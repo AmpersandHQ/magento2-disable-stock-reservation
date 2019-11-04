@@ -1,5 +1,5 @@
 <?php
-namespace Ampersand\DisableStockReservation;
+namespace Ampersand\DisableStockReservation\Plugin;
 
 use Ampersand\DisableStockReservation\Model\Config;
 use Magento\InventorySales\Model\PlaceReservationsForSalesEvent;
