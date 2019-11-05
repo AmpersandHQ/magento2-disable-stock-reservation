@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Magento\InventoryShipping\Observer;
+namespace Ampersand\DisableStockReservation\Observer;
 
 use Ampersand\DisableStockReservation\Model\GetItemsToDeductFromOrder;
 use Ampersand\DisableStockReservation\Model\SourceDeductionRequestFromOrderFactory;
