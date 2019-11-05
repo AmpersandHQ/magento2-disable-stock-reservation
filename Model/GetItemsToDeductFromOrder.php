@@ -67,7 +67,7 @@ class GetItemsToDeductFromOrder
                 }
             } else {
                 $itemSku = $this->getSkuFromOrderItem->execute($orderItem);
-                $qty = $this->castQty($orderItem, $orderItem->getQty());
+                $qty = $this->castQty($orderItem, $orderItem->getQtyOrdered());
                 $itemsToOrder[] = $this->itemToDeduct->create([
                     'sku' => $itemSku,
                     'qty' => $qty
@@ -85,11 +85,11 @@ class GetItemsToDeductFromOrder
     private function groupItemsBySku(array $orderItems): array
     {
         $processingItems = $groupedItems = [];
-        foreach ($shipmentItems as $shipmentItem) {
-            if (empty($processingItems[$shipmentItem->getSku()])) {
-                $processingItems[$shipmentItem->getSku()] = $shipmentItem->getQty();
+        foreach ($orderItems as $orderItem) {
+            if (empty($processingItems[$orderItem->getSku()])) {
+                $processingItems[$orderItem->getSku()] = $orderItem->getQty();
             } else {
-                $processingItems[$shipmentItem->getSku()] += $shipmentItem->getQty();
+                $processingItems[$orderItem->getSku()] += $orderItem->getQty();
             }
         }
 
@@ -104,7 +104,7 @@ class GetItemsToDeductFromOrder
     }
 
     /**
-     * @param Item $shipmentItem
+     * @param Item $orderItem
      * @return array
      */
     private function processComplexItem(Item $orderItem): array
@@ -120,7 +120,7 @@ class GetItemsToDeductFromOrder
                     $productOptions['bundle_selection_attributes']
                 );
                 if ($bundleSelectionAttributes) {
-                    $qty = $bundleSelectionAttributes['qty'] * $shipmentItem->getQty();
+                    $qty = $bundleSelectionAttributes['qty'] * $orderItem->getQty();
                     $qty = $this->castQty($item, $qty);
                     $itemSku = $this->getSkuFromOrderItem->execute($item);
                     $itemsToOrder[] = $this->itemToDeduct->create([
@@ -132,7 +132,7 @@ class GetItemsToDeductFromOrder
             } else {
                 // configurable product
                 $itemSku = $this->getSkuFromOrderItem->execute($orderItem);
-                $qty = $this->castQty($orderItem, $shipmentItem->getQty());
+                $qty = $this->castQty($orderItem, $orderItem->getQtyOrdered());
                 $itemsToOrder[] = $this->itemToDeduct->create([
                     'sku' => $itemSku,
                     'qty' => $qty

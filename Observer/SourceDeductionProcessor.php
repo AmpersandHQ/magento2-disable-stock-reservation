@@ -93,11 +93,13 @@ class SourceDeductionProcessor implements ObserverInterface
             return;
         }
 
-        if (!empty($order->getExtensionAttributes())
-            && !empty($order->getExtensionAttributes()->getSourceCode())) {
-            $sourceCode = $order->getExtensionAttributes()->getSourceCode();
-        } elseif ($this->isSingleSourceMode->execute()) {
+        // Purposely check for single source mode first
+        // If your store's configuration for inventory is not single source, then you'll need something to make source
+        // calculation on order placement, rather than order shipment
+        if ($this->isSingleSourceMode->execute()) {
             $sourceCode = $this->defaultSourceProvider->getCode();
+        } elseif (!empty($order->getExtensionAttributes()) && !empty($order->getExtensionAttributes()->getSourceCode())) {
+            $sourceCode = $order->getExtensionAttributes()->getSourceCode();
         }
 
         $orderItems = $this->getItemsToDeductFromOrder->execute($order);

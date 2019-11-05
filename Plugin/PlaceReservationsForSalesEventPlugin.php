@@ -2,9 +2,9 @@
 namespace Ampersand\DisableStockReservation\Plugin;
 
 use Ampersand\DisableStockReservation\Model\Config;
-use Magento\InventorySales\Model\PlaceReservationsForSalesEvent;
 use Magento\InventorySalesApi\Api\Data\SalesChannelInterface;
 use Magento\InventorySalesApi\Api\Data\SalesEventInterface;
+use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
 
 class PlaceReservationsForSalesEventPlugin
 {
@@ -19,12 +19,12 @@ class PlaceReservationsForSalesEventPlugin
      * @param null $websiteId
      */
     public function aroundExecute(
-        PlaceReservationsForSalesEvent $subject,
+        PlaceReservationsForSalesEventInterface $subject,
         callable $proceed,
         array $items,
         SalesChannelInterface $salesChannel,
         SalesEventInterface $salesEvent
     ) {
-        // do nothing
+        $doSomething = false;
     }
 }

@@ -53,17 +53,18 @@ class SourceDeductionRequestFromOrderFactory
     }
 
     /**
-     * @param Shipment $shipment
+     * @param Order $order
      * @param string $sourceCode
      * @param array $items
      * @return SourceDeductionRequestInterface
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function execute(
         Order $order,
         string $sourceCode,
         array $items
     ): SourceDeductionRequestInterface {
-        $websiteId = $shipment->getOrder()->getStore()->getWebsiteId();
+        $websiteId = $order->getStore()->getWebsiteId();
 
         $salesEvent = $this->salesEventFactory->create([
             'type' => SalesEventInterface::EVENT_SHIPMENT_CREATED,

@@ -14,6 +14,8 @@ use Magento\InventorySalesApi\Api\Data\SalesChannelInterfaceFactory;
 use Magento\InventorySalesApi\Api\Data\SalesEventInterface;
 use Magento\InventorySalesApi\Api\Data\SalesEventInterfaceFactory;
 use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
+use Magento\InventorySourceDeductionApi\Model\ItemToDeductFactory;
+use Magento\InventorySourceDeductionApi\Model\SourceDeductionRequestFactory;
 use Magento\InventorySourceDeductionApi\Model\SourceDeductionService;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Store\Api\WebsiteRepositoryInterface;
@@ -66,17 +68,27 @@ class CancelOrderItemObserver implements ObserverInterface
     private $itemToDeductFactory;
 
     /**
+     * @var SourceDeductionRequestFactory
+     */
+    private $sourceDeductionRequestFactory;
+
+    /**
      * @var SourceDeductionService
      */
     private $sourceDeductionService;
 
     /**
+     * CancelOrderItemObserver constructor.
      * @param Processor $priceIndexer
      * @param SalesEventInterfaceFactory $salesEventFactory
      * @param PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent
      * @param SalesChannelInterfaceFactory $salesChannelFactory
      * @param WebsiteRepositoryInterface $websiteRepository
      * @param GetItemsToCancelFromOrderItem $getItemsToCancelFromOrderItem
+     * @param IsSingleSourceModeInterface $isSingleSourceMode
+     * @param DefaultSourceProviderInterface $defaultSourceProvider
+     * @param ItemToDeductFactory $itemToDeductFactory
+     * @param SourceDeductionService $sourceDeductionService
      */
     public function __construct(
         Processor $priceIndexer,
@@ -88,6 +100,7 @@ class CancelOrderItemObserver implements ObserverInterface
         IsSingleSourceModeInterface $isSingleSourceMode,
         DefaultSourceProviderInterface $defaultSourceProvider,
         ItemToDeductFactory $itemToDeductFactory,
+        SourceDeductionRequestFactory $sourceDeductionRequestFactory,
         SourceDeductionService $sourceDeductionService
     ) {
         $this->priceIndexer = $priceIndexer;
@@ -99,6 +112,7 @@ class CancelOrderItemObserver implements ObserverInterface
         $this->isSingleSourceMode = $isSingleSourceMode;
         $this->defaultSourceProvider = $defaultSourceProvider;
         $this->itemToDeductFactory = $itemToDeductFactory;
+        $this->sourceDeductionRequestFactory = $sourceDeductionRequestFactory;
         $this->sourceDeductionService = $sourceDeductionService;
     }
 
@@ -132,20 +146,23 @@ class CancelOrderItemObserver implements ObserverInterface
             'objectId' => (string)$orderItem->getOrderId()
         ]);
 
+        //This does nothing, is disabled on the PlaceReservationsForSalesEventPlugin
         $this->placeReservationsForSalesEvent->execute($itemsToCancel, $salesChannel, $salesEvent);
 
         $order = $orderItem->getOrder();
-        
-        if (!empty($order->getExtensionAttributes())
-            && !empty($order->getExtensionAttributes()->getSourceCode())) {
-            $sourceCode = $order->getExtensionAttributes()->getSourceCode();
-        } elseif ($this->isSingleSourceMode->execute()) {
+
+        // Purposely check for single source mode first
+        // If your store's configuration for inventory is not single source, then you'll need something to make source
+        // calculation on order placement, rather than order shipment
+        if ($this->isSingleSourceMode->execute()) {
             $sourceCode = $this->defaultSourceProvider->getCode();
+        } elseif (!empty($order->getExtensionAttributes()) && !empty($order->getExtensionAttributes()->getSourceCode())) {
+            $sourceCode = $order->getExtensionAttributes()->getSourceCode();
         }
 
         $itemsToDeduct = [];
         foreach ($itemsToCancel as $itemToCancel) {
-            $this->itemToDeductFactory->create([
+            $itemsToDeduct[] = $this->itemToDeductFactory->create([
                 'sku' => $itemToCancel->getSku(),
                 'qty' => -$itemToCancel->getQuantity(),
             ]);
@@ -153,7 +170,7 @@ class CancelOrderItemObserver implements ObserverInterface
 
         $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
             'sourceCode' => $sourceCode,
-            'items' => [$itemsToDeduct],
+            'items' => $itemsToDeduct,
             'salesChannel' => $salesChannel,
             'salesEvent' => $salesEvent
         ]);
