@@ -13,10 +13,11 @@ class PlaceReservationsForSalesEventPlugin
      * Around plugin for PlaceReservationsForSalesEvent::execute function to make it do nothing.
      * This will prevent all writes to the table inventory_reservation
      *
-     * @param PlaceReservationsForSalesEvent $subject
+     * @param PlaceReservationsForSalesEventInterface $subject
      * @param callable $proceed
-     * @param $items
-     * @param null $websiteId
+     * @param array $items
+     * @param SalesChannelInterface $salesChannel
+     * @param SalesEventInterface $salesEvent
      */
     public function aroundExecute(
         PlaceReservationsForSalesEventInterface $subject,

@@ -96,6 +96,7 @@ class SourceDeductionProcessor implements ObserverInterface
         // Purposely check for single source mode first
         // If your store's configuration for inventory is not single source, then you'll need something to make source
         // calculation on order placement, rather than order shipment
+        $sourceCode = null;
         if ($this->isSingleSourceMode->execute()) {
             $sourceCode = $this->defaultSourceProvider->getCode();
         } elseif (!empty($order->getExtensionAttributes()) && !empty($order->getExtensionAttributes()->getSourceCode())) {
