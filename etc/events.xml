@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <!--  Disable observer that deducts stock from shipment save and add an observer to deduct stock on order placement -->
+    <event name="sales_order_shipment_save_after">
+        <observer name="inventory_sales_source_deduction_processor" disabled="true"/>
+    </event>
+    <event name="sales_order_save_after">
+        <observer name="inventory_sales_source_deduction_processor" instance="Ampersand\DisableStockReservation\Observer\SourceDeductionProcessor"/>
+    </event>
+    <!--  Return stock on order cancellation  -->
+    <!--  This observer replaces the original to avoid reindexing the price twice  -->
+    <event name="sales_order_item_cancel">
+        <observer name="inventory" instance="Ampersand\DisableStockReservation\Observer\CancelOrderItemObserver"/>
+    </event>
+</config>
