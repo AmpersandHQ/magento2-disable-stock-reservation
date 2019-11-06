@@ -44,7 +44,7 @@ class GetItemsToDeductFromOrder
     }
 
     /**
-     * @param Shipment $shipment
+     * @param Order $order
      * @return ItemToDeductInterface[]
      * @throws NoSuchEntityException
      */
@@ -52,7 +52,7 @@ class GetItemsToDeductFromOrder
     {
         $itemsToOrder = [];
 
-        /** @var \Magento\Sales\Model\Order\Shipment\Item $orderItem */
+        /** @var \Magento\Sales\Model\Order\Item $orderItem */
         foreach ($order->getAllItems() as $orderItem) {
             // This code was added as quick fix for merge mainline
             // https://github.com/magento-engcom/msi/issues/1586
@@ -144,7 +144,7 @@ class GetItemsToDeductFromOrder
     }
 
     /**
-     * @param OrderItem $item
+     * @param Item $item
      * @param string|int|float $qty
      * @return float|int
      */
