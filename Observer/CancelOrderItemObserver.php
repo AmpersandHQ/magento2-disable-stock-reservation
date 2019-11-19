@@ -151,33 +151,30 @@ class CancelOrderItemObserver implements ObserverInterface
 
         $order = $orderItem->getOrder();
 
-        // Purposely check for single source mode first
-        // If your store's configuration for inventory is not single source, then you'll need something to make source
-        // calculation on order placement, rather than order shipment
-        $sourceCode = null;
+        // Source selection happens by default on shipment, so only shipments contain information about the
+        // inventory source.
+        // @TODO add support for multi source stock replenishment on cancellation
         if ($this->isSingleSourceMode->execute()) {
             $sourceCode = $this->defaultSourceProvider->getCode();
-        } elseif (!empty($order->getExtensionAttributes()) && !empty($order->getExtensionAttributes()->getSourceCode())) {
-            $sourceCode = $order->getExtensionAttributes()->getSourceCode();
-        }
 
-        $itemsToDeduct = [];
-        foreach ($itemsToCancel as $itemToCancel) {
-            $itemsToDeduct[] = $this->itemToDeductFactory->create([
-                'sku' => $itemToCancel->getSku(),
-                'qty' => -$itemToCancel->getQuantity(),
+            $itemsToDeduct = [];
+            foreach ($itemsToCancel as $itemToCancel) {
+                $itemsToDeduct[] = $this->itemToDeductFactory->create([
+                    'sku' => $itemToCancel->getSku(),
+                    'qty' => -$itemToCancel->getQuantity(),
+                ]);
+            }
+
+            $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
+                'sourceCode' => $sourceCode,
+                'items' => $itemsToDeduct,
+                'salesChannel' => $salesChannel,
+                'salesEvent' => $salesEvent
             ]);
+
+            $this->sourceDeductionService->execute($sourceDeductionRequest);
+
+            $this->priceIndexer->reindexRow($orderItem->getProductId());
         }
-
-        $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
-            'sourceCode' => $sourceCode,
-            'items' => $itemsToDeduct,
-            'salesChannel' => $salesChannel,
-            'salesEvent' => $salesEvent
-        ]);
-        
-        $this->sourceDeductionService->execute($sourceDeductionRequest);
-
-        $this->priceIndexer->reindexRow($orderItem->getProductId());
     }
 }

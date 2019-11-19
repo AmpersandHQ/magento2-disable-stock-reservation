@@ -3,41 +3,26 @@ declare(strict_types=1);
 
 namespace Ampersand\DisableStockReservation\Observer;
 
-use Ampersand\DisableStockReservation\Model\GetItemsToDeductFromOrder;
-use Ampersand\DisableStockReservation\Model\SourceDeductionRequestFromOrderFactory;
+use Ampersand\DisableStockReservation\Model\GetSourceSelectionResultFromOrder;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer as EventObserver;
-use Magento\InventorySourceDeductionApi\Model\SourceDeductionServiceInterface;
-use Magento\InventoryCatalogApi\Api\DefaultSourceProviderInterface;
-use Magento\InventoryCatalogApi\Model\IsSingleSourceModeInterface;
-use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\InventorySalesApi\Api\Data\SalesEventInterface;
+use Magento\InventorySalesApi\Api\Data\SalesEventInterfaceFactory;
 use Magento\InventorySourceDeductionApi\Model\SourceDeductionRequestInterface;
+use Magento\InventorySourceDeductionApi\Model\SourceDeductionServiceInterface;
+use Magento\InventoryShipping\Model\SourceDeductionRequestsFromSourceSelectionFactory;
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\InventorySalesApi\Api\Data\ItemToSellInterfaceFactory;
+use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
 
-/**
- * Class SourceDeductionProcessor
- */
 class SourceDeductionProcessor implements ObserverInterface
 {
     /**
-     * @var IsSingleSourceModeInterface
+     * @var GetSourceSelectionResultFromOrder
      */
-    private $isSingleSourceMode;
-
-    /**
-     * @var DefaultSourceProviderInterface
-     */
-    private $defaultSourceProvider;
-
-    /**
-     * @var GetItemsToDeductFromOrder
-     */
-    private $getItemsToDeductFromOrder;
-
-    /**
-     * @var SourceDeductionRequestFromOrderFactory
-     */
-    private $sourceDeductionRequestFromOrderFactory;
+    private $getSourceSelectionResultFromOrder;
 
     /**
      * @var SourceDeductionServiceInterface
@@ -45,9 +30,19 @@ class SourceDeductionProcessor implements ObserverInterface
     private $sourceDeductionService;
 
     /**
+     * @var SourceDeductionRequestsFromSourceSelectionFactory
+     */
+    private $sourceDeductionRequestsFromSourceSelectionFactory;
+
+    /**
+     * @var SalesEventInterfaceFactory
+     */
+    private $salesEventFactory;
+
+    /**
      * @var ItemToSellInterfaceFactory
      */
-    private $itemsToSellFactory;
+    private $itemToSellFactory;
 
     /**
      * @var PlaceReservationsForSalesEventInterface
@@ -55,29 +50,26 @@ class SourceDeductionProcessor implements ObserverInterface
     private $placeReservationsForSalesEvent;
 
     /**
-     * @param IsSingleSourceModeInterface $isSingleSourceMode
-     * @param DefaultSourceProviderInterface $defaultSourceProvider
-     * @param GetItemsToDeductFromOrder $getItemsToDeductFromOrder
-     * @param SourceDeductionRequestFromOrderFactory $sourceDeductionRequestFromOrderFactory
+     * @param GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder
      * @param SourceDeductionServiceInterface $sourceDeductionService
-     * @param ItemToSellInterfaceFactory $itemsToSellFactory
+     * @param SourceDeductionRequestsFromSourceSelectionFactory $sourceDeductionRequestsFromSourceSelectionFactory
+     * @param SalesEventInterfaceFactory $salesEventFactory
+     * @param ItemToSellInterfaceFactory $itemToSellFactory
      * @param PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent
      */
     public function __construct(
-        IsSingleSourceModeInterface $isSingleSourceMode,
-        DefaultSourceProviderInterface $defaultSourceProvider,
-        GetItemsToDeductFromOrder $getItemsToDeductFromOrder,
-        SourceDeductionRequestFromOrderFactory $sourceDeductionRequestFromOrderFactory,
+        GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder,
         SourceDeductionServiceInterface $sourceDeductionService,
-        ItemToSellInterfaceFactory $itemsToSellFactory,
+        SourceDeductionRequestsFromSourceSelectionFactory $sourceDeductionRequestsFromSourceSelectionFactory,
+        SalesEventInterfaceFactory $salesEventFactory,
+        ItemToSellInterfaceFactory $itemToSellFactory,
         PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent
     ) {
-        $this->isSingleSourceMode = $isSingleSourceMode;
-        $this->defaultSourceProvider = $defaultSourceProvider;
-        $this->getItemsToDeductFromOrder = $getItemsToDeductFromOrder;
-        $this->sourceDeductionRequestFromOrderFactory = $sourceDeductionRequestFromOrderFactory;
+        $this->getSourceSelectionResultFromOrder = $getSourceSelectionResultFromOrder;
         $this->sourceDeductionService = $sourceDeductionService;
-        $this->itemsToSellFactory = $itemsToSellFactory;
+        $this->sourceDeductionRequestsFromSourceSelectionFactory = $sourceDeductionRequestsFromSourceSelectionFactory;
+        $this->salesEventFactory = $salesEventFactory;
+        $this->itemToSellFactory = $itemToSellFactory;
         $this->placeReservationsForSalesEvent = $placeReservationsForSalesEvent;
     }
 
@@ -93,24 +85,22 @@ class SourceDeductionProcessor implements ObserverInterface
             return;
         }
 
-        // Purposely check for single source mode first
-        // If your store's configuration for inventory is not single source, then you'll need something to make source
-        // calculation on order placement, rather than order shipment
-        $sourceCode = null;
-        if ($this->isSingleSourceMode->execute()) {
-            $sourceCode = $this->defaultSourceProvider->getCode();
-        } elseif (!empty($order->getExtensionAttributes()) && !empty($order->getExtensionAttributes()->getSourceCode())) {
-            $sourceCode = $order->getExtensionAttributes()->getSourceCode();
-        }
+        $sourceSelectionResult = $this->getSourceSelectionResultFromOrder->execute($order);
 
-        $orderItems = $this->getItemsToDeductFromOrder->execute($order);
+        /** @var SalesEventInterface $salesEvent */
+        $salesEvent = $this->salesEventFactory->create([
+            'type' => SalesEventInterface::EVENT_ORDER_PLACED,
+            'objectType' => SalesEventInterface::OBJECT_TYPE_ORDER,
+            'objectId' => $order->getEntityId(),
+        ]);
 
-        if (!empty($orderItems)) {
-            $sourceDeductionRequest = $this->sourceDeductionRequestFromOrderFactory->execute(
-                $order,
-                $sourceCode,
-                $orderItems
-            );
+        $sourceDeductionRequests = $this->sourceDeductionRequestsFromSourceSelectionFactory->create(
+            $sourceSelectionResult,
+            $salesEvent,
+            (int)$order->getStore()->getWebsiteId()
+        );
+
+        foreach ($sourceDeductionRequests as $sourceDeductionRequest) {
             $this->sourceDeductionService->execute($sourceDeductionRequest);
             $this->placeCompensatingReservation($sourceDeductionRequest);
         }
@@ -125,7 +115,7 @@ class SourceDeductionProcessor implements ObserverInterface
     {
         $items = [];
         foreach ($sourceDeductionRequest->getItems() as $item) {
-            $items[] = $this->itemsToSellFactory->create([
+            $items[] = $this->itemToSellFactory->create([
                 'sku' => $item->getSku(),
                 'qty' => $item->getQty()
             ]);
