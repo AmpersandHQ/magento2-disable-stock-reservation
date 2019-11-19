@@ -18,8 +18,3 @@ This module will:
 * Prevent stock deductions on order shipment. See disabled `inventory_sales_source_deduction_processor` observer on `sales_order_shipment_save_after` event.
 * Replenish stock for cancelled order items. See `inventory` observer on `sales_order_item_cancel` event.
 
-## Limitations
-
-Magento will determine which inventory source from where to decrement the stock on order shipment. If your store is single source
-then this module will work perfectly for you. However, if your store is multi source, then you'll need to make source calculation
-happen on order placement instead. See [AmpersandHQ/magento2-msi-source-on-order-placement](https://github.com/AmpersandHQ/magento2-msi-source-on-order-placement)
