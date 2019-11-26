@@ -1,10 +1,6 @@
 {
     "name": "ampersand/magento2-disable-stock-reservation",
     "type": "magento2-module",
-    "repositories": [
-        {"type": "composer", "url": "https://repo.packagist.com/ampersandhq/"},
-        {"packagist.org": false}
-    ],
     "minimum-stability": "dev",
     "require": {
         "magento/framework": "*",
