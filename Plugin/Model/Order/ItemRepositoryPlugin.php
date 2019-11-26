@@ -6,7 +6,6 @@ use Magento\Sales\Model\Order\ItemRepository;
 use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\Sales\Api\Data\OrderItemExtensionFactory;
 use Magento\Sales\Api\Data\OrderItemSearchResultInterface;
-use Psr\Log\LoggerInterface;
 use Magento\Sales\Model\Order\Item;
 use Magento\Sales\Model\Order;
 use Ampersand\DisableStockReservation\Model\GetSourceSelectionResultFromOrder;
@@ -24,16 +23,6 @@ class ItemRepositoryPlugin
      * @var OrderItemExtensionFactory
      */
     private $orderItemExtensionFactory;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * @var Order
-     */
-    private $order;
 
     /**
      * @var GetSourceSelectionResultFromOrder
@@ -59,8 +48,6 @@ class ItemRepositoryPlugin
      * ItemRepositoryPlugin constructor.
      *
      * @param OrderItemExtensionFactory $orderItemExtensionFactory
-     * @param LoggerInterface $logger
-     * @param Order $order
      * @param GetSourceSelectionResultFromOrder $sourceSelectionResult
      * @param GetInventoryRequestFromOrder $getInventoryRequestFromOrder
      * @param GetDefaultSourceSelectionAlgorithmCodeInterface $getDefaultSourceSelectionAlgorithmCode
@@ -68,16 +55,12 @@ class ItemRepositoryPlugin
      */
     public function __construct(
         OrderItemExtensionFactory $orderItemExtensionFactory,
-        LoggerInterface $logger,
-        Order $order,
         GetSourceSelectionResultFromOrder $sourceSelectionResult,
         GetInventoryRequestFromOrder $getInventoryRequestFromOrder,
         GetDefaultSourceSelectionAlgorithmCodeInterface $getDefaultSourceSelectionAlgorithmCode,
         SourceSelectionServiceInterface $sourceSelectionService
     ) {
         $this->orderItemExtensionFactory = $orderItemExtensionFactory;
-        $this->logger = $logger;
-        $this->order = $order;
         $this->sourceSelectionResult = $sourceSelectionResult;
         $this->getInventoryRequestFromOrder = $getInventoryRequestFromOrder;
         $this->getDefaultSourceSelectionAlgorithmCode = $getDefaultSourceSelectionAlgorithmCode;
@@ -121,18 +104,6 @@ class ItemRepositoryPlugin
      */
     private function applyExtensionAttributesToOrderItem(OrderItemInterface $orderItem, array $allItems) : OrderItemInterface
     {
-        $orderProduct = $orderItem->getProduct();
-
-        // Ensure we do not process any further if there is no product associated and log order item
-        if (!$orderProduct) {
-            $this->logger->debug('Order item is missing associated product', [
-                'order_id' => $orderItem->getOrderId(),
-                'order_item_id' => $orderItem->getId()
-            ]);
-
-            return $orderItem;
-        }
-
         if (!$extensionAttributes = $orderItem->getExtensionAttributes()) {
             $extensionAttributes = $this->orderItemExtensionFactory->create();
         }
@@ -146,12 +117,13 @@ class ItemRepositoryPlugin
         return $orderItem;
     }
 
+    // @TODO what happens if there's more than one source?
     /**
      * @param Order $order
      * @param array $allItems
-     * @return string
+     * @return string|null
      */
-    private function getCustomAttributeValue(Order $order, array $allItems) : string
+    private function getCustomAttributeValue(Order $order, array $allItems)
     {
         $inventoryRequest = $this->getInventoryRequestFromOrder->execute(
             $order,
@@ -160,6 +132,10 @@ class ItemRepositoryPlugin
 
         $selectionAlgorithmCode = $this->getDefaultSourceSelectionAlgorithmCode->execute();
         $sourceSelectionResult = $this->sourceSelectionService->execute($inventoryRequest, $selectionAlgorithmCode);
+
+        if (empty($sourceSelectionResult)) {
+            return null;
+        }
 
         return $sourceSelectionResult->getSourceSelectionItems()[0]->getSourceCode();
     }
