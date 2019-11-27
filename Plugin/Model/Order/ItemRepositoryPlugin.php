@@ -7,7 +7,7 @@ use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\Sales\Api\Data\OrderItemExtensionFactory;
 use Magento\Sales\Api\Data\OrderItemSearchResultInterface;
 use Magento\Sales\Model\Order\Item;
-use Magento\Sales\Model\Order;
+use Magento\Sales\Api\Data\OrderInterface;
 use Ampersand\DisableStockReservation\Model\GetSourceSelectionResultFromOrder;
 use Ampersand\DisableStockReservation\Model\GetInventoryRequestFromOrder;
 use Magento\InventorySourceSelectionApi\Api\GetDefaultSourceSelectionAlgorithmCodeInterface;
@@ -49,7 +49,7 @@ class ItemRepositoryPlugin
      *
      * @var array
      */
-    private $sourceSelectionResultValues = [];
+    private $sourceCodeByOrderId = [];
 
     /**
      * ItemRepositoryPlugin constructor.
@@ -127,28 +127,26 @@ class ItemRepositoryPlugin
     /**
      * @TODO what happens if there's more than one source?
      *
-     * @param Order $order
+     * @param OrderInterface $order
      * @param array $allItems
      * @return string|null
      */
-    private function getOrderSourceCode(Order $order, array $allItems): ?string
+    private function getOrderSourceCode(OrderInterface $order, array $allItems): ?string
     {
-        if (empty($this->sourceSelectionResultValues)) {
-            $inventoryRequest = $this->getInventoryRequestFromOrder->execute(
-                $order,
-                $this->sourceSelectionResult->getSelectionRequestItems($allItems)
-            );
-
-            $selectionAlgorithmCode = $this->getDefaultSourceSelectionAlgorithmCode->execute();
-            $sourceSelectionResult = $this->sourceSelectionService->execute($inventoryRequest, $selectionAlgorithmCode);
-
-            if (empty($sourceSelectionResult)) {
-                return null;
-            }
-
-            $this->sourceSelectionResultValues = $sourceSelectionResult;
+        $orderId = $order->getId();
+        if (array_key_exists($orderId, $this->sourceCodeByOrderId)) {
+            return $this->sourceCodeByOrderId[$orderId];
         }
 
-        return $this->sourceSelectionResultValues->getSourceSelectionItems()[0]->getSourceCode();
+        $inventoryRequest = $this->getInventoryRequestFromOrder->execute(
+            $order,
+            $this->sourceSelectionResult->getSelectionRequestItems($allItems)
+        );
+
+        $selectionAlgorithmCode = $this->getDefaultSourceSelectionAlgorithmCode->execute();
+        $sourceSelectionResult = $this->sourceSelectionService->execute($inventoryRequest, $selectionAlgorithmCode);
+
+        $sourceSelectionItems = $sourceSelectionResult->getSourceSelectionItems();
+        return $this->sourceCodeByOrderId[$orderId] = !empty($sourceSelectionItems) ? $sourceSelectionItems[0]->getSourceCode() : null;
     }
 }
