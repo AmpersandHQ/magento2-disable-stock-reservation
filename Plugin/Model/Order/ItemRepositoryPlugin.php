@@ -45,6 +45,13 @@ class ItemRepositoryPlugin
     private $sourceSelectionService;
 
     /**
+     * Cache the values
+     *
+     * @var array
+     */
+    private $sourceSelectionResultValues = [];
+
+    /**
      * ItemRepositoryPlugin constructor.
      *
      * @param OrderItemExtensionFactory $orderItemExtensionFactory
@@ -102,7 +109,7 @@ class ItemRepositoryPlugin
      * @param array $allItems
      * @return OrderItemInterface
      */
-    private function applyExtensionAttributesToOrderItem(OrderItemInterface $orderItem, array $allItems) : OrderItemInterface
+    private function applyExtensionAttributesToOrderItem(OrderItemInterface $orderItem, array $allItems): OrderItemInterface
     {
         if (!$extensionAttributes = $orderItem->getExtensionAttributes()) {
             $extensionAttributes = $this->orderItemExtensionFactory->create();
@@ -124,20 +131,24 @@ class ItemRepositoryPlugin
      * @param array $allItems
      * @return string|null
      */
-    private function getOrderSourceCode(Order $order, array $allItems) : ?string
+    private function getOrderSourceCode(Order $order, array $allItems): ?string
     {
-        $inventoryRequest = $this->getInventoryRequestFromOrder->execute(
-            $order,
-            $this->sourceSelectionResult->getSelectionRequestItems($allItems)
-        );
+        if (empty($this->sourceSelectionResultValues)) {
+            $inventoryRequest = $this->getInventoryRequestFromOrder->execute(
+                $order,
+                $this->sourceSelectionResult->getSelectionRequestItems($allItems)
+            );
 
-        $selectionAlgorithmCode = $this->getDefaultSourceSelectionAlgorithmCode->execute();
-        $sourceSelectionResult = $this->sourceSelectionService->execute($inventoryRequest, $selectionAlgorithmCode);
+            $selectionAlgorithmCode = $this->getDefaultSourceSelectionAlgorithmCode->execute();
+            $sourceSelectionResult = $this->sourceSelectionService->execute($inventoryRequest, $selectionAlgorithmCode);
 
-        if (empty($sourceSelectionResult)) {
-            return null;
+            if (empty($sourceSelectionResult)) {
+                return null;
+            }
+
+            $this->sourceSelectionResultValues = $sourceSelectionResult;
         }
 
-        return $sourceSelectionResult->getSourceSelectionItems()[0]->getSourceCode();
+        return $this->sourceSelectionResultValues->getSourceSelectionItems()[0]->getSourceCode();
     }
 }
