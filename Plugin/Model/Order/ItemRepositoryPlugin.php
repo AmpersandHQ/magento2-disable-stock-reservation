@@ -109,7 +109,7 @@ class ItemRepositoryPlugin
         }
 
         $extensionAttributes->setSourceCode(
-            $this->getCustomAttributeValue($orderItem->getOrder(), $allItems)
+            $this->getOrderSourceCode($orderItem->getOrder(), $allItems)
         );
 
         $orderItem->setExtensionAttributes($extensionAttributes);
@@ -117,13 +117,14 @@ class ItemRepositoryPlugin
         return $orderItem;
     }
 
-    // @TODO what happens if there's more than one source?
     /**
+     * @TODO what happens if there's more than one source?
+     *
      * @param Order $order
      * @param array $allItems
      * @return string|null
      */
-    private function getCustomAttributeValue(Order $order, array $allItems)
+    private function getOrderSourceCode(Order $order, array $allItems) : ?string
     {
         $inventoryRequest = $this->getInventoryRequestFromOrder->execute(
             $order,
