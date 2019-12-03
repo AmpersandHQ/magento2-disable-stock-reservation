@@ -64,6 +64,7 @@ class ItemRepositoryPlugin
      * @param GetInventoryRequestFromOrder $getInventoryRequestFromOrder
      * @param GetDefaultSourceSelectionAlgorithmCodeInterface $getDefaultSourceSelectionAlgorithmCode
      * @param SourceSelectionServiceInterface $sourceSelectionService
+     * @param SerializerInterface $serializer
      */
     public function __construct(
         OrderItemExtensionFactory $orderItemExtensionFactory,
