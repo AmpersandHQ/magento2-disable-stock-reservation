@@ -11,7 +11,6 @@ use Ampersand\DisableStockReservation\Model\GetSourceSelectionResultFromOrder;
 use Ampersand\DisableStockReservation\Model\GetInventoryRequestFromOrder;
 use Magento\InventorySourceSelectionApi\Api\GetDefaultSourceSelectionAlgorithmCodeInterface;
 use Magento\InventorySourceSelectionApi\Api\SourceSelectionServiceInterface;
-use Magento\Framework\Serialize\SerializerInterface;
 use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionItemInterface;
 
 /**
@@ -53,11 +52,6 @@ class ItemRepositoryPlugin
     private $sourceSelectionItems = [];
 
     /**
-     * @var SerializerInterface
-     */
-    private $serializer;
-
-    /**
      * ItemRepositoryPlugin constructor.
      *
      * @param OrderItemExtensionFactory $orderItemExtensionFactory
@@ -72,15 +66,13 @@ class ItemRepositoryPlugin
         GetSourceSelectionResultFromOrder $sourceSelectionResult,
         GetInventoryRequestFromOrder $getInventoryRequestFromOrder,
         GetDefaultSourceSelectionAlgorithmCodeInterface $getDefaultSourceSelectionAlgorithmCode,
-        SourceSelectionServiceInterface $sourceSelectionService,
-        SerializerInterface $serializer
+        SourceSelectionServiceInterface $sourceSelectionService
     ) {
         $this->orderItemExtensionFactory = $orderItemExtensionFactory;
         $this->sourceSelectionResult = $sourceSelectionResult;
         $this->getInventoryRequestFromOrder = $getInventoryRequestFromOrder;
         $this->getDefaultSourceSelectionAlgorithmCode = $getDefaultSourceSelectionAlgorithmCode;
         $this->sourceSelectionService = $sourceSelectionService;
-        $this->serializer = $serializer;
     }
 
     /**
@@ -125,9 +117,7 @@ class ItemRepositoryPlugin
         }
 
         $extensionAttributes->setSources(
-
             $this->getOrderItemSources($orderItem, $allItems)
-
         );
 
         $orderItem->setExtensionAttributes($extensionAttributes);
