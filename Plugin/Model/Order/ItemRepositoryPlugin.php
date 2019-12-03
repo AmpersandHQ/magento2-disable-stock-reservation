@@ -59,7 +59,6 @@ class ItemRepositoryPlugin
      * @param GetInventoryRequestFromOrder $getInventoryRequestFromOrder
      * @param GetDefaultSourceSelectionAlgorithmCodeInterface $getDefaultSourceSelectionAlgorithmCode
      * @param SourceSelectionServiceInterface $sourceSelectionService
-     * @param SerializerInterface $serializer
      */
     public function __construct(
         OrderItemExtensionFactory $orderItemExtensionFactory,
@@ -158,6 +157,6 @@ class ItemRepositoryPlugin
             []
         );
 
-        return $this->sourceSelectionItems[$orderItemSku];
+        return array_key_exists($orderItemSku, $this->sourceSelectionItems)? $this->sourceSelectionItems[$orderItemSku] : [];
     }
 }
