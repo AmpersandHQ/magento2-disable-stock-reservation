@@ -8,7 +8,7 @@
     </type>
 
     <type name="Magento\Sales\Model\Order\ItemRepository">
-        <plugin name="add_source_code_attribute_to_order_items"
+        <plugin name="add_sources_attribute_to_order_items"
                 type="Ampersand\DisableStockReservation\Plugin\Model\Order\ItemRepositoryPlugin"
                 sortOrder="2"/>
     </type>

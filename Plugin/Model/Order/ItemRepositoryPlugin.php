@@ -7,11 +7,11 @@ use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\Sales\Api\Data\OrderItemExtensionFactory;
 use Magento\Sales\Api\Data\OrderItemSearchResultInterface;
 use Magento\Sales\Model\Order\Item;
-use Magento\Sales\Api\Data\OrderInterface;
 use Ampersand\DisableStockReservation\Model\GetSourceSelectionResultFromOrder;
 use Ampersand\DisableStockReservation\Model\GetInventoryRequestFromOrder;
 use Magento\InventorySourceSelectionApi\Api\GetDefaultSourceSelectionAlgorithmCodeInterface;
 use Magento\InventorySourceSelectionApi\Api\SourceSelectionServiceInterface;
+use Magento\Framework\Serialize\SerializerInterface;
 
 /**
  * Class ItemRepositoryPlugin
@@ -49,7 +49,12 @@ class ItemRepositoryPlugin
      *
      * @var array
      */
-    private $sourceCodeByOrderId = [];
+    private $sourceSelectionItems;
+
+    /**
+     * @var SerializerInterface
+     */
+    private $serializer;
 
     /**
      * ItemRepositoryPlugin constructor.
@@ -65,13 +70,15 @@ class ItemRepositoryPlugin
         GetSourceSelectionResultFromOrder $sourceSelectionResult,
         GetInventoryRequestFromOrder $getInventoryRequestFromOrder,
         GetDefaultSourceSelectionAlgorithmCodeInterface $getDefaultSourceSelectionAlgorithmCode,
-        SourceSelectionServiceInterface $sourceSelectionService
+        SourceSelectionServiceInterface $sourceSelectionService,
+        SerializerInterface $serializer
     ) {
         $this->orderItemExtensionFactory = $orderItemExtensionFactory;
         $this->sourceSelectionResult = $sourceSelectionResult;
         $this->getInventoryRequestFromOrder = $getInventoryRequestFromOrder;
         $this->getDefaultSourceSelectionAlgorithmCode = $getDefaultSourceSelectionAlgorithmCode;
         $this->sourceSelectionService = $sourceSelectionService;
+        $this->serializer = $serializer;
     }
 
     /**
@@ -115,8 +122,10 @@ class ItemRepositoryPlugin
             $extensionAttributes = $this->orderItemExtensionFactory->create();
         }
 
-        $extensionAttributes->setSourceCode(
-            $this->getOrderSourceCode($orderItem->getOrder(), $allItems)
+        $extensionAttributes->setSources(
+            $this->serializer->serialize(
+                $this->getOrderItemSources($orderItem, $allItems)
+            )
         );
 
         $orderItem->setExtensionAttributes($extensionAttributes);
@@ -125,28 +134,45 @@ class ItemRepositoryPlugin
     }
 
     /**
-     * @TODO what happens if there's more than one source?
-     *
-     * @param OrderInterface $order
+     * @param OrderItemInterface $orderItem
      * @param array $allItems
-     * @return string|null
+     * @return array
      */
-    private function getOrderSourceCode(OrderInterface $order, array $allItems): ?string
+    private function getOrderItemSources(OrderItemInterface $orderItem, array $allItems): array
     {
-        $orderId = $order->getId();
-        if (array_key_exists($orderId, $this->sourceCodeByOrderId)) {
-            return $this->sourceCodeByOrderId[$orderId];
+        if ($this->sourceSelectionItems === null) {
+            $inventoryRequest = $this->getInventoryRequestFromOrder->execute(
+                $orderItem->getOrder(),
+                $this->sourceSelectionResult->getSelectionRequestItems($allItems)
+            );
+
+            $selectionAlgorithmCode = $this->getDefaultSourceSelectionAlgorithmCode->execute();
+            $sourceSelectionResult = $this->sourceSelectionService->execute($inventoryRequest, $selectionAlgorithmCode);
+
+            $this->sourceSelectionItems = $sourceSelectionResult->getSourceSelectionItems();
         }
 
-        $inventoryRequest = $this->getInventoryRequestFromOrder->execute(
-            $order,
-            $this->sourceSelectionResult->getSelectionRequestItems($allItems)
-        );
+        return $this->getItemSources($orderItem);
+    }
 
-        $selectionAlgorithmCode = $this->getDefaultSourceSelectionAlgorithmCode->execute();
-        $sourceSelectionResult = $this->sourceSelectionService->execute($inventoryRequest, $selectionAlgorithmCode);
+    /**
+     * @param OrderItemInterface $orderItem
+     * @return array
+     */
+    private function getItemSources(OrderItemInterface $orderItem): array
+    {
+        $sources = [];
 
-        $sourceSelectionItems = $sourceSelectionResult->getSourceSelectionItems();
-        return $this->sourceCodeByOrderId[$orderId] = !empty($sourceSelectionItems) ? $sourceSelectionItems[0]->getSourceCode() : null;
+        foreach ($this->sourceSelectionItems as $item) {
+            if ($item->getSku() === $orderItem->getSku()) {
+                $sources[] =
+                    [
+                        'source_code' => $item->getSourceCode(),
+                        'qty' => $item->getQtyToDeduct()
+                    ];
+            }
+        }
+
+        return $sources;
     }
 }
