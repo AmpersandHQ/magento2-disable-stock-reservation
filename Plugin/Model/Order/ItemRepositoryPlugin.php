@@ -124,20 +124,10 @@ class ItemRepositoryPlugin
             $extensionAttributes = $this->orderItemExtensionFactory->create();
         }
 
-        $sources = [];
-        $selectionItem = $this->getOrderItemSources($orderItem, $allItems);
-
-        foreach ($selectionItem as $item) {
-            $sources[] = [
-                'source_code' => $item->getSourceCode(),
-                'qty' => $item->getQtyToDeduct()
-            ];
-        }
-
         $extensionAttributes->setSources(
-            $this->serializer->serialize(
-                $sources
-            )
+
+            $this->getOrderItemSources($orderItem, $allItems)
+
         );
 
         $orderItem->setExtensionAttributes($extensionAttributes);
