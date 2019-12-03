@@ -12,6 +12,7 @@ use Ampersand\DisableStockReservation\Model\GetInventoryRequestFromOrder;
 use Magento\InventorySourceSelectionApi\Api\GetDefaultSourceSelectionAlgorithmCodeInterface;
 use Magento\InventorySourceSelectionApi\Api\SourceSelectionServiceInterface;
 use Magento\Framework\Serialize\SerializerInterface;
+use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionItemInterface;
 
 /**
  * Class ItemRepositoryPlugin
@@ -49,7 +50,7 @@ class ItemRepositoryPlugin
      *
      * @var array
      */
-    private $sourceSelectionItems;
+    private $sourceSelectionItems = [];
 
     /**
      * @var SerializerInterface
@@ -91,7 +92,7 @@ class ItemRepositoryPlugin
      */
     public function afterGet(ItemRepository $subject, OrderItemInterface $result)
     {
-        return $this->applyExtensionAttributesToOrderItem($result, $result);
+        return $this->applyExtensionAttributesToOrderItem($result, [$result]);
     }
 
     /**
@@ -123,9 +124,19 @@ class ItemRepositoryPlugin
             $extensionAttributes = $this->orderItemExtensionFactory->create();
         }
 
+        $sources = [];
+        $selectionItem = $this->getOrderItemSources($orderItem, $allItems);
+
+        foreach ($selectionItem as $item) {
+            $sources[] = [
+                'source_code' => $item->getSourceCode(),
+                'qty' => $item->getQtyToDeduct()
+            ];
+        }
+
         $extensionAttributes->setSources(
             $this->serializer->serialize(
-                $this->getOrderItemSources($orderItem, $allItems)
+                $sources
             )
         );
 
@@ -141,39 +152,32 @@ class ItemRepositoryPlugin
      */
     private function getOrderItemSources(OrderItemInterface $orderItem, array $allItems): array
     {
-        if ($this->sourceSelectionItems === null) {
-            $inventoryRequest = $this->getInventoryRequestFromOrder->execute(
-                $orderItem->getOrder(),
-                $this->sourceSelectionResult->getSelectionRequestItems($allItems)
-            );
-
-            $selectionAlgorithmCode = $this->getDefaultSourceSelectionAlgorithmCode->execute();
-            $sourceSelectionResult = $this->sourceSelectionService->execute($inventoryRequest, $selectionAlgorithmCode);
-
-            $this->sourceSelectionItems = $sourceSelectionResult->getSourceSelectionItems();
+        $orderItemSku = $orderItem->getSku();
+        if (array_key_exists($orderItemSku, $this->sourceSelectionItems)) {
+            return $this->sourceSelectionItems[$orderItemSku];
         }
 
-        return $this->getItemSources($orderItem);
-    }
+        $inventoryRequest = $this->getInventoryRequestFromOrder->execute(
+            $orderItem->getOrder(),
+            $this->sourceSelectionResult->getSelectionRequestItems($allItems)
+        );
 
-    /**
-     * @param OrderItemInterface $orderItem
-     * @return array
-     */
-    private function getItemSources(OrderItemInterface $orderItem): array
-    {
-        $sources = [];
+        $selectionAlgorithmCode = $this->getDefaultSourceSelectionAlgorithmCode->execute();
+        $sourceSelectionResult = $this->sourceSelectionService->execute($inventoryRequest, $selectionAlgorithmCode);
 
-        foreach ($this->sourceSelectionItems as $item) {
-            if ($item->getSku() === $orderItem->getSku()) {
-                $sources[] =
-                    [
-                        'source_code' => $item->getSourceCode(),
-                        'qty' => $item->getQtyToDeduct()
-                    ];
-            }
-        }
+        $this->sourceSelectionItems = array_reduce(
+            $sourceSelectionResult->getSourceSelectionItems(),
+            function (array $indexedArray, SourceSelectionItemInterface $selectionItem) {
+                $indexedArray[$selectionItem->getSku()] =
+                    array_merge(
+                        $indexedArray[$selectionItem->getSku()] ?? [], [$selectionItem]
+                    );
 
-        return $sources;
+                return $indexedArray;
+            },
+            []
+        );
+
+        return $this->sourceSelectionItems[$orderItemSku];
     }
 }
