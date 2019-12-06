@@ -6,10 +6,4 @@
         <plugin name="disable_place_reservations"
                 type="Ampersand\DisableStockReservation\Plugin\PlaceReservationsForSalesEventPlugin"/>
     </type>
-
-    <type name="Magento\Sales\Model\Order\ItemRepository">
-        <plugin name="add_sources_attribute_to_order_items"
-                type="Ampersand\DisableStockReservation\Plugin\Model\Order\ItemRepositoryPlugin"
-                sortOrder="2"/>
-    </type>
 </config>

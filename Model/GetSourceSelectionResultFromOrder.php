@@ -85,7 +85,7 @@ class GetSourceSelectionResultFromOrder
      * @param OrderItemInterface[]|Traversable $orderItems
      * @return array
      */
-    public function getSelectionRequestItems(iterable $orderItems): array
+    private function getSelectionRequestItems(iterable $orderItems): array
     {
         $selectionRequestItems = [];
         foreach ($orderItems as $orderItem) {
