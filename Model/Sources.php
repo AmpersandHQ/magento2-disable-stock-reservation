@@ -4,7 +4,6 @@ namespace Ampersand\DisableStockReservation\Model;
 
 use Magento\Framework\Model\AbstractModel;
 
-
 /**
  * Class Sources
  * @package Ampersand\DisableStockReservation\Model
