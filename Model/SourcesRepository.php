@@ -90,12 +90,6 @@ class SourcesRepository
             'order_id'
         );
 
-//        $x = $this->dataObjectHelper->populateWithArray(
-//            $this->sourceSelectionResultInterface,
-//            $this->serializer->unserialize($sourcesModel->getSources()),
-//            \Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterface::class
-//        );
-
         return $sourcesModel;
     }
 

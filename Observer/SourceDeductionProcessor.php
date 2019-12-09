@@ -120,7 +120,7 @@ class SourceDeductionProcessor implements ObserverInterface
         );
 
         $order->setExtensionAttributes($extensionAttributes);
-        
+
         $this->sourceRepository->save($sourcesItems, $order->getId());
 
         /** @var SalesEventInterface $salesEvent */
