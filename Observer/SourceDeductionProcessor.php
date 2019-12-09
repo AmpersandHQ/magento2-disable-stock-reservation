@@ -15,7 +15,7 @@ use Magento\InventorySalesApi\Api\Data\ItemToSellInterfaceFactory;
 use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
 use Ampersand\DisableStockReservation\Model\SourcesFactory;
 use Ampersand\DisableStockReservation\Model\ResourceModel\Sources;
-use Magento\Framework\Serialize\SerializerInterface;
+use Ampersand\DisableStockReservation\Model\SourcesRepository;
 
 class SourceDeductionProcessor implements ObserverInterface
 {
@@ -60,9 +60,9 @@ class SourceDeductionProcessor implements ObserverInterface
     protected $sourcesResourceModel;
 
     /**
-     * @var SerializerInterface
+     * @var SourcesRepository
      */
-    private $serializer;
+    private $sourceRepository;
 
     /**
      * @param GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder
@@ -73,7 +73,7 @@ class SourceDeductionProcessor implements ObserverInterface
      * @param PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent
      * @param SourcesFactory $sourcesFactory
      * @param Sources $sourcesResourceModel
-     * @param SerializerInterface $serializer
+     * @param SourcesRepository $sourceRepository
      */
     public function __construct(
         GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder,
@@ -84,7 +84,7 @@ class SourceDeductionProcessor implements ObserverInterface
         PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent,
         SourcesFactory $sourcesFactory,
         Sources $sourcesResourceModel,
-        SerializerInterface $serializer
+        SourcesRepository $sourceRepository
     ) {
         $this->getSourceSelectionResultFromOrder = $getSourceSelectionResultFromOrder;
         $this->sourceDeductionService = $sourceDeductionService;
@@ -94,7 +94,7 @@ class SourceDeductionProcessor implements ObserverInterface
         $this->placeReservationsForSalesEvent = $placeReservationsForSalesEvent;
         $this->sourcesFactory = $sourcesFactory;
         $this->sourcesResourceModel = $sourcesResourceModel;
-        $this->serializer = $serializer;
+        $this->sourceRepository = $sourceRepository;
     }
 
     /**
@@ -120,32 +120,8 @@ class SourceDeductionProcessor implements ObserverInterface
         );
 
         $order->setExtensionAttributes($extensionAttributes);
-
-        $sources = [];
-        foreach ($sourcesItems as $item) {
-            $sources[] = [
-                'source_code' => $item->getSourceCode(),
-                'SKU' => $item->getSku(),
-                'qty_to_deduct' => $item->getQtyToDeduct(),
-                'qty_available' => $item->getQtyAvailable()
-            ];
-        }
-
-        $model = $this->sourcesFactory->create();
-        $this->sourcesResourceModel->load($model, $orderId = $order->getId(), 'order_id');
-
-        if (!$model->getId()) {
-            $model->addData(
-                [
-                    'order_id' => $orderId,
-                    'sources' => $this->serializer->serialize($sources)
-                ]
-            );
-        } else {
-            $model->setData('sources', $this->serializer->serialize($sources));
-        }
-
-        $this->sourcesResourceModel->save($model);
+        
+        $this->sourceRepository->save($sourcesItems, $order->getId());
 
         /** @var SalesEventInterface $salesEvent */
         $salesEvent = $this->salesEventFactory->create([
