@@ -7,10 +7,9 @@ use Magento\Framework\Exception\CouldNotSaveException;
 use Ampersand\DisableStockReservation\Model\SourcesFactory;
 use Ampersand\DisableStockReservation\Model\ResourceModel\Sources;
 use Ampersand\DisableStockReservation\Model\Sources as SourceModel;
-use Magento\Framework\Serialize\SerializerInterface;
 use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterfaceFactory;
 use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterface;
-use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionItemInterfaceFactory;
+use Ampersand\DisableStockReservation\Service\SourcesConverter;
 
 /**
  * Class SourcesRepository
@@ -29,48 +28,32 @@ class SourcesRepository
     protected $sourcesResourceModel;
 
     /**
-     * @var SerializerInterface
-     */
-    private $serializer;
-
-    /**
-     * @var \Magento\Framework\Api\DataObjectHelper
-     */
-    protected $dataObjectHelper;
-
-    /**
      * @var SourceSelectionResultInterfaceFactory
      */
     private $sourceSelectionResultFactory;
 
     /**
-     * @var SourceSelectionItemInterfaceFactory
+     * @var SourcesConverter
      */
-    private $sourceSelectionItemInterface;
+    private $sourcesConverter;
 
     /**
      * SourcesRepository constructor.
      * @param SourcesFactory $sourcesFactory
      * @param Sources $sourcesResourceModel
-     * @param SerializerInterface $serializer
      * @param SourceSelectionResultInterfaceFactory $sourceSelectionResultFactory
-     * @param SourceSelectionItemInterfaceFactory $sourceSelectionItemInterface
+     * @param SourcesConverter $sourcesConverter
      */
     public function __construct(
         SourcesFactory $sourcesFactory,
         Sources $sourcesResourceModel,
-        SerializerInterface $serializer,
-        \Magento\Framework\Api\DataObjectHelper $dataObjectHelper,
         SourceSelectionResultInterfaceFactory $sourceSelectionResultFactory,
-        SourceSelectionItemInterfaceFactory $sourceSelectionItemInterface
+        SourcesConverter $sourcesConverter
     ) {
         $this->sourcesFactory = $sourcesFactory;
         $this->sourcesResourceModel = $sourcesResourceModel;
-        $this->serializer = $serializer;
-        $this->dataObjectHelper = $dataObjectHelper;
         $this->sourceSelectionResultFactory = $sourceSelectionResultFactory;
-        $this->sourceSelectionItemInterface = $sourceSelectionItemInterface;
-
+        $this->sourcesConverter = $sourcesConverter;
     }
 
     /**
@@ -84,11 +67,15 @@ class SourcesRepository
         /** @var SourceModel $sourcesModel */
         $sourcesModel = $this->sourcesFactory->create();
 
-        $this->sourcesResourceModel->load(
-            $sourcesModel,
-            $orderId,
-            'order_id'
-        );
+        try {
+            $this->sourcesResourceModel->load(
+                $sourcesModel,
+                $orderId,
+                'order_id'
+            );
+        } catch (\Exception $exception) {
+            throw new NoSuchEntityException(__($exception->getMessage()));
+        }
 
         return $sourcesModel;
     }
@@ -101,37 +88,14 @@ class SourcesRepository
     public function getSourceSelectionResultByOrderId(string $orderId): SourceSelectionResultInterface
     {
         /** @var SourceModel $sourcesModel */
-        $sourcesModel = $this->sourcesFactory->create();
+        $sourcesModel = $this->getByOrderId($orderId);
+        $sourceSelectionItems = $this->sourcesConverter
+            ->convertSourcesArrayToSourceSelectionItems($sourcesModel->getSources());
 
-        $this->sourcesResourceModel->load(
-            $sourcesModel,
-            $orderId,
-            'order_id'
-        );
-
-        $sourcesArray = $this->serializer->unserialize($sourcesModel->getSources());
-        $sourceSelectionItems = [];
-
-        foreach ($sourcesArray as $item)
-        {
-            $sourceSelectionItem = $this->sourceSelectionItemInterface->create(
-                [
-                    'sourceCode' => $item['source_code'],
-                    'sku' => $item['SKU'],
-                    'qtyToDeduct' => $item['qty_to_deduct'],
-                    'qtyAvailable' => $item['qty_available']
-                ]
-            );
-
-        $sourceSelectionItems[] = $sourceSelectionItem;
-        }
-
-        $sourceSelectionResult = $this->sourceSelectionResultFactory->create(
-            [
-                'sourceItemSelections' => $sourceSelectionItems,
-                'isShippable' => true
-            ]
-        );
+        $sourceSelectionResult = $this->sourceSelectionResultFactory->create([
+            'sourceItemSelections' => $sourceSelectionItems,
+            'isShippable' => true
+        ]);
 
         return $sourceSelectionResult;
     }
@@ -145,27 +109,11 @@ class SourcesRepository
      */
     public function save(array $sourcesItems, string $orderId): SourceModel
     {
-        $sources = [];
-        foreach ($sourcesItems as $item) {
-            $sources[] = [
-                'source_code' => $item->getSourceCode(),
-                'SKU' => $item->getSku(),
-                'qty_to_deduct' => $item->getQtyToDeduct(),
-                'qty_available' => $item->getQtyAvailable()
-            ];
-        }
-
         $model = $this->getByOrderId($orderId);
-        if (!$model->getId()) {
-            $model->addData(
-                [
-                    'order_id' => $orderId,
-                    'sources' => $this->serializer->serialize($sources)
-                ]
-            );
-        } else {
-            $model->setData('sources', $this->serializer = $this->serializer->serialize($sources));
-        }
+        $model->setOrderId($orderId);
+        $model->setSources(
+            $this->sourcesConverter->convertSourceSelectionItemsToSourcesArray($sourcesItems)
+        );
 
         try {
             $this->sourcesResourceModel->save($model);
