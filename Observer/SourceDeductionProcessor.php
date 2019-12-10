@@ -15,6 +15,7 @@ use Magento\InventorySalesApi\Api\Data\ItemToSellInterfaceFactory;
 use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
 use Ampersand\DisableStockReservation\Model\SourcesRepository;
 use Magento\Sales\Api\Data\OrderExtensionFactory;
+use Ampersand\DisableStockReservation\Service\SourcesConverter;
 
 class SourceDeductionProcessor implements ObserverInterface
 {
@@ -59,15 +60,20 @@ class SourceDeductionProcessor implements ObserverInterface
     private $orderExtensionFactory;
 
     /**
+     * @var SourcesConverter
+     */
+    private $sourcesConverter;
+
+    /**
      * @param GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder
      * @param SourceDeductionServiceInterface $sourceDeductionService
      * @param SourceDeductionRequestsFromSourceSelectionFactory $sourceDeductionRequestsFromSourceSelectionFactory
      * @param SalesEventInterfaceFactory $salesEventFactory
      * @param ItemToSellInterfaceFactory $itemToSellFactory
      * @param PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent
-     * @param Sources $sourcesResourceModel
      * @param SourcesRepository $sourceRepository
      * @param OrderExtensionFactory $orderExtensionFactory
+     * @param SourcesConverter $sourcesConverter
      */
     public function __construct(
         GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder,
@@ -77,7 +83,8 @@ class SourceDeductionProcessor implements ObserverInterface
         ItemToSellInterfaceFactory $itemToSellFactory,
         PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent,
         SourcesRepository $sourceRepository,
-        OrderExtensionFactory $orderExtensionFactory
+        OrderExtensionFactory $orderExtensionFactory,
+        SourcesConverter $sourcesConverter
     ) {
         $this->getSourceSelectionResultFromOrder = $getSourceSelectionResultFromOrder;
         $this->sourceDeductionService = $sourceDeductionService;
@@ -87,6 +94,7 @@ class SourceDeductionProcessor implements ObserverInterface
         $this->placeReservationsForSalesEvent = $placeReservationsForSalesEvent;
         $this->sourceRepository = $sourceRepository;
         $this->orderExtensionFactory = $orderExtensionFactory;
+        $this->sourcesConverter = $sourcesConverter;
     }
 
     /**
@@ -97,22 +105,18 @@ class SourceDeductionProcessor implements ObserverInterface
     {
         /** @var \Magento\Sales\Model\Order $order */
         $order = $observer->getEvent()->getOrder();
-        if ($order->getOrigData('entity_id')) {
+        if ($orderId = $order->getOrigData('entity_id')) {
             return;
         }
 
         $sourceSelectionResult = $this->getSourceSelectionResultFromOrder->execute($order);
 
-        if (!$extensionAttributes = $order->getExtensionAttributes()) {
-            $extensionAttributes = $this->orderExtensionFactory->create();
-        }
-
-        $extensionAttributes->setSources(
-            $sourcesItems = $sourceSelectionResult->getSourceSelectionItems()
+        $sourceModel = $this->sourceRepository->getByOrderId($orderId);
+        $sourceModel->setOrderId($orderId);
+        $sourceModel->setSources(
+            $this->sourcesConverter->convertSourceSelectionItemsToSourcesArray($sourceSelectionResult->getSourceSelectionItems())
         );
-
-        $order->setExtensionAttributes($extensionAttributes);
-        $this->sourceRepository->save($sourceSelectionResult->getSourceSelectionItems(), $order->getId());
+        $this->sourceRepository->save($sourceModel);
 
         /** @var SalesEventInterface $salesEvent */
         $salesEvent = $this->salesEventFactory->create([

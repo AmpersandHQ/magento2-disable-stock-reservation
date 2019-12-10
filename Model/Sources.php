@@ -11,27 +11,44 @@ use Ampersand\DisableStockReservation\Api\Data\SourcesInterface;
  */
 class Sources extends AbstractModel implements SourcesInterface
 {
+    /**
+     *
+     */
     public function _construct()
     {
         $this->_init(\Ampersand\DisableStockReservation\Model\ResourceModel\Sources::class);
     }
 
-    public function getSources()
+    /**
+     * @return null|string
+     */
+    public function getSources(): ?string
     {
         return $this->getData('sources');
     }
 
-    public function setSources($sources)
+    /**
+     * @param string $sources
+     * @return SourcesInterface
+     */
+    public function setSources(string $sources): SourcesInterface
     {
         return $this->setData('sources', $sources);
     }
 
-    public function getOrderId()
+    /**
+     * @return int|null
+     */
+    public function getOrderId(): ?int
     {
         return $this->getData('order_id');
     }
 
-    public function setOrderId($id)
+    /**
+     * @param int $id
+     * @return SourcesInterface
+     */
+    public function setOrderId($id): SourcesInterface
     {
         return $this->setData('order_id', $id);
     }

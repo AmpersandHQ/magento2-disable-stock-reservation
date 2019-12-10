@@ -9,24 +9,24 @@ namespace Ampersand\DisableStockReservation\Api\Data;
 interface SourcesInterface
 {
     /**
-     * @return array|null
+     * @return string|null
      */
-    public function getSources();
+    public function getSources(): ?string;
 
     /**
-     * @param array $source
-     * @return $this
+     * @param string $sources
+     * @return SourcesInterface $this
      */
-    public function setSources($source);
+    public function setSources(string $sources): SourcesInterface;
 
     /**
      * @return int|null
      */
-    public function getOrderId();
+    public function getOrderId(): ?int;
 
     /**
      * @param int $id
-     * @return $this
+     * @return SourcesInterface $this
      */
-    public function setOrderId($id);
+    public function setOrderId($id): SourcesInterface;
 }

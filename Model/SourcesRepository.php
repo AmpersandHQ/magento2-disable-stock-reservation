@@ -10,6 +10,7 @@ use Ampersand\DisableStockReservation\Model\Sources as SourceModel;
 use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterfaceFactory;
 use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterface;
 use Ampersand\DisableStockReservation\Service\SourcesConverter;
+use Ampersand\DisableStockReservation\Model\ResourceModel\Sources\CollectionFactory;
 
 /**
  * Class SourcesRepository
@@ -38,22 +39,30 @@ class SourcesRepository
     private $sourcesConverter;
 
     /**
+     * @var CollectionFactory
+     */
+    private $collectionFactory;
+
+    /**
      * SourcesRepository constructor.
      * @param SourcesFactory $sourcesFactory
      * @param Sources $sourcesResourceModel
      * @param SourceSelectionResultInterfaceFactory $sourceSelectionResultFactory
      * @param SourcesConverter $sourcesConverter
+     * @param CollectionFactory $collectionFactory
      */
     public function __construct(
         SourcesFactory $sourcesFactory,
         Sources $sourcesResourceModel,
         SourceSelectionResultInterfaceFactory $sourceSelectionResultFactory,
-        SourcesConverter $sourcesConverter
+        SourcesConverter $sourcesConverter,
+        CollectionFactory $collectionFactory
     ) {
         $this->sourcesFactory = $sourcesFactory;
         $this->sourcesResourceModel = $sourcesResourceModel;
         $this->sourceSelectionResultFactory = $sourceSelectionResultFactory;
         $this->sourcesConverter = $sourcesConverter;
+        $this->collectionFactory = $collectionFactory;
     }
 
     /**
@@ -66,13 +75,14 @@ class SourcesRepository
     {
         /** @var SourceModel $sourcesModel */
         $sourcesModel = $this->sourcesFactory->create();
+        $this->sourcesResourceModel->load(
+            $sourcesModel,
+            $orderId,
+            'order_id'
+        );
 
         try {
-            $this->sourcesResourceModel->load(
-                $sourcesModel,
-                $orderId,
-                'order_id'
-            );
+            $sourcesModel->getId();
         } catch (\Exception $exception) {
             throw new NoSuchEntityException(__($exception->getMessage()));
         }
@@ -81,14 +91,27 @@ class SourcesRepository
     }
 
     /**
+     * @return Sources\Collection
+     */
+    public function getOrdersSourcesCollection()
+    {
+        return $this->collectionFactory->create();
+    }
+
+    /**
      * @param string $orderId
      *
-     * @return SourceSelectionResultInterface
+     * @return SourceSelectionResultInterface|null
      */
-    public function getSourceSelectionResultByOrderId(string $orderId): SourceSelectionResultInterface
+    public function getSourceSelectionResultByOrderId(string $orderId): ?SourceSelectionResultInterface
     {
         /** @var SourceModel $sourcesModel */
         $sourcesModel = $this->getByOrderId($orderId);
+
+        if (!$sourcesModel->getId()) {
+            return null;
+        }
+
         $sourceSelectionItems = $this->sourcesConverter
             ->convertSourcesArrayToSourceSelectionItems($sourcesModel->getSources());
 
@@ -101,20 +124,13 @@ class SourcesRepository
     }
 
     /**
-     * @param array $sourcesItems
-     * @param string $orderId
+     * @param SourceModel $model
      *
      * @return SourceModel
      * @throws CouldNotSaveException
      */
-    public function save(array $sourcesItems, string $orderId): SourceModel
+    public function save(SourceModel $model): SourceModel
     {
-        $model = $this->getByOrderId($orderId);
-        $model->setOrderId($orderId);
-        $model->setSources(
-            $this->sourcesConverter->convertSourceSelectionItemsToSourcesArray($sourcesItems)
-        );
-
         try {
             $this->sourcesResourceModel->save($model);
         } catch (\Exception $exception) {
