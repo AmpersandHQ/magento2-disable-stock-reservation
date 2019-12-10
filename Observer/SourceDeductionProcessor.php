@@ -105,13 +105,13 @@ class SourceDeductionProcessor implements ObserverInterface
     {
         /** @var \Magento\Sales\Model\Order $order */
         $order = $observer->getEvent()->getOrder();
-        if ($orderId = $order->getOrigData('entity_id')) {
+        if ($order->getOrigData('entity_id')) {
             return;
         }
 
         $sourceSelectionResult = $this->getSourceSelectionResultFromOrder->execute($order);
 
-        $sourceModel = $this->sourceRepository->getByOrderId($orderId);
+        $sourceModel = $this->sourceRepository->getByOrderId($orderId = $order->getEntityId());
         $sourceModel->setOrderId($orderId);
         $sourceModel->setSources(
             $this->sourcesConverter->convertSourceSelectionItemsToSourcesArray($sourceSelectionResult->getSourceSelectionItems())
