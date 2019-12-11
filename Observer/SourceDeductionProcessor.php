@@ -123,7 +123,7 @@ class SourceDeductionProcessor implements ObserverInterface
         $sourceModel = $this->sourcesFactory->create();
         $sourceModel->setOrderId($order->getEntityId());
         $sourceModel->setSources(
-            $this->sourcesConverter->convertSourceSelectionItemsToSourcesArray($sourceSelectionResult->getSourceSelectionItems())
+            $this->sourcesConverter->convertSourceSelectionItemsToJson($sourceSelectionResult->getSourceSelectionItems())
         );
         $this->sourceRepository->save($sourceModel);
 

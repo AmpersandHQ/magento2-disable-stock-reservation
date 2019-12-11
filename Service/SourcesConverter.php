@@ -38,7 +38,7 @@ class SourcesConverter
      * @param array $sourcesItems
      * @return string
      */
-    public function convertSourceSelectionItemsToSourcesArray(array $sourcesItems): string
+    public function convertSourceSelectionItemsToJson(array $sourcesItems): string
     {
         $sources = [];
         foreach ($sourcesItems as $item) {
@@ -57,7 +57,7 @@ class SourcesConverter
      * @param string $sources
      * @return array
      */
-    public function convertSourcesArrayToSourceSelectionItems(string $sources): array
+    public function convertSourcesJsonToSourceSelectionItems(string $sources): array
     {
         $sourcesArray = $this->serializer->unserialize($sources);
         $sourceSelectionItems = [];

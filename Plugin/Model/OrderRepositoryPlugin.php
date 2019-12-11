@@ -8,7 +8,9 @@ use Magento\Sales\Api\Data\OrderSearchResultInterface;
 use Magento\Sales\Api\Data\OrderExtensionFactory;
 use Ampersand\DisableStockReservation\Model\SourcesRepository;
 use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterfaceFactory;
-use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterface;
+use Ampersand\DisableStockReservation\Model\Sources as SourceModel;
+use Ampersand\DisableStockReservation\Service\SourcesConverter;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 /**
  * Class OrderRepositoryPlugin
@@ -32,19 +34,27 @@ class OrderRepositoryPlugin
     private $sourceSelectionResultInterfaceFactory;
 
     /**
+     * @var SourcesConverter
+     */
+    private $sourcesConverter;
+
+    /**
      * OrderRepositoryPlugin constructor.
      * @param SourcesRepository $sourcesRepository
      * @param OrderExtensionFactory $orderExtensionFactory
      * @param SourceSelectionResultInterfaceFactory $sourceSelectionResultInterfaceFactory
+     * @param SourcesConverter $sourcesConverter
      */
     public function __construct(
         SourcesRepository $sourcesRepository,
         OrderExtensionFactory $orderExtensionFactory,
-        SourceSelectionResultInterfaceFactory $sourceSelectionResultInterfaceFactory
+        SourceSelectionResultInterfaceFactory $sourceSelectionResultInterfaceFactory,
+        SourcesConverter $sourcesConverter
     ) {
         $this->sourcesRepository = $sourcesRepository;
         $this->orderExtensionFactory = $orderExtensionFactory;
         $this->sourceSelectionResultInterfaceFactory = $sourceSelectionResultInterfaceFactory;
+        $this->sourcesConverter = $sourcesConverter;
     }
 
     /**
@@ -54,7 +64,7 @@ class OrderRepositoryPlugin
      */
     public function afterGet(OrderRepository $subject, OrderInterface $result): OrderInterface
     {
-        return $this->applyExtensionAttributesToOrder($result, null);
+        return $this->applyExtensionAttributesToOrder($result);
     }
 
     /**
@@ -64,15 +74,31 @@ class OrderRepositoryPlugin
      */
     public function afterGetList(OrderRepository $subject, OrderSearchResultInterface $result): OrderSearchResultInterface
     {
-        $sourcesCollection = $this->sourcesRepository->getOrdersSourcesCollection($result);
+        $resultIds = [];
+        foreach ($result as $resultItem) {
+            $resultIds[] = $resultItem->getEntityId();
+        }
+
+        $orderListSources = $this->sourcesRepository->getOrderListSources($resultIds);
+
+        $orderSources = [];
+        foreach ($orderListSources as $item) {
+            $orderSources[$item->getOrderId()] = $this->sourcesConverter
+                ->convertSourcesJsonToSourceSelectionItems($item->getSources());
+        }
 
         foreach ($result->getItems() as $item) {
-            $sourceSelectionResult = $this->sourceSelectionResultInterfaceFactory->create([
-                'sourceItemSelections' => $sourcesCollection[$item->getEntityId()],
-                'isShippable' => true
-            ]);
+            if (array_key_exists($orderId = $item->getEntityId(), $orderSources)) {
+                if (!$extensionAttributes = $item->getExtensionAttributes()) {
+                    $extensionAttributes = $this->orderExtensionFactory->create();
+                }
 
-            $this->applyExtensionAttributesToOrder($item, $sourceSelectionResult);
+                $extensionAttributes->setSources(
+                    $orderSources[$orderId]
+                );
+
+                $item->setExtensionAttributes($extensionAttributes);
+            }
         }
 
         return $result;
@@ -80,27 +106,28 @@ class OrderRepositoryPlugin
 
     /**
      * @param OrderInterface $order
-     * @param SourceSelectionResultInterface|null $sourceSelectionResult
      * @return OrderInterface
      */
-    private function applyExtensionAttributesToOrder(
-        OrderInterface $order,
-        SourceSelectionResultInterface $sourceSelectionResult = null
-    ): OrderInterface
+    private function applyExtensionAttributesToOrder(OrderInterface $order): OrderInterface
     {
-        if ($sourceSelectionResult === null) {
-            $sourceSelectionResult = $this->sourcesRepository->getSourceSelectionResultByOrderId($order->getEntityId());
+        try {
+            /** @var SourceModel $sourcesModel */
+            $sourcesModel = $this->sourcesRepository->getByOrderId($order->getEntityId());
+
+            $sourceSelectionItems = $this->sourcesConverter
+                ->convertSourcesJsonToSourceSelectionItems($sourcesModel->getSources());
+
+            if (!$extensionAttributes = $order->getExtensionAttributes()) {
+                $extensionAttributes = $this->orderExtensionFactory->create();
+            }
+
+            $extensionAttributes->setSources(
+                $sourceSelectionItems
+            );
+
+            $order->setExtensionAttributes($extensionAttributes);
+        } catch (NoSuchEntityException $exception) {
         }
-
-        if (!$extensionAttributes = $order->getExtensionAttributes()) {
-            $extensionAttributes = $this->orderExtensionFactory->create();
-        }
-
-        $extensionAttributes->setSources(
-            $sourcesItems = $sourceSelectionResult ? $sourceSelectionResult->getSourceSelectionItems() : null
-        );
-
-        $order->setExtensionAttributes($extensionAttributes);
 
         return $order;
     }

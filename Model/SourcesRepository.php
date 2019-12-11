@@ -7,11 +7,7 @@ use Magento\Framework\Exception\CouldNotSaveException;
 use Ampersand\DisableStockReservation\Model\SourcesFactory;
 use Ampersand\DisableStockReservation\Model\ResourceModel\Sources;
 use Ampersand\DisableStockReservation\Model\Sources as SourceModel;
-use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterfaceFactory;
-use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterface;
-use Ampersand\DisableStockReservation\Service\SourcesConverter;
 use Ampersand\DisableStockReservation\Model\ResourceModel\Sources\CollectionFactory;
-use Magento\Sales\Api\Data\OrderSearchResultInterface;
 use Ampersand\DisableStockReservation\Api\Data\SourcesInterface;
 
 /**
@@ -31,16 +27,6 @@ class SourcesRepository
     protected $sourcesResourceModel;
 
     /**
-     * @var SourceSelectionResultInterfaceFactory
-     */
-    private $sourceSelectionResultFactory;
-
-    /**
-     * @var SourcesConverter
-     */
-    private $sourcesConverter;
-
-    /**
      * @var CollectionFactory
      */
     private $collectionFactory;
@@ -49,21 +35,15 @@ class SourcesRepository
      * SourcesRepository constructor.
      * @param SourcesFactory $sourcesFactory
      * @param Sources $sourcesResourceModel
-     * @param SourceSelectionResultInterfaceFactory $sourceSelectionResultFactory
-     * @param SourcesConverter $sourcesConverter
      * @param CollectionFactory $collectionFactory
      */
     public function __construct(
         SourcesFactory $sourcesFactory,
         Sources $sourcesResourceModel,
-        SourceSelectionResultInterfaceFactory $sourceSelectionResultFactory,
-        SourcesConverter $sourcesConverter,
         CollectionFactory $collectionFactory
     ) {
         $this->sourcesFactory = $sourcesFactory;
         $this->sourcesResourceModel = $sourcesResourceModel;
-        $this->sourceSelectionResultFactory = $sourceSelectionResultFactory;
-        $this->sourcesConverter = $sourcesConverter;
         $this->collectionFactory = $collectionFactory;
     }
 
@@ -90,49 +70,17 @@ class SourcesRepository
         return $sourcesModel;
     }
 
-    public function getOrdersSourcesCollection(OrderSearchResultInterface $result)
+    /**
+     * @param array $ordersIds
+     * @return array
+     */
+    public function getOrderListSources(array $ordersIds): array
     {
-        $resultIds = [];
-        foreach ($result as $resultItem) {
-            $resultIds [] = $resultItem->getEntityId();
-        }
-
         $ordersSourcesItems = $this->collectionFactory->create()
-            ->addFieldToFilter('order_id', ['in' => $resultIds])
+            ->addFieldToFilter('order_id', ['in' => $ordersIds])
             ->getItems();
 
-        $orderSources = [];
-        foreach ($ordersSourcesItems as $item) {
-            $orderSources[$item->getOrderId()] = $this->sourcesConverter->
-            convertSourcesArrayToSourceSelectionItems($item->getSources());
-        }
-
-        return $orderSources;
-    }
-
-    /**
-     * @param string $orderId
-     *
-     * @return SourceSelectionResultInterface|null
-     */
-    public function getSourceSelectionResultByOrderId(string $orderId): ?SourceSelectionResultInterface
-    {
-        try {
-            /** @var SourceModel $sourcesModel */
-            $sourcesModel = $this->getByOrderId($orderId);
-        } catch (NoSuchEntityException $exception) {
-            return null;
-        }
-
-        $sourceSelectionItems = $this->sourcesConverter
-            ->convertSourcesArrayToSourceSelectionItems($sourcesModel->getSources());
-
-        $sourceSelectionResult = $this->sourceSelectionResultFactory->create([
-            'sourceItemSelections' => $sourceSelectionItems,
-            'isShippable' => true
-        ]);
-
-        return $sourceSelectionResult;
+        return $ordersSourcesItems;
     }
 
     /**
