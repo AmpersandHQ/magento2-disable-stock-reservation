@@ -41,10 +41,10 @@ class SourcesRepository implements SourcesRepositoryInterface
     /**
      * @param string $orderId
      *
-     * @return SourceModel
+     * @return SourcesInterface
      * @throws \Exception
      */
-    public function getByOrderId(string $orderId): SourceModel
+    public function getByOrderId(string $orderId): SourcesInterface
     {
         /** @var SourceModel $sourcesModel */
         $sourcesModel = $this->sourcesFactory->create();

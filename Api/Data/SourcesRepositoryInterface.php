@@ -2,8 +2,6 @@
 
 namespace Ampersand\DisableStockReservation\Api\Data;
 
-use Ampersand\DisableStockReservation\Model\Sources;
-
 /**
  * Interface SourcesRepositoryInterface
  * @package Ampersand\DisableStockReservation\Api\Data
@@ -12,9 +10,9 @@ interface SourcesRepositoryInterface
 {
     /**
      * @param string $orderId
-     * @return Sources
+     * @return SourcesInterface
      */
-    public function getByOrderId(string $orderId): Sources;
+    public function getByOrderId(string $orderId): SourcesInterface;
 
     /**
      * @param SourcesInterface $model
