@@ -4,16 +4,16 @@ namespace Ampersand\DisableStockReservation\Model;
 
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\CouldNotSaveException;
-use Ampersand\DisableStockReservation\Model\SourcesFactory;
 use Ampersand\DisableStockReservation\Model\ResourceModel\Sources;
 use Ampersand\DisableStockReservation\Model\Sources as SourceModel;
 use Ampersand\DisableStockReservation\Api\Data\SourcesInterface;
+use Ampersand\DisableStockReservation\Api\Data\SourcesRepositoryInterface;
 
 /**
  * Class SourcesRepository
  * @package Ampersand\DisableStockReservation\Model
  */
-class SourcesRepository
+class SourcesRepository implements SourcesRepositoryInterface
 {
     /**
      * @var SourcesFactory

@@ -15,6 +15,9 @@
 
     <preference
             for="Ampersand\DisableStockReservation\Api\Data\SourcesInterface"
-            type="Ampersand\DisableStockReservation\Model\SourcesRepository" />
+            type="Ampersand\DisableStockReservation\Model\Sources" />
 
+    <preference
+            for="Ampersand\DisableStockReservation\Api\Data\SourcesRepositoryInterface"
+            type="Ampersand\DisableStockReservation\Model\SourcesRepository" />
 </config>
