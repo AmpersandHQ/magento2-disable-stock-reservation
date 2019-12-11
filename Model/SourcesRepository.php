@@ -7,7 +7,6 @@ use Magento\Framework\Exception\CouldNotSaveException;
 use Ampersand\DisableStockReservation\Model\SourcesFactory;
 use Ampersand\DisableStockReservation\Model\ResourceModel\Sources;
 use Ampersand\DisableStockReservation\Model\Sources as SourceModel;
-use Ampersand\DisableStockReservation\Model\ResourceModel\Sources\CollectionFactory;
 use Ampersand\DisableStockReservation\Api\Data\SourcesInterface;
 
 /**
@@ -25,11 +24,6 @@ class SourcesRepository
      * @var Sources
      */
     protected $sourcesResourceModel;
-
-    /**
-     * @var CollectionFactory
-     */
-    private $collectionFactory;
 
     /**
      * SourcesRepository constructor.
@@ -68,19 +62,6 @@ class SourcesRepository
         }
 
         return $sourcesModel;
-    }
-
-    /**
-     * @param array $ordersIds
-     * @return array
-     */
-    public function getOrderListSources(array $ordersIds): array
-    {
-        $ordersSourcesItems = $this->collectionFactory->create()
-            ->addFieldToFilter('order_id', ['in' => $ordersIds])
-            ->getItems();
-
-        return $ordersSourcesItems;
     }
 
     /**

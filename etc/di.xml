@@ -12,4 +12,9 @@
                 type="Ampersand\DisableStockReservation\Plugin\Model\OrderRepositoryPlugin"
                 sortOrder="2"/>
     </type>
+
+    <preference
+            for="Ampersand\DisableStockReservation\Api\Data\SourcesInterface"
+            type="Ampersand\DisableStockReservation\Model\SourcesRepository" />
+
 </config>

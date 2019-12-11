@@ -11,6 +11,7 @@ use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterfaceF
 use Ampersand\DisableStockReservation\Model\Sources as SourceModel;
 use Ampersand\DisableStockReservation\Service\SourcesConverter;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Ampersand\DisableStockReservation\Model\ResourceModel\Sources\CollectionFactory;
 
 /**
  * Class OrderRepositoryPlugin
@@ -39,22 +40,30 @@ class OrderRepositoryPlugin
     private $sourcesConverter;
 
     /**
+     * @var CollectionFactory
+     */
+    private $collectionFactory;
+
+    /**
      * OrderRepositoryPlugin constructor.
      * @param SourcesRepository $sourcesRepository
      * @param OrderExtensionFactory $orderExtensionFactory
      * @param SourceSelectionResultInterfaceFactory $sourceSelectionResultInterfaceFactory
      * @param SourcesConverter $sourcesConverter
+     * @param CollectionFactory $collectionFactory
      */
     public function __construct(
         SourcesRepository $sourcesRepository,
         OrderExtensionFactory $orderExtensionFactory,
         SourceSelectionResultInterfaceFactory $sourceSelectionResultInterfaceFactory,
-        SourcesConverter $sourcesConverter
+        SourcesConverter $sourcesConverter,
+        CollectionFactory $collectionFactory
     ) {
         $this->sourcesRepository = $sourcesRepository;
         $this->orderExtensionFactory = $orderExtensionFactory;
         $this->sourceSelectionResultInterfaceFactory = $sourceSelectionResultInterfaceFactory;
         $this->sourcesConverter = $sourcesConverter;
+        $this->collectionFactory = $collectionFactory;
     }
 
     /**
@@ -64,7 +73,18 @@ class OrderRepositoryPlugin
      */
     public function afterGet(OrderRepository $subject, OrderInterface $result): OrderInterface
     {
-        return $this->applyExtensionAttributesToOrder($result);
+        try {
+            /** @var SourceModel $sourcesModel */
+            $sourcesModel = $this->sourcesRepository->getByOrderId($result->getEntityId());
+
+            $sourceSelectionItems = $this->sourcesConverter
+                ->convertSourcesJsonToSourceSelectionItems($sourcesModel->getSources());
+
+            $this->applyExtensionAttributesToOrder($result, $sourceSelectionItems);
+        } catch (NoSuchEntityException $exception) {
+        }
+
+        return $result;
     }
 
     /**
@@ -79,7 +99,9 @@ class OrderRepositoryPlugin
             $resultIds[] = $resultItem->getEntityId();
         }
 
-        $orderListSources = $this->sourcesRepository->getOrderListSources($resultIds);
+        $orderListSources = $this->collectionFactory->create()
+            ->addFieldToFilter('order_id', ['in' => $resultIds])
+            ->getItems();
 
         $orderSources = [];
         foreach ($orderListSources as $item) {
@@ -89,15 +111,8 @@ class OrderRepositoryPlugin
 
         foreach ($result->getItems() as $item) {
             if (array_key_exists($orderId = $item->getEntityId(), $orderSources)) {
-                if (!$extensionAttributes = $item->getExtensionAttributes()) {
-                    $extensionAttributes = $this->orderExtensionFactory->create();
-                }
 
-                $extensionAttributes->setSources(
-                    $orderSources[$orderId]
-                );
-
-                $item->setExtensionAttributes($extensionAttributes);
+                $this->applyExtensionAttributesToOrder($item, $orderSources[$orderId]);
             }
         }
 
@@ -108,26 +123,17 @@ class OrderRepositoryPlugin
      * @param OrderInterface $order
      * @return OrderInterface
      */
-    private function applyExtensionAttributesToOrder(OrderInterface $order): OrderInterface
+    private function applyExtensionAttributesToOrder(OrderInterface $order, $sourceSelectionItems): OrderInterface
     {
-        try {
-            /** @var SourceModel $sourcesModel */
-            $sourcesModel = $this->sourcesRepository->getByOrderId($order->getEntityId());
-
-            $sourceSelectionItems = $this->sourcesConverter
-                ->convertSourcesJsonToSourceSelectionItems($sourcesModel->getSources());
-
-            if (!$extensionAttributes = $order->getExtensionAttributes()) {
-                $extensionAttributes = $this->orderExtensionFactory->create();
-            }
-
-            $extensionAttributes->setSources(
-                $sourceSelectionItems
-            );
-
-            $order->setExtensionAttributes($extensionAttributes);
-        } catch (NoSuchEntityException $exception) {
+        if (!$extensionAttributes = $order->getExtensionAttributes()) {
+            $extensionAttributes = $this->orderExtensionFactory->create();
         }
+
+        $extensionAttributes->setSources(
+            $sourceSelectionItems
+        );
+
+        $order->setExtensionAttributes($extensionAttributes);
 
         return $order;
     }
