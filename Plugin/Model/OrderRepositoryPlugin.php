@@ -100,7 +100,7 @@ class OrderRepositoryPlugin
         SourceSelectionResultInterface $sourceSelectionResult = null
     ): OrderInterface
     {
-        if (!$sourceSelectionResult) {
+        if (!$sourceSelectionResult || $sourceSelectionResult === null) {
             $sourceSelectionResult = $this->sourcesRepository->getSourceSelectionResultByOrderId($order->getEntityId());
         }
 
