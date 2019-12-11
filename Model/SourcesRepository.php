@@ -84,7 +84,7 @@ class SourcesRepository
         );
 
         if (!$sourcesModel->getId()) {
-            throw new NoSuchEntityException('Source model with the order ID' . $orderId . ' does not exist');
+            throw new NoSuchEntityException();
         }
 
         return $sourcesModel;
