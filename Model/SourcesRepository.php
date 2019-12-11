@@ -11,6 +11,8 @@ use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterfaceF
 use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterface;
 use Ampersand\DisableStockReservation\Service\SourcesConverter;
 use Ampersand\DisableStockReservation\Model\ResourceModel\Sources\CollectionFactory;
+use Magento\Sales\Api\Data\OrderSearchResultInterface;
+use Ampersand\DisableStockReservation\Api\Data\SourcesInterface;
 
 /**
  * Class SourcesRepository
@@ -81,23 +83,28 @@ class SourcesRepository
             'order_id'
         );
 
-        if (!$sourcesModel->getId() || $sourcesModel->getId() === null) {
-            throw new NoSuchEntityException();
+        if (!$sourcesModel->getId()) {
+            throw new NoSuchEntityException('Source model with the order ID' . $orderId . ' does not exist');
         }
 
         return $sourcesModel;
     }
 
-    /**
-     * @return array
-     */
-    public function getOrdersSourcesCollection()
+    public function getOrdersSourcesCollection(OrderSearchResultInterface $result)
     {
-        $ordersSourcesItems = $this->collectionFactory->create()->getItems();
+        $resultIds = [];
+        foreach ($result as $resultItem) {
+            $resultIds [] = $resultItem->getEntityId();
+        }
+
+        $ordersSourcesItems = $this->collectionFactory->create()
+            ->addFieldToFilter('order_id', ['in' => $resultIds])
+            ->getItems();
 
         $orderSources = [];
         foreach ($ordersSourcesItems as $item) {
-            $orderSources[$item->getData('order_id')] = $item->getData('sources');
+            $orderSources[$item->getOrderId()] = $this->sourcesConverter->
+            convertSourcesArrayToSourceSelectionItems($item->getSources());
         }
 
         return $orderSources;
@@ -129,12 +136,12 @@ class SourcesRepository
     }
 
     /**
-     * @param SourceModel $model
+     * @param SourcesInterface $model
      *
-     * @return SourceModel
+     * @return SourcesInterface
      * @throws CouldNotSaveException
      */
-    public function save(SourceModel $model): SourceModel
+    public function save(SourcesInterface $model): SourcesInterface
     {
         try {
             $this->sourcesResourceModel->save($model);
