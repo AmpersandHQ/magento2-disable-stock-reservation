@@ -29,16 +29,13 @@ class SourcesRepository
      * SourcesRepository constructor.
      * @param SourcesFactory $sourcesFactory
      * @param Sources $sourcesResourceModel
-     * @param CollectionFactory $collectionFactory
      */
     public function __construct(
         SourcesFactory $sourcesFactory,
-        Sources $sourcesResourceModel,
-        CollectionFactory $collectionFactory
+        Sources $sourcesResourceModel
     ) {
         $this->sourcesFactory = $sourcesFactory;
         $this->sourcesResourceModel = $sourcesResourceModel;
-        $this->collectionFactory = $collectionFactory;
     }
 
     /**
