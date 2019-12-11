@@ -3,6 +3,8 @@
 namespace Ampersand\DisableStockReservation\Model\ResourceModel\Sources;
 
 use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
+use Ampersand\DisableStockReservation\Model\Sources;
+use Ampersand\DisableStockReservation\Model\ResourceModel\Sources as ResourceModelSources;
 
 class Collection extends AbstractCollection
 {
@@ -13,9 +15,6 @@ class Collection extends AbstractCollection
      */
     protected function _construct()
     {
-        $this->_init(
-            'Ampersand\DisableStockReservation\Model\Sources',
-            'Ampersand\DisableStockReservation\Model\ResourceModel\Sources'
-        );
+        $this->_init(Sources::class, ResourceModelSources::class);
     }
 }

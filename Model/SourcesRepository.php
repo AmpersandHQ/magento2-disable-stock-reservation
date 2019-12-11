@@ -69,7 +69,7 @@ class SourcesRepository
      * @param string $orderId
      *
      * @return SourceModel
-     * @throws NoSuchEntityException
+     * @throws \Exception
      */
     public function getByOrderId(string $orderId): SourceModel
     {
@@ -81,21 +81,26 @@ class SourcesRepository
             'order_id'
         );
 
-        try {
-            $sourcesModel->getId();
-        } catch (\Exception $exception) {
-            throw new NoSuchEntityException(__($exception->getMessage()));
+        if (!$sourcesModel->getId() || $sourcesModel->getId() === null) {
+            throw new NoSuchEntityException();
         }
 
         return $sourcesModel;
     }
 
     /**
-     * @return Sources\Collection
+     * @return array
      */
     public function getOrdersSourcesCollection()
     {
-        return $this->collectionFactory->create();
+        $ordersSourcesItems = $this->collectionFactory->create()->getItems();
+
+        $orderSources = [];
+        foreach ($ordersSourcesItems as $item) {
+            $orderSources[$item->getData('order_id')] = $item->getData('sources');
+        }
+
+        return $orderSources;
     }
 
     /**
@@ -105,10 +110,10 @@ class SourcesRepository
      */
     public function getSourceSelectionResultByOrderId(string $orderId): ?SourceSelectionResultInterface
     {
-        /** @var SourceModel $sourcesModel */
-        $sourcesModel = $this->getByOrderId($orderId);
-
-        if (!$sourcesModel->getId()) {
+        try {
+            /** @var SourceModel $sourcesModel */
+            $sourcesModel = $this->getByOrderId($orderId);
+        } catch (NoSuchEntityException $exception) {
             return null;
         }
 

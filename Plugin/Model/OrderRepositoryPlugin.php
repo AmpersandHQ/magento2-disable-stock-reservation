@@ -9,6 +9,7 @@ use Magento\Sales\Api\Data\OrderExtensionFactory;
 use Ampersand\DisableStockReservation\Model\SourcesRepository;
 use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterfaceFactory;
 use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterface;
+use Ampersand\DisableStockReservation\Service\SourcesConverter;
 
 /**
  * Class OrderRepositoryPlugin
@@ -32,19 +33,27 @@ class OrderRepositoryPlugin
     private $sourceSelectionResultInterfaceFactory;
 
     /**
+     * @var SourcesConverter
+     */
+    private $sourcesConverter;
+
+    /**
      * OrderRepositoryPlugin constructor.
      * @param SourcesRepository $sourcesRepository
      * @param OrderExtensionFactory $orderExtensionFactory
      * @param SourceSelectionResultInterfaceFactory $sourceSelectionResultInterfaceFactory
+     * @param SourcesConverter $sourcesConverter
      */
     public function __construct(
         SourcesRepository $sourcesRepository,
         OrderExtensionFactory $orderExtensionFactory,
-        SourceSelectionResultInterfaceFactory $sourceSelectionResultInterfaceFactory
+        SourceSelectionResultInterfaceFactory $sourceSelectionResultInterfaceFactory,
+        SourcesConverter $sourcesConverter
     ) {
         $this->sourcesRepository = $sourcesRepository;
         $this->orderExtensionFactory = $orderExtensionFactory;
         $this->sourceSelectionResultInterfaceFactory = $sourceSelectionResultInterfaceFactory;
+        $this->sourcesConverter = $sourcesConverter;
     }
 
     /**
@@ -65,9 +74,13 @@ class OrderRepositoryPlugin
     public function afterGetList(OrderRepository $subject, OrderSearchResultInterface $result): OrderSearchResultInterface
     {
         $sourcesCollection = $this->sourcesRepository->getOrdersSourcesCollection();
+
         foreach ($result->getItems() as $item) {
+            $sourceSelectionItems = $this->sourcesConverter
+                ->convertSourcesArrayToSourceSelectionItems($sourcesCollection[$item->getEntityId()]);
+
             $sourceSelectionResult = $this->sourceSelectionResultInterfaceFactory->create([
-                'sourceItemSelections' => $sourcesCollection->addFieldToFilter('order_id', $item->getEntityId())->getData(),
+                'sourceItemSelections' => $sourceSelectionItems,
                 'isShippable' => true
             ]);
 

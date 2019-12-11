@@ -16,6 +16,7 @@ use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
 use Ampersand\DisableStockReservation\Model\SourcesRepository;
 use Magento\Sales\Api\Data\OrderExtensionFactory;
 use Ampersand\DisableStockReservation\Service\SourcesConverter;
+use Ampersand\DisableStockReservation\Model\SourcesFactory;
 
 class SourceDeductionProcessor implements ObserverInterface
 {
@@ -65,6 +66,11 @@ class SourceDeductionProcessor implements ObserverInterface
     private $sourcesConverter;
 
     /**
+     * @var SourcesFactory
+     */
+    protected $sourcesFactory;
+
+    /**
      * @param GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder
      * @param SourceDeductionServiceInterface $sourceDeductionService
      * @param SourceDeductionRequestsFromSourceSelectionFactory $sourceDeductionRequestsFromSourceSelectionFactory
@@ -74,6 +80,7 @@ class SourceDeductionProcessor implements ObserverInterface
      * @param SourcesRepository $sourceRepository
      * @param OrderExtensionFactory $orderExtensionFactory
      * @param SourcesConverter $sourcesConverter
+     * @param SourcesFactory $sourcesFactory
      */
     public function __construct(
         GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder,
@@ -84,7 +91,8 @@ class SourceDeductionProcessor implements ObserverInterface
         PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent,
         SourcesRepository $sourceRepository,
         OrderExtensionFactory $orderExtensionFactory,
-        SourcesConverter $sourcesConverter
+        SourcesConverter $sourcesConverter,
+        SourcesFactory $sourcesFactory
     ) {
         $this->getSourceSelectionResultFromOrder = $getSourceSelectionResultFromOrder;
         $this->sourceDeductionService = $sourceDeductionService;
@@ -95,6 +103,7 @@ class SourceDeductionProcessor implements ObserverInterface
         $this->sourceRepository = $sourceRepository;
         $this->orderExtensionFactory = $orderExtensionFactory;
         $this->sourcesConverter = $sourcesConverter;
+        $this->sourcesFactory = $sourcesFactory;
     }
 
     /**
@@ -111,8 +120,8 @@ class SourceDeductionProcessor implements ObserverInterface
 
         $sourceSelectionResult = $this->getSourceSelectionResultFromOrder->execute($order);
 
-        $sourceModel = $this->sourceRepository->getByOrderId($orderId = $order->getEntityId());
-        $sourceModel->setOrderId($orderId);
+        $sourceModel = $this->sourcesFactory->create();
+        $sourceModel->setOrderId($order->getEntityId());
         $sourceModel->setSources(
             $this->sourcesConverter->convertSourceSelectionItemsToSourcesArray($sourceSelectionResult->getSourceSelectionItems())
         );

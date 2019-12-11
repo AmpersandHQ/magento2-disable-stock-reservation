@@ -28,5 +28,5 @@ interface SourcesInterface
      * @param int $id
      * @return SourcesInterface $this
      */
-    public function setOrderId($id): SourcesInterface;
+    public function setOrderId(int $id): SourcesInterface;
 }

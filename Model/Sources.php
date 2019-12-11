@@ -4,6 +4,7 @@ namespace Ampersand\DisableStockReservation\Model;
 
 use Magento\Framework\Model\AbstractModel;
 use Ampersand\DisableStockReservation\Api\Data\SourcesInterface;
+use Ampersand\DisableStockReservation\Model\ResourceModel\Sources as ResourceModelSources;
 
 /**
  * Class Sources
@@ -11,12 +12,9 @@ use Ampersand\DisableStockReservation\Api\Data\SourcesInterface;
  */
 class Sources extends AbstractModel implements SourcesInterface
 {
-    /**
-     *
-     */
     public function _construct()
     {
-        $this->_init(\Ampersand\DisableStockReservation\Model\ResourceModel\Sources::class);
+        $this->_init(ResourceModelSources::class);
     }
 
     /**
@@ -48,7 +46,7 @@ class Sources extends AbstractModel implements SourcesInterface
      * @param int $id
      * @return SourcesInterface
      */
-    public function setOrderId($id): SourcesInterface
+    public function setOrderId(int $id): SourcesInterface
     {
         return $this->setData('order_id', $id);
     }
