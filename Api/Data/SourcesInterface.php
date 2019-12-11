@@ -20,13 +20,13 @@ interface SourcesInterface
     public function setSources(string $sources): SourcesInterface;
 
     /**
-     * @return int|null
+     * @return string|null
      */
-    public function getOrderId(): ?int;
+    public function getOrderId(): ?string;
 
     /**
-     * @param int $id
+     * @param string $id
      * @return SourcesInterface $this
      */
-    public function setOrderId(int $id): SourcesInterface;
+    public function setOrderId(string $id): SourcesInterface;
 }

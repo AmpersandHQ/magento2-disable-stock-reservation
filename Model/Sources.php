@@ -35,18 +35,18 @@ class Sources extends AbstractModel implements SourcesInterface
     }
 
     /**
-     * @return int|null
+     * @return string|null
      */
-    public function getOrderId(): ?int
+    public function getOrderId(): ?string
     {
         return $this->getData('order_id');
     }
 
     /**
-     * @param int $id
+     * @param string $id
      * @return SourcesInterface
      */
-    public function setOrderId(int $id): SourcesInterface
+    public function setOrderId(string $id): SourcesInterface
     {
         return $this->setData('order_id', $id);
     }
