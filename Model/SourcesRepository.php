@@ -78,6 +78,7 @@ class SourcesRepository implements SourcesRepositoryInterface
     public function save(SourcesInterface $model): SourcesInterface
     {
         try {
+            // SourcesModel extending AbstractDb and implementing SourcesInterface
             if (!$model instanceof SourcesModel) {
                 throw new \Exception('expects Magento\Framework\Model\AbstractModel');
             }
