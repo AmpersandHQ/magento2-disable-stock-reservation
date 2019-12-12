@@ -2,16 +2,16 @@
 
 namespace Ampersand\DisableStockReservation\Plugin\Model;
 
-use Magento\Sales\Model\OrderRepository;
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderSearchResultInterface;
 use Magento\Sales\Api\Data\OrderExtensionFactory;
-use Ampersand\DisableStockReservation\Model\SourcesRepository;
 use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterfaceFactory;
 use Ampersand\DisableStockReservation\Model\Sources as SourceModel;
 use Ampersand\DisableStockReservation\Service\SourcesConverter;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Ampersand\DisableStockReservation\Model\ResourceModel\Sources\CollectionFactory;
+use Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface;
 
 /**
  * Class OrderRepositoryPlugin
@@ -20,7 +20,7 @@ use Ampersand\DisableStockReservation\Model\ResourceModel\Sources\CollectionFact
 class OrderRepositoryPlugin
 {
     /**
-     * @var SourcesRepository
+     * @var SourcesRepositoryInterface
      */
     private $sourcesRepository;
 
@@ -46,14 +46,14 @@ class OrderRepositoryPlugin
 
     /**
      * OrderRepositoryPlugin constructor.
-     * @param SourcesRepository $sourcesRepository
+     * @param SourcesRepositoryInterface $sourcesRepository
      * @param OrderExtensionFactory $orderExtensionFactory
      * @param SourceSelectionResultInterfaceFactory $sourceSelectionResultInterfaceFactory
      * @param SourcesConverter $sourcesConverter
      * @param CollectionFactory $collectionFactory
      */
     public function __construct(
-        SourcesRepository $sourcesRepository,
+        SourcesRepositoryInterface $sourcesRepository,
         OrderExtensionFactory $orderExtensionFactory,
         SourceSelectionResultInterfaceFactory $sourceSelectionResultInterfaceFactory,
         SourcesConverter $sourcesConverter,
@@ -67,11 +67,11 @@ class OrderRepositoryPlugin
     }
 
     /**
-     * @param OrderRepository $subject
+     * @param OrderRepositoryInterface $subject
      * @param OrderInterface $result
      * @return OrderInterface
      */
-    public function afterGet(OrderRepository $subject, OrderInterface $result): OrderInterface
+    public function afterGet(OrderRepositoryInterface $subject, OrderInterface $result): OrderInterface
     {
         try {
             /** @var SourceModel $sourcesModel */
@@ -88,11 +88,11 @@ class OrderRepositoryPlugin
     }
 
     /**
-     * @param OrderRepository $subject
+     * @param OrderRepositoryInterface $subject
      * @param OrderSearchResultInterface $result
      * @return OrderSearchResultInterface
      */
-    public function afterGetList(OrderRepository $subject, OrderSearchResultInterface $result): OrderSearchResultInterface
+    public function afterGetList(OrderRepositoryInterface $subject, OrderSearchResultInterface $result): OrderSearchResultInterface
     {
         $resultIds = [];
         foreach ($result as $resultItem) {
@@ -111,7 +111,6 @@ class OrderRepositoryPlugin
 
         foreach ($result->getItems() as $item) {
             if (array_key_exists($orderId = $item->getEntityId(), $orderSources)) {
-
                 $this->applyExtensionAttributesToOrder($item, $orderSources[$orderId]);
             }
         }

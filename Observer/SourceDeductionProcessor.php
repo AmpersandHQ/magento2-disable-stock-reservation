@@ -13,10 +13,10 @@ use Magento\InventorySourceDeductionApi\Model\SourceDeductionServiceInterface;
 use Magento\InventoryShipping\Model\SourceDeductionRequestsFromSourceSelectionFactory;
 use Magento\InventorySalesApi\Api\Data\ItemToSellInterfaceFactory;
 use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
-use Ampersand\DisableStockReservation\Model\SourcesRepository;
+use Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface;
 use Magento\Sales\Api\Data\OrderExtensionFactory;
 use Ampersand\DisableStockReservation\Service\SourcesConverter;
-use Ampersand\DisableStockReservation\Model\SourcesFactory;
+use Ampersand\DisableStockReservation\Api\Data\SourcesInterfaceFactory;
 
 class SourceDeductionProcessor implements ObserverInterface
 {
@@ -51,7 +51,7 @@ class SourceDeductionProcessor implements ObserverInterface
     private $placeReservationsForSalesEvent;
 
     /**
-     * @var SourcesRepository
+     * @var SourcesRepositoryInterface
      */
     private $sourceRepository;
 
@@ -66,7 +66,7 @@ class SourceDeductionProcessor implements ObserverInterface
     private $sourcesConverter;
 
     /**
-     * @var SourcesFactory
+     * @var SourcesInterfaceFactory
      */
     protected $sourcesFactory;
 
@@ -77,10 +77,10 @@ class SourceDeductionProcessor implements ObserverInterface
      * @param SalesEventInterfaceFactory $salesEventFactory
      * @param ItemToSellInterfaceFactory $itemToSellFactory
      * @param PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent
-     * @param SourcesRepository $sourceRepository
+     * @param SourcesRepositoryInterface $sourceRepository
      * @param OrderExtensionFactory $orderExtensionFactory
      * @param SourcesConverter $sourcesConverter
-     * @param SourcesFactory $sourcesFactory
+     * @param SourcesInterfaceFactory $sourcesFactory
      */
     public function __construct(
         GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder,
@@ -89,10 +89,10 @@ class SourceDeductionProcessor implements ObserverInterface
         SalesEventInterfaceFactory $salesEventFactory,
         ItemToSellInterfaceFactory $itemToSellFactory,
         PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent,
-        SourcesRepository $sourceRepository,
+        SourcesRepositoryInterface $sourceRepository,
         OrderExtensionFactory $orderExtensionFactory,
         SourcesConverter $sourcesConverter,
-        SourcesFactory $sourcesFactory
+        SourcesInterfaceFactory $sourcesFactory
     ) {
         $this->getSourceSelectionResultFromOrder = $getSourceSelectionResultFromOrder;
         $this->sourceDeductionService = $sourceDeductionService;

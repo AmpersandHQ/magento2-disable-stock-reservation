@@ -1,6 +1,8 @@
 <?php
 
-namespace Ampersand\DisableStockReservation\Api\Data;
+namespace Ampersand\DisableStockReservation\Api;
+
+use Ampersand\DisableStockReservation\Api\Data\SourcesInterface;
 
 /**
  * Interface SourcesRepositoryInterface
