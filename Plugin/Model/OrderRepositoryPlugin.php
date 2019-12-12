@@ -82,6 +82,7 @@ class OrderRepositoryPlugin
 
             $this->applyExtensionAttributesToOrder($result, $sourceSelectionItems);
         } catch (NoSuchEntityException $exception) {
+            // Do nothing
         }
 
         return $result;

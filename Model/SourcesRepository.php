@@ -2,7 +2,7 @@
 
 namespace Ampersand\DisableStockReservation\Model;
 
-use Braintree\Exception;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Ampersand\DisableStockReservation\Model\ResourceModel\Sources;
@@ -48,13 +48,8 @@ class SourcesRepository implements SourcesRepositoryInterface
      */
     public function getByOrderId(string $orderId): SourcesInterface
     {
-        /** @var SourcesInterface $sourcesModel */
+        /** @var SourcesModel $sourcesModel */
         $sourcesModel = $this->sourcesFactory->create();
-
-        // SourcesModel extending AbstractDb and implementing SourcesInterface
-        if (!$sourcesModel instanceof SourcesModel) {
-            throw new \Exception('expects Magento\Framework\Model\AbstractModel');
-        }
 
         $this->sourcesResourceModel->load(
             $sourcesModel,
@@ -79,7 +74,7 @@ class SourcesRepository implements SourcesRepositoryInterface
     {
         try {
             if (!$model instanceof SourcesModel) {
-                throw new \Exception('expects Magento\Framework\Model\AbstractModel');
+                throw new LocalizedException(__('expects Magento\Framework\Model\AbstractModel'));
             }
             $this->sourcesResourceModel->save($model);
         } catch (\Exception $exception) {

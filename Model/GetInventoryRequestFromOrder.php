@@ -107,9 +107,8 @@ class GetInventoryRequestFromOrder
      */
     private function getAddressFromOrder(OrderInterface $order): ?AddressInterface
     {
-        /** @var Address $shippingAddress */
         $shippingAddress = $order->getShippingAddress();
-        if ($shippingAddress == null) {
+        if ($shippingAddress === null) {
             return null;
         }
 
