@@ -2,12 +2,14 @@
 
 namespace Ampersand\DisableStockReservation\Model;
 
+use Braintree\Exception;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Ampersand\DisableStockReservation\Model\ResourceModel\Sources;
 use Ampersand\DisableStockReservation\Api\Data\SourcesInterface;
 use Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface;
 use Ampersand\DisableStockReservation\Api\Data\SourcesInterfaceFactory;
+use Ampersand\DisableStockReservation\Model\Sources as SourcesModel;
 
 /**
  * Class SourcesRepository
@@ -48,6 +50,12 @@ class SourcesRepository implements SourcesRepositoryInterface
     {
         /** @var SourcesInterface $sourcesModel */
         $sourcesModel = $this->sourcesFactory->create();
+
+        // SourcesModel extending AbstractDb and implementing SourcesInterface
+        if (!$sourcesModel instanceof SourcesModel) {
+            throw new \Exception('expects Magento\Framework\Model\AbstractModel');
+        }
+
         $this->sourcesResourceModel->load(
             $sourcesModel,
             $orderId,
@@ -70,6 +78,9 @@ class SourcesRepository implements SourcesRepositoryInterface
     public function save(SourcesInterface $model): SourcesInterface
     {
         try {
+            if (!$model instanceof SourcesModel) {
+                throw new \Exception('expects Magento\Framework\Model\AbstractModel');
+            }
             $this->sourcesResourceModel->save($model);
         } catch (\Exception $exception) {
             throw new CouldNotSaveException(__($exception->getMessage()));

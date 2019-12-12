@@ -75,7 +75,7 @@ class OrderRepositoryPlugin
     {
         try {
             /** @var SourceModel $sourcesModel */
-            $sourcesModel = $this->sourcesRepository->getByOrderId($result->getEntityId());
+            $sourcesModel = $this->sourcesRepository->getByOrderId($result->getId());
 
             $sourceSelectionItems = $this->sourcesConverter
                 ->convertSourcesJsonToSourceSelectionItems($sourcesModel->getSources());
@@ -95,8 +95,8 @@ class OrderRepositoryPlugin
     public function afterGetList(OrderRepositoryInterface $subject, OrderSearchResultInterface $result): OrderSearchResultInterface
     {
         $resultIds = [];
-        foreach ($result as $resultItem) {
-            $resultIds[] = $resultItem->getEntityId();
+        foreach ($result->getItems() as $resultItem) {
+            $resultIds[] = $resultItem->getId();
         }
 
         $orderListSources = $this->collectionFactory->create()
@@ -104,13 +104,14 @@ class OrderRepositoryPlugin
             ->getItems();
 
         $orderSources = [];
-        foreach ($orderListSources as $item) {
-            $orderSources[$item->getOrderId()] = $this->sourcesConverter
-                ->convertSourcesJsonToSourceSelectionItems($item->getSources());
+        foreach ($orderListSources as $orderSourcesItem) {
+            /** @var SourceModel $orderSourcesItem */
+            $orderSources[$orderSourcesItem->getOrderId()] = $this->sourcesConverter
+                ->convertSourcesJsonToSourceSelectionItems($orderSourcesItem->getSources());
         }
 
         foreach ($result->getItems() as $item) {
-            if (array_key_exists($orderId = $item->getEntityId(), $orderSources)) {
+            if (array_key_exists($orderId = $item->getId(), $orderSources)) {
                 $this->applyExtensionAttributesToOrder($item, $orderSources[$orderId]);
             }
         }

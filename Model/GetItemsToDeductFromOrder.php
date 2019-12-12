@@ -59,7 +59,7 @@ class GetItemsToDeductFromOrder
             }
             // This code was added as quick fix for merge mainline
             // https://github.com/magento-engcom/msi/issues/1586
-            if (null === $orderItem) {
+            if (null == $orderItem) {
                 continue;
             }
             if ($orderItem->getHasChildren()) {
