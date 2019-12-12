@@ -73,8 +73,8 @@ class SourcesRepository implements SourcesRepositoryInterface
     public function save(SourcesInterface $model): SourcesInterface
     {
         try {
-            // We're checking the model here because the Sources model extending the AbstractModel and implementing the
-            // interface and the save method needs the AbstractModel as parameter to save in the DB
+            // We're doing this because https://github.com/phpstan/phpstan fails when trying to pass our interface to the
+            // load/save method. The resource model expects an instance of AbstractDb
             if (!$model instanceof SourcesModel) {
                 throw new LocalizedException(__('expects Magento\Framework\Model\AbstractModel'));
             }
