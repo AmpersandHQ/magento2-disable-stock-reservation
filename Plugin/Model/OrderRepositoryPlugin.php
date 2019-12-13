@@ -100,6 +100,7 @@ class OrderRepositoryPlugin
             $resultIds[] = $resultItem->getId();
         }
 
+        /** @var SourcesInterface[] $orderListSources */
         $orderListSources = $this->collectionFactory->create()
             ->addFieldToFilter('order_id', ['in' => $resultIds])
             ->getItems();
