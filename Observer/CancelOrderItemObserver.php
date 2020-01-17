@@ -19,6 +19,8 @@ use Magento\InventorySourceDeductionApi\Model\SourceDeductionRequestFactory;
 use Magento\InventorySourceDeductionApi\Model\SourceDeductionService;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Store\Api\WebsiteRepositoryInterface;
+use Ampersand\DisableStockReservation\Model\GetSourceSelectionResultFromOrder;
+use Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface;
 
 class CancelOrderItemObserver implements ObserverInterface
 {
@@ -78,6 +80,16 @@ class CancelOrderItemObserver implements ObserverInterface
     private $sourceDeductionService;
 
     /**
+     * @var GetSourceSelectionResultFromOrder
+     */
+    private $getSourceSelectionResultFromOrder;
+
+    /**
+     * @var SourcesRepositoryInterface
+     */
+    private $sourceRepository;
+
+    /**
      * CancelOrderItemObserver constructor.
      * @param Processor $priceIndexer
      * @param SalesEventInterfaceFactory $salesEventFactory
@@ -89,6 +101,8 @@ class CancelOrderItemObserver implements ObserverInterface
      * @param DefaultSourceProviderInterface $defaultSourceProvider
      * @param ItemToDeductFactory $itemToDeductFactory
      * @param SourceDeductionService $sourceDeductionService
+     * @param GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder
+     * @param SourcesRepositoryInterface $sourceRepository
      */
     public function __construct(
         Processor $priceIndexer,
@@ -101,7 +115,9 @@ class CancelOrderItemObserver implements ObserverInterface
         DefaultSourceProviderInterface $defaultSourceProvider,
         ItemToDeductFactory $itemToDeductFactory,
         SourceDeductionRequestFactory $sourceDeductionRequestFactory,
-        SourceDeductionService $sourceDeductionService
+        SourceDeductionService $sourceDeductionService,
+        GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder,
+        SourcesRepositoryInterface $sourceRepository
     ) {
         $this->priceIndexer = $priceIndexer;
         $this->salesEventFactory = $salesEventFactory;
@@ -114,6 +130,7 @@ class CancelOrderItemObserver implements ObserverInterface
         $this->itemToDeductFactory = $itemToDeductFactory;
         $this->sourceDeductionRequestFactory = $sourceDeductionRequestFactory;
         $this->sourceDeductionService = $sourceDeductionService;
+        $this->getSourceSelectionResultFromOrder = $getSourceSelectionResultFromOrder;
     }
 
     /**
@@ -150,31 +167,28 @@ class CancelOrderItemObserver implements ObserverInterface
         $this->placeReservationsForSalesEvent->execute($itemsToCancel, $salesChannel, $salesEvent);
 
         $order = $orderItem->getOrder();
+        $sourceSelectionItems = $this->getSourceSelectionResultFromOrder->execute($order)->getSourceSelectionItems();
 
-        // Source selection happens by default on shipment, so only shipments contain information about the
-        // inventory source.
-        // @TODO add support for multi source stock replenishment on cancellation
-        if ($this->isSingleSourceMode->execute()) {
-            $sourceCode = $this->defaultSourceProvider->getCode();
+        foreach ($itemsToCancel as $itemToCancel) {
+            foreach ($sourceSelectionItems as $sourceSelectionItem) {
+                if ($sourceSelectionItem->getSku() === $itemToCancel->getSku()) {
+                    $sourceCode = $sourceSelectionItem->getSourceCode();
 
-            $itemsToDeduct = [];
-            foreach ($itemsToCancel as $itemToCancel) {
-                $itemsToDeduct[] = $this->itemToDeductFactory->create([
-                    'sku' => $itemToCancel->getSku(),
-                    'qty' => -$itemToCancel->getQuantity(),
-                ]);
+                    $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
+                        'sourceCode' => $sourceCode,
+                        'items' => [$this->itemToDeductFactory->create([
+                            'sku' => $itemToCancel->getSku(),
+                            'qty' => -$itemToCancel->getQuantity()
+                        ])],
+                        'salesChannel' => $salesChannel,
+                        'salesEvent' => $salesEvent
+                    ]);
+
+                    $this->sourceDeductionService->execute($sourceDeductionRequest);
+                    $this->priceIndexer->reindexRow($orderItem->getProductId());
+                    break;
+                }
             }
-
-            $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
-                'sourceCode' => $sourceCode,
-                'items' => $itemsToDeduct,
-                'salesChannel' => $salesChannel,
-                'salesEvent' => $salesEvent
-            ]);
-
-            $this->sourceDeductionService->execute($sourceDeductionRequest);
-
-            $this->priceIndexer->reindexRow($orderItem->getProductId());
         }
     }
 }
