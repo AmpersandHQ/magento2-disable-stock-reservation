@@ -20,7 +20,6 @@ use Magento\InventorySourceDeductionApi\Model\SourceDeductionService;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Store\Api\WebsiteRepositoryInterface;
 use Ampersand\DisableStockReservation\Model\GetSourceSelectionResultFromOrder;
-use Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface;
 
 class CancelOrderItemObserver implements ObserverInterface
 {
@@ -85,11 +84,6 @@ class CancelOrderItemObserver implements ObserverInterface
     private $getSourceSelectionResultFromOrder;
 
     /**
-     * @var SourcesRepositoryInterface
-     */
-    private $sourceRepository;
-
-    /**
      * CancelOrderItemObserver constructor.
      * @param Processor $priceIndexer
      * @param SalesEventInterfaceFactory $salesEventFactory
@@ -100,9 +94,9 @@ class CancelOrderItemObserver implements ObserverInterface
      * @param IsSingleSourceModeInterface $isSingleSourceMode
      * @param DefaultSourceProviderInterface $defaultSourceProvider
      * @param ItemToDeductFactory $itemToDeductFactory
+     * @param SourceDeductionRequestFactory $sourceDeductionRequestFactory
      * @param SourceDeductionService $sourceDeductionService
      * @param GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder
-     * @param SourcesRepositoryInterface $sourceRepository
      */
     public function __construct(
         Processor $priceIndexer,
@@ -116,8 +110,7 @@ class CancelOrderItemObserver implements ObserverInterface
         ItemToDeductFactory $itemToDeductFactory,
         SourceDeductionRequestFactory $sourceDeductionRequestFactory,
         SourceDeductionService $sourceDeductionService,
-        GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder,
-        SourcesRepositoryInterface $sourceRepository
+        GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder
     ) {
         $this->priceIndexer = $priceIndexer;
         $this->salesEventFactory = $salesEventFactory;
