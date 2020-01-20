@@ -21,6 +21,4 @@
             for="Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface"
             type="Ampersand\DisableStockReservation\Model\SourcesRepository" />
 
-    <preference for="Magento\SalesInventory\Observer\RefundOrderInventoryObserver"
-                type="Ampersand\DisableStockReservation\Observer\RefundOrderInventoryObserver"/>
 </config>

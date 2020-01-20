@@ -15,6 +15,7 @@
     <!--  Return stock on Creditmemo  -->
     <!--  This observer replaces the original  -->
     <event name="sales_order_creditmemo_save_after">
-        <observer name="inventory" instance="Ampersand\DisableStockReservation\Observer\RefundOrderInventoryObserver"/>
+        <observer name="inventory" disabled="true"/>
+        <observer name="inventory_creditmemo" instance="Ampersand\DisableStockReservation\Observer\RefundOrderInventoryObserver"/>
     </event>
 </config>
