@@ -178,10 +178,10 @@ class CancelOrderItemObserver implements ObserverInterface
                     ]);
 
                     $this->sourceDeductionService->execute($sourceDeductionRequest);
-                    $this->priceIndexer->reindexRow($orderItem->getProductId());
                     break;
                 }
             }
         }
+        $this->priceIndexer->reindexRow($orderItem->getProductId());
     }
 }
