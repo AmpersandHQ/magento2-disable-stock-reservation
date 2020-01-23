@@ -121,7 +121,7 @@ class SourceDeductionProcessor implements ObserverInterface
         $sourceSelectionResult = $this->getSourceSelectionResultFromOrder->execute($order);
 
         $sourceModel = $this->sourcesFactory->create();
-        $sourceModel->setOrderId($order->getEntityId());
+        $sourceModel->setOrderId($order->getId());
         $sourceModel->setSources(
             $this->sourcesConverter->convertSourceSelectionItemsToJson($sourceSelectionResult->getSourceSelectionItems())
         );
@@ -131,7 +131,7 @@ class SourceDeductionProcessor implements ObserverInterface
         $salesEvent = $this->salesEventFactory->create([
             'type' => SalesEventInterface::EVENT_ORDER_PLACED,
             'objectType' => SalesEventInterface::OBJECT_TYPE_ORDER,
-            'objectId' => $order->getEntityId(),
+            'objectId' => $order->getId(),
         ]);
 
         $sourceDeductionRequests = $this->sourceDeductionRequestsFromSourceSelectionFactory->create(

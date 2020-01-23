@@ -117,16 +117,18 @@ class ExecuteSourceDeductionForItems
         $salesEvent = $this->salesEventFactory->create([
             'type' => $type,
             'objectType' => SalesEventInterface::OBJECT_TYPE_ORDER,
-            'objectId' => (string)$order->getEntityId()
+            'objectId' => (string)$order->getId()
         ]);
 
+        $itemsIds = [];
         foreach ($itemsToCancel as $item) {
             if ($creditmemo && !$item->getBackToStock()) {
                 continue;
             }
 
+            $itemsIds[] = $item->getProductId();
             $sourceItem = $this->sourceRepository->getSourceItemBySku(
-                (string)$order->getEntityId(), $item->getSku()
+                (string)$order->getId(), $item->getSku()
             );
 
             $sourceCode = $sourceItem ? $sourceItem->getSourceCode() : 'default';
@@ -142,7 +144,7 @@ class ExecuteSourceDeductionForItems
             ]);
 
             $this->sourceDeductionService->execute($sourceDeductionRequest);
-            $this->priceIndexer->reindexRow($item->getProductId());
         }
+        $this->priceIndexer->reindexList($itemsIds);
     }
 }

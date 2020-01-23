@@ -78,22 +78,20 @@ class SourcesRepository implements SourcesRepositoryInterface
      * @param string $orderId
      * @param string $itemSku
      *
-     * @return SourceSelectionItem|null
+     * @return SourceSelectionItem
+     * @throws \Exception
      */
-    public function getSourceItemBySku(string $orderId, string $itemSku): ?SourceSelectionItem
+    public function getSourceItemBySku(string $orderId, string $itemSku): SourceSelectionItem
     {
         $sourceSelectionItems = $this->sourcesConverter->convertSourcesJsonToSourceSelectionItems(
             $this->getByOrderId($orderId)->getSources()
         );
 
-        /** @var SourceSelectionItem $item */
-        foreach ($sourceSelectionItems as $item) {
-            if ($item->getSku() === $itemSku) {
-                return $item;
-            }
+        if (!array_key_exists($itemSku, $sourceSelectionItems)) {
+            throw new NoSuchEntityException(__('Source model with the sku "%1', $itemSku));
         }
 
-        return null;
+        return $sourceSelectionItems[$itemSku];
     }
 
     /**
