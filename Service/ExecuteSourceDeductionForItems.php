@@ -4,7 +4,6 @@ namespace Ampersand\DisableStockReservation\Service;
 
 use Magento\InventorySalesApi\Api\Data\SalesChannelInterface;
 use Magento\InventorySalesApi\Api\Data\SalesEventInterface;
-use Magento\InventorySales\Model\GetItemsToCancelFromOrderItem;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order\Creditmemo;
 use Magento\Store\Api\WebsiteRepositoryInterface;
@@ -15,6 +14,8 @@ use Magento\InventorySourceDeductionApi\Model\SourceDeductionRequestFactory;
 use Magento\InventorySourceDeductionApi\Model\ItemToDeductFactory;
 use Magento\InventorySourceDeductionApi\Model\SourceDeductionService;
 use Magento\Catalog\Model\Indexer\Product\Price\Processor;
+use Magento\Sales\Model\Order\Item as OrderItem;
+use Magento\Sales\Model\Order\Creditmemo\Item as CreditmemoItem;
 
 /**
  * Class ExecuteSourceDeductionForItems
@@ -95,7 +96,7 @@ class ExecuteSourceDeductionForItems
 
     /**
      * @param OrderInterface $order
-     * @param GetItemsToCancelFromOrderItem[] $itemsToCancel
+     * @param array $itemsToCancel
      * @param Creditmemo|null $creditmemo
      */
     public function executeSourceDeductionForItems(OrderInterface $order, array $itemsToCancel, Creditmemo $creditmemo = null)
@@ -121,6 +122,8 @@ class ExecuteSourceDeductionForItems
         ]);
 
         $itemsIds = [];
+
+        /** @var OrderItem|CreditmemoItem $item */
         foreach ($itemsToCancel as $item) {
             if ($creditmemo && !$item->getBackToStock()) {
                 continue;

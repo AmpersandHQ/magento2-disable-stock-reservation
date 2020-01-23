@@ -100,14 +100,13 @@ class OrderRepositoryPlugin
             $resultIds[] = $resultItem->getId();
         }
 
-        /** @var SourcesInterface[] $orderListSources */
         $orderListSources = $this->collectionFactory->create()
             ->addFieldToFilter('order_id', ['in' => $resultIds])
             ->getItems();
 
         $orderSources = [];
+        /** @var SourceModel $orderSourcesItem */
         foreach ($orderListSources as $orderSourcesItem) {
-            /** @var SourceModel $orderSourcesItem */
             $orderSources[$orderSourcesItem->getOrderId()] = $this->sourcesConverter
                 ->convertSourcesJsonToSourceSelectionItems($orderSourcesItem->getSources());
         }
