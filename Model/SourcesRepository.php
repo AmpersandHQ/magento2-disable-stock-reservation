@@ -10,6 +10,8 @@ use Ampersand\DisableStockReservation\Api\Data\SourcesInterface;
 use Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface;
 use Ampersand\DisableStockReservation\Api\Data\SourcesInterfaceFactory;
 use Ampersand\DisableStockReservation\Model\Sources as SourcesModel;
+use Ampersand\DisableStockReservation\Service\SourcesConverter;
+use Magento\InventorySourceSelection\Model\Result\SourceSelectionItem;
 
 /**
  * Class SourcesRepository
@@ -28,16 +30,24 @@ class SourcesRepository implements SourcesRepositoryInterface
     protected $sourcesResourceModel;
 
     /**
+     * @var SourcesConverter
+     */
+    private $sourcesConverter;
+
+    /**
      * SourcesRepository constructor.
      * @param SourcesInterfaceFactory $sourcesFactory
      * @param Sources $sourcesResourceModel
+     * @param SourcesConverter $sourcesConverter
      */
     public function __construct(
         SourcesInterfaceFactory $sourcesFactory,
-        Sources $sourcesResourceModel
+        Sources $sourcesResourceModel,
+        SourcesConverter $sourcesConverter
     ) {
         $this->sourcesFactory = $sourcesFactory;
         $this->sourcesResourceModel = $sourcesResourceModel;
+        $this->sourcesConverter = $sourcesConverter;
     }
 
     /**
@@ -62,6 +72,28 @@ class SourcesRepository implements SourcesRepositoryInterface
         }
 
         return $sourcesModel;
+    }
+
+    /**
+     * @param string $orderId
+     * @param string $itemSku
+     *
+     * @return SourceSelectionItem|null
+     */
+    public function getSourceItemBySku(string $orderId, string $itemSku): ?SourceSelectionItem
+    {
+        $sourceSelectionItems = $this->sourcesConverter->convertSourcesJsonToSourceSelectionItems(
+            $this->getByOrderId($orderId)->getSources()
+        );
+
+        /** @var SourceSelectionItem $item */
+        foreach ($sourceSelectionItems as $item) {
+            if ($item->getSku() === $itemSku) {
+                return $item;
+            }
+        }
+
+        return null;
     }
 
     /**
