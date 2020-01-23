@@ -12,6 +12,7 @@ use Ampersand\DisableStockReservation\Api\Data\SourcesInterfaceFactory;
 use Ampersand\DisableStockReservation\Model\Sources as SourcesModel;
 use Ampersand\DisableStockReservation\Service\SourcesConverter;
 use Magento\InventorySourceSelection\Model\Result\SourceSelectionItem;
+use Magento\Framework\Model\AbstractModel;
 
 /**
  * Class SourcesRepository
@@ -105,7 +106,7 @@ class SourcesRepository implements SourcesRepositoryInterface
         try {
             // We're doing this because https://github.com/phpstan/phpstan fails when trying to pass our interface to the
             // load/save method. The resource model expects an instance of AbstractDb
-            if (!$model instanceof SourcesModel) {
+            if (!$model instanceof AbstractModel) {
                 throw new LocalizedException(__('expects Magento\Framework\Model\AbstractModel'));
             }
             $this->sourcesResourceModel->save($model);
