@@ -31,5 +31,5 @@ interface SourcesRepositoryInterface
      * @return SourceSelectionItem
      * @throws NoSuchEntityException
      */
-    public function getSourceItemBySku(string $orderId, string $itemSku): ?SourceSelectionItem;
+    public function getSourceItemBySku(string $orderId, string $itemSku): SourceSelectionItem;
 }
