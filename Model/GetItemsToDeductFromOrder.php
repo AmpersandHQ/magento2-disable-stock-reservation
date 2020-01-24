@@ -51,16 +51,11 @@ class GetItemsToDeductFromOrder
     public function execute(Order $order): array
     {
         $itemsToOrder = [];
-
         foreach ($order->getAllVisibleItems() as $orderItem) {
-            if ($orderItem->getParentItem() !== null) {
+            if (null === $orderItem || $orderItem->getParentItem() !== null) {
                 continue;
             }
-            // This code was added as quick fix for merge mainline
-            // https://github.com/magento-engcom/msi/issues/1586
-            if (null === $orderItem) {
-                continue;
-            }
+
             if ($orderItem->getHasChildren()) {
                 if (!$orderItem->isDummy(true)) {
                     foreach ($this->processComplexItem($orderItem) as $item) {

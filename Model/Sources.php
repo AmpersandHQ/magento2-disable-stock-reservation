@@ -39,7 +39,7 @@ class Sources extends AbstractModel implements SourcesInterface
      */
     public function getOrderId(): ?string
     {
-        return $this->getData('order_id');
+        return $this->getData(SourcesInterface::ORDER_ID_KEY);
     }
 
     /**
@@ -48,6 +48,6 @@ class Sources extends AbstractModel implements SourcesInterface
      */
     public function setOrderId(string $id): SourcesInterface
     {
-        return $this->setData('order_id', $id);
+        return $this->setData(SourcesInterface::ORDER_ID_KEY, $id);
     }
 }

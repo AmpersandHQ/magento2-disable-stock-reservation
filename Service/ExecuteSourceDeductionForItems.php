@@ -97,12 +97,12 @@ class ExecuteSourceDeductionForItems
     /**
      * @param OrderInterface $order
      * @param array $itemsToCancel
-     * @param Creditmemo|null $creditmemo
+     * @param bool $isCreditmemo
      */
-    public function executeSourceDeductionForItems(OrderInterface $order, array $itemsToCancel, Creditmemo $creditmemo = null)
+    public function executeSourceDeductionForItems(OrderInterface $order, array $itemsToCancel, bool $isCreditmemo = false)
     {
         $type = SalesEventInterface::EVENT_ORDER_CANCELED;
-        if ($creditmemo) {
+        if ($isCreditmemo) {
             $type = SalesEventInterface::EVENT_CREDITMEMO_CREATED;
         }
 
@@ -125,7 +125,7 @@ class ExecuteSourceDeductionForItems
 
         /** @var OrderItem|CreditmemoItem $item */
         foreach ($itemsToCancel as $item) {
-            if ($creditmemo && !$item->getBackToStock()) {
+            if ($isCreditmemo && !$item->getBackToStock()) {
                 continue;
             }
 

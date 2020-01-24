@@ -7,7 +7,6 @@ use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\InventorySales\Model\GetItemsToCancelFromOrderItem;
 use Magento\Sales\Model\Order\Item as OrderItem;
-use Magento\Sales\Api\Data\OrderInterface;
 use Ampersand\DisableStockReservation\Service\ExecuteSourceDeductionForItems;
 
 /**
@@ -44,10 +43,14 @@ class CancelOrderItemObserver implements ObserverInterface
      * @param EventObserver $observer
      * @return void
      */
-    public function execute(EventObserver $observer): void
+    public function execute(EventObserver $observer)
     {
         /** @var OrderItem $item */
         $orderItem = $observer->getEvent()->getItem();
+
+        if (!$orderItem instanceof OrderItem) {
+            return;
+        }
 
         $itemsToCancel = $this->getItemsToCancelFromOrderItem->execute($orderItem);
 
@@ -55,9 +58,6 @@ class CancelOrderItemObserver implements ObserverInterface
             return;
         }
 
-        /** @var OrderInterface $order */
-        $order = $orderItem->getOrder();
-
-        $this->executeSourceDeductionForItems->executeSourceDeductionForItems($order, $itemsToCancel);
+        $this->executeSourceDeductionForItems->executeSourceDeductionForItems($orderItem->getOrder(), $itemsToCancel);
     }
 }

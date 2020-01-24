@@ -12,6 +12,7 @@ use Ampersand\DisableStockReservation\Service\SourcesConverter;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Ampersand\DisableStockReservation\Model\ResourceModel\Sources\CollectionFactory;
 use Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface;
+use Ampersand\DisableStockReservation\Api\Data\SourcesInterface;
 
 /**
  * Class OrderRepositoryPlugin
@@ -101,7 +102,7 @@ class OrderRepositoryPlugin
         }
 
         $orderListSources = $this->collectionFactory->create()
-            ->addFieldToFilter('order_id', ['in' => $resultIds])
+            ->addFieldToFilter(SourcesInterface::ORDER_ID_KEY, ['in' => $resultIds])
             ->getItems();
 
         $orderSources = [];

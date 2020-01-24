@@ -55,7 +55,7 @@ class SourcesRepository implements SourcesRepositoryInterface
      * @param string $orderId
      *
      * @return SourcesInterface
-     * @throws \Exception
+     * @throws NoSuchEntityException
      */
     public function getByOrderId(string $orderId): SourcesInterface
     {
@@ -65,11 +65,11 @@ class SourcesRepository implements SourcesRepositoryInterface
         $this->sourcesResourceModel->load(
             $sourcesModel,
             $orderId,
-            'order_id'
+            SourcesInterface::ORDER_ID_KEY
         );
 
         if (!$sourcesModel->getId()) {
-            throw new NoSuchEntityException(__('Source model with the order ID "%1', $orderId));
+            throw new NoSuchEntityException(__('Source model with the order ID "%1" does not exist', $orderId));
         }
 
         return $sourcesModel;
@@ -80,7 +80,7 @@ class SourcesRepository implements SourcesRepositoryInterface
      * @param string $itemSku
      *
      * @return SourceSelectionItem
-     * @throws \Exception
+     * @throws NoSuchEntityException
      */
     public function getSourceItemBySku(string $orderId, string $itemSku): SourceSelectionItem
     {
@@ -89,7 +89,7 @@ class SourcesRepository implements SourcesRepositoryInterface
         );
 
         if (!array_key_exists($itemSku, $sourceSelectionItems)) {
-            throw new NoSuchEntityException(__('Source model with the sku "%1', $itemSku));
+            throw new NoSuchEntityException(__('Source model with the sku "%1" does not exist', $itemSku));
         }
 
         return $sourceSelectionItems[$itemSku];
@@ -107,7 +107,7 @@ class SourcesRepository implements SourcesRepositoryInterface
             // We're doing this because https://github.com/phpstan/phpstan fails when trying to pass our interface to the
             // load/save method. The resource model expects an instance of AbstractDb
             if (!$model instanceof AbstractModel) {
-                throw new LocalizedException(__('expects Magento\Framework\Model\AbstractModel'));
+                throw new LocalizedException(__('Expects Magento\Framework\Model\AbstractModel'));
             }
             $this->sourcesResourceModel->save($model);
         } catch (\Exception $exception) {

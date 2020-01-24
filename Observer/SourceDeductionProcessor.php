@@ -17,6 +17,7 @@ use Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface;
 use Magento\Sales\Api\Data\OrderExtensionFactory;
 use Ampersand\DisableStockReservation\Service\SourcesConverter;
 use Ampersand\DisableStockReservation\Api\Data\SourcesInterfaceFactory;
+use Magento\Sales\Api\Data\OrderInterface;
 
 class SourceDeductionProcessor implements ObserverInterface
 {
@@ -114,7 +115,8 @@ class SourceDeductionProcessor implements ObserverInterface
     {
         /** @var \Magento\Sales\Model\Order $order */
         $order = $observer->getEvent()->getOrder();
-        if ($order->getOrigData('entity_id')) {
+
+        if (!$order instanceof OrderInterface || $order->getOrigData('entity_id')) {
             return;
         }
 

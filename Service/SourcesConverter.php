@@ -44,7 +44,7 @@ class SourcesConverter
         foreach ($sourcesItems as $item) {
             $sources[] = [
                 'source_code' => $item->getSourceCode(),
-                'SKU' => $item->getSku(),
+                'sku' => $item->getSku(),
                 'qty_to_deduct' => $item->getQtyToDeduct(),
                 'qty_available' => $item->getQtyAvailable()
             ];
@@ -62,18 +62,17 @@ class SourcesConverter
         $sourcesArray = $this->serializer->unserialize($sources);
         $sourceSelectionItems = [];
 
-        foreach ($sourcesArray as $item)
-        {
+        foreach ($sourcesArray as $item) {
             $sourceSelectionItem = $this->sourceSelectionItemInterfaceFactory->create(
                 [
                     'sourceCode' => $item['source_code'],
-                    'sku' => $item['SKU'],
+                    'sku' => $item['sku'],
                     'qtyToDeduct' => $item['qty_to_deduct'],
                     'qtyAvailable' => $item['qty_available']
                 ]
             );
 
-            $sourceSelectionItems[$item['SKU']] = $sourceSelectionItem;
+            $sourceSelectionItems[$item['sku']] = $sourceSelectionItem;
         }
 
         return $sourceSelectionItems;

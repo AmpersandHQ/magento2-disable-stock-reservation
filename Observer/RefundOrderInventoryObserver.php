@@ -4,7 +4,7 @@ namespace Ampersand\DisableStockReservation\Observer;
 
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\Data\CreditmemoInterface;
 use Ampersand\DisableStockReservation\Service\ExecuteSourceDeductionForItems;
 use Magento\Sales\Model\Order\Creditmemo;
 
@@ -40,9 +40,10 @@ class RefundOrderInventoryObserver implements ObserverInterface
         /** @var Creditmemo $creditmemo */
         $creditmemo = $observer->getEvent()->getCreditmemo();
 
-        /** @var OrderInterface $order */
-        $order = $creditmemo->getOrder();
+        if (!$creditmemo instanceof CreditmemoInterface) {
+            return;
+        }
 
-        $this->executeSourceDeductionForItems->executeSourceDeductionForItems($order, $creditmemo->getItems(), $creditmemo);
+        $this->executeSourceDeductionForItems->executeSourceDeductionForItems($creditmemo->getOrder(), $creditmemo->getItems(), true);
     }
 }
