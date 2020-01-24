@@ -22,7 +22,7 @@ class Sources extends AbstractModel implements SourcesInterface
      */
     public function getSources(): ?string
     {
-        return $this->getData('sources');
+        return $this->getData(SourcesInterface::SOURCES_KEY);
     }
 
     /**
@@ -31,7 +31,7 @@ class Sources extends AbstractModel implements SourcesInterface
      */
     public function setSources(string $sources): SourcesInterface
     {
-        return $this->setData('sources', $sources);
+        return $this->setData(SourcesInterface::SOURCES_KEY, $sources);
     }
 
     /**

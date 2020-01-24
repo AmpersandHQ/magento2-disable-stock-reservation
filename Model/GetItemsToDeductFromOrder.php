@@ -51,6 +51,8 @@ class GetItemsToDeductFromOrder
     public function execute(Order $order): array
     {
         $itemsToOrder = [];
+
+        /** @var \Magento\Sales\Model\Order\Item|null $orderItem */
         foreach ($order->getAllVisibleItems() as $orderItem) {
             if (null === $orderItem || $orderItem->getParentItem() !== null) {
                 continue;

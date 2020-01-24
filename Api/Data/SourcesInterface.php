@@ -14,6 +14,11 @@ interface SourcesInterface
     const ORDER_ID_KEY = 'order_id';
 
     /**
+     * Sources Key
+     */
+    const SOURCES_KEY = 'sources';
+
+    /**
      * @return string|null
      */
     public function getSources(): ?string;
