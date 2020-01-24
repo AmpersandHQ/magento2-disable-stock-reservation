@@ -4,6 +4,7 @@ namespace Ampersand\DisableStockReservation\Api;
 
 use Ampersand\DisableStockReservation\Api\Data\SourcesInterface;
 use Magento\InventorySourceSelection\Model\Result\SourceSelectionItem;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 /**
  * Interface SourcesRepositoryInterface
@@ -26,7 +27,9 @@ interface SourcesRepositoryInterface
     /**
      * @param string $orderId
      * @param string $itemSku
-     * @return SourceSelectionItem|null
+     *
+     * @return SourceSelectionItem
+     * @throws NoSuchEntityException
      */
     public function getSourceItemBySku(string $orderId, string $itemSku): ?SourceSelectionItem;
 }

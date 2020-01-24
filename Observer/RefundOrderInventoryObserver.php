@@ -35,7 +35,7 @@ class RefundOrderInventoryObserver implements ObserverInterface
      * @param EventObserver $observer
      * @return void
      */
-    public function execute(EventObserver $observer)
+    public function execute(EventObserver $observer): void
     {
         /** @var Creditmemo $creditmemo */
         $creditmemo = $observer->getEvent()->getCreditmemo();
