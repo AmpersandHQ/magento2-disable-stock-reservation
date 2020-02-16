@@ -82,7 +82,7 @@ class GetSourceSelectionResultFromOrder
     /**
      * Get selection request items
      *
-     * @param OrderItemInterface[]|Traversable $orderItems
+     * @param iterable $orderItems
      * @return array
      */
     private function getSelectionRequestItems(iterable $orderItems): array
