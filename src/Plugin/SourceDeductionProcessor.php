@@ -1,23 +1,24 @@
 <?php
 declare(strict_types=1);
 
-namespace Ampersand\DisableStockReservation\Observer;
+namespace Ampersand\DisableStockReservation\Plugin;
 
 use Ampersand\DisableStockReservation\Model\GetSourceSelectionResultFromOrder;
-use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\Event\Observer as EventObserver;
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\InventorySalesApi\Api\Data\SalesEventInterface;
 use Magento\InventorySalesApi\Api\Data\SalesEventInterfaceFactory;
 use Magento\InventorySourceDeductionApi\Model\SourceDeductionRequestInterface;
 use Magento\InventorySourceDeductionApi\Model\SourceDeductionServiceInterface;
 use Magento\InventoryShipping\Model\SourceDeductionRequestsFromSourceSelectionFactory;
-use Magento\Sales\Api\Data\OrderInterface;
-use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\InventorySalesApi\Api\Data\ItemToSellInterfaceFactory;
 use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Service\OrderService;
 
-class SourceDeductionProcessor implements ObserverInterface
+class SourceDeductionProcessor
 {
     /**
      * @var GetSourceSelectionResultFromOrder
@@ -74,14 +75,20 @@ class SourceDeductionProcessor implements ObserverInterface
     }
 
     /**
-     * @param EventObserver $observer
-     * @return void
+     * @param OrderService $subject
+     * @param OrderInterface $result
+     *
+     * @return OrderInterface
+     * @throws CouldNotSaveException
+     * @throws InputException
+     * @throws LocalizedException
+     * @see OrderService::place
      */
-    public function execute(EventObserver $observer)
+    public function afterPlace(OrderService $subject, OrderInterface $result)
     {
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $observer->getEvent()->getOrder();
-        if ($order->getOrigData('entity_id')) {
+        /** @var Order $order */
+        $order = $result;
+        if (is_null($order->getId())) {
             return;
         }
 
@@ -104,12 +111,18 @@ class SourceDeductionProcessor implements ObserverInterface
             $this->sourceDeductionService->execute($sourceDeductionRequest);
             $this->placeCompensatingReservation($sourceDeductionRequest);
         }
+
+        return $result;
     }
 
     /**
      * Place compensating reservation after source deduction
      *
      * @param SourceDeductionRequestInterface $sourceDeductionRequest
+     *
+     * @throws CouldNotSaveException
+     * @throws InputException
+     * @throws LocalizedException
      */
     private function placeCompensatingReservation(SourceDeductionRequestInterface $sourceDeductionRequest): void
     {

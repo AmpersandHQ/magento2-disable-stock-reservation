@@ -5,4 +5,7 @@
     <type name="Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface">
         <plugin name="disable_place_reservations" type="Ampersand\DisableStockReservation\Plugin\PlaceReservationsForSalesEventPlugin"/>
     </type>
+    <type name="Magento\Sales\Model\Service\OrderService">
+        <plugin name="inventory_sales_source_deduction_processor" type="Ampersand\DisableStockReservation\Plugin\SourceDeductionProcessor"/>
+    </type>
 </config>
