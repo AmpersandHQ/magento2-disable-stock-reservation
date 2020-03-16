@@ -1,0 +1,60 @@
+language: php
+php: 7.3
+
+install:
+  - # Install magento
+  - composer install --no-interaction
+  - NAME=disablestockres WITH_SAMPLE_DATA=1 VERSION=2.3.4 ./vendor/bin/travis-install-magento.sh;
+  - # Install this module
+  - cd vendor/ampersand/travis-vanilla-magento/instances/disablestockres
+  - export COMPOSER_MEMORY_LIMIT=-1
+  - composer config repo.disablestockres git "../../../../../"
+  - composer require ampersand/magento2-disable-stock-reservation dev-$TRAVIS_BRANCH || composer require ampersand/magento2-disable-stock-reservation $TRAVIS_BRANCH
+  - php bin/magento setup:upgrade
+  - # compile magento
+  - php bin/magento setup:di:compile
+  - # Set up test configuration
+  - magerun2 config:store:set checkout/options/guest_checkout 1
+  - magerun2 config:store:set payment/checkmo/active 1
+  - magerun2 integration:create disablestockres example@example.com https://example.com --access-token="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - magerun2 cache:flush
+  - # warm caches
+  - php bin/magento | head -1
+  - curl -k -s https://magento-disablestockres.localhost/fusion-backpack.html || true
+  - cd -
+
+before_install:
+  - mkdir -p $HOME/bin/
+  - # Install google chrome latest version from source. More reliable than using apt-get.
+  - test -f $HOME/bin/google-chrome-stable_current_amd64.deb || (wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && mv google-chrome-stable_current_amd64.deb $HOME/bin/)
+  - sudo apt-get remove google-chrome-stable && sudo dpkg -i $HOME/bin/google-chrome-stable_current_amd64.deb && google-chrome --version;
+  - ./dev/chromedriver/start.sh
+  - # Install magerun2
+  - test -f $HOME/bin/magerun2 || (wget https://files.magerun.net/n98-magerun2-latest.phar && chmod +x n98-magerun2-latest.phar && mv n98-magerun2-latest.phar $HOME/bin/magerun2)
+
+script:
+  - ./vendor/bin/codecept build -c dev
+  - URL="https://magento-disablestockres.localhost/" MYSQL_USER="root" MYSQL_HOST="127.0.0.1" MYSQL_DB="databasedisablestockres" MYSQL_PORT="3306" ./vendor/bin/codecept run acceptance -c dev --env headless -vvv
+
+addons:
+  apt:
+    packages:
+    - postfix
+    - apache2
+    - libapache2-mod-fastcgi
+
+services:
+  - mysql
+
+cache:
+  apt: true
+  directories:
+    - $HOME/.composer/cache
+    - $HOME/bin
+
+after_failure:
+  - test -d ./var/report/ && for r in ./var/report/*; do cat $r; done
+  - test -f ./var/log/system.log && grep -v "Broken reference" ./var/log/system.log
+  - test -f ./var/log/exception.log && cat ./var/log/exception.log
+  - test -f ./var/log/support_report.log && grep -v "Broken reference" ./var/log/support_report.log
+  - sleep 10; # give log files time to render
