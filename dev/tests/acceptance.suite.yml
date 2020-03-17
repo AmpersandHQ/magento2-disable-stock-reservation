@@ -10,7 +10,7 @@ step_decorators:
     - \Codeception\Step\TryTo
 modules:
     enabled:
-        - WebDriver
+        - PhpBrowser
         - Asserts
         - Db
         - REST
@@ -18,26 +18,12 @@ modules:
     config:
         REST:
            depends: PhpBrowser
-           url: '%URL%rest/V1/'
+           url: '%URL%rest/'
            shortDebugResponse: 1000 # only the first 300 chars of the response
-        WebDriver:
+        PhpBrowser:
             url: '%URL%'
-            wait: 15
-            browser: chrome
-            port: 9515
-            restart: true
-            clear_cookies: true
+            timeout: 60
         Db:
             dsn: 'mysql:host=%MYSQL_HOST%;dbname=%MYSQL_DB%;port=%MYSQL_PORT%'
             user: '%MYSQL_USER%'
             password:
-env:
-    headless:
-         modules:
-            config:
-                WebDriver:
-                    capabilities:
-                        acceptSslCerts: true
-                        acceptInsecureCerts: true
-                        chromeOptions:
-                            args: ["--url-base=/wd/hub", "--headless", "--ignore-certificate-errors", "window-size=1300,768", "--password-store=basic", "--use-mock-keychain"]

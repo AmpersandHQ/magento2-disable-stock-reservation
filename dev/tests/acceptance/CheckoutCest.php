@@ -5,97 +5,82 @@ class CheckoutCest
     /**
      * magerun2 integration:create disablestockres example@example.com https://example.com --access-token="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
      */
-    const ACCESS_TOKEN='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-    const SKU='24-MB02';
+    const ACCESS_TOKEN = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    const SKU = 'ampersand-magento2-disable-stock-reservation-sku';
 
     private $productEntityId = null;
     private $productQty = null;
-    private $orderId = null;
 
     /**
      * @param AcceptanceTester $I
      */
-    public function databaseIsConfigured(AcceptanceTester $I)
+    public function dependenciesAreConfigured(AcceptanceTester $I)
     {
         $I->seeNumRecords(1, 'inventory_source');
         $I->seeInDatabase('core_config_data', ['path' => 'checkout/options/guest_checkout', 'value' => '1']);
         $I->seeInDatabase('core_config_data', ['path' => 'payment/checkmo/active', 'value' => '1']);
-        $I->seeInDatabase('oauth_token', ['token'=> self::ACCESS_TOKEN]);
-        $I->deleteFromDatabase('sales_order');
-        $I->deleteFromDatabase('quote');
+        $I->seeInDatabase('oauth_token', ['token' => self::ACCESS_TOKEN]);
         $I->deleteFromDatabase('inventory_reservation');
-        $I->seeInDatabase('catalog_product_entity', ['sku' => self::SKU]);
 
-        // Get product quantity
-        $productEntityId = $I->grabFromDatabase('catalog_product_entity', 'entity_id', ['sku' => self::SKU]);
-        $qty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productEntityId]);
-        $I->assertGreaterOrEquals(1, $qty, '24-MB02 must have at least 1 qty in stock');
-        $this->productQty = $qty;
-        $this->productEntityId = $productEntityId;
+        $I->amGoingTo('Create our test product if it does not exist');
+        $productEntityTypeId = $I->grabFromDatabase(
+            'eav_entity_type',
+            'entity_type_id',
+            [
+                'entity_type_code' => 'catalog_product'
+            ]
+        );
+        $attributeSetId = $I->grabFromDatabase(
+            'eav_attribute_set',
+            'attribute_set_id',
+            [
+                'entity_type_id' => $productEntityTypeId,
+                'attribute_set_name' => 'Default'
+            ]
+        );
+
+        // Configure a small retry when doing the first API requests in case caches are slow to warm, curl could timeout
+        $I->retry(4, 100);
+        $I->amBearerAuthenticated(self::ACCESS_TOKEN);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->retrySendPOSTAndVerifyResponseCodeIs200('V1/products', json_encode([
+            'product' => [
+                'sku' => self::SKU,
+                'name' => 'ampersand test product',
+                'attribute_set_id' => $attributeSetId,
+                'price' => 10,
+                'status' => 1,
+                'visibility' => 4,
+                'type_id' => 'simple',
+                'extension_attributes' => [
+                    'stock_item' => [
+                        'qty' => 100,
+                        'is_in_stock' => true
+                    ]
+                ],
+                'custom_attributes' => [
+                    [
+                        'attribute_code' => 'tax_class_id',
+                        'value' => 2
+                    ]
+                ]
+            ]
+        ]));
+
+        $productData = json_decode($I->grabResponse(), true);
+        $I->assertArrayHasKey('id', $productData);
+
+        $this->productEntityId = $productData['id'];
     }
 
     /**
-     * @depends databaseIsConfigured
-     *
-     * @param AcceptanceTester $I
-     */
-    public function addToBasketThenCheckout(AcceptanceTester $I)
-    {
-        // Configure a forgiving retry amount
-        $I->retry(10, 100);
-
-        $I->amOnPage('fusion-backpack.html');
-
-        // Add to basket
-        $I->retryClick('button[title="Add to Cart"]');
-        $I->waitAjaxLoad();
-        $I->retrySeeInDatabase('quote');
-
-        // Load checkout
-        $I->amOnPage('checkout');
-        $I->dontSeeInCurrentUrl('cart');                    // Verify that guest checkout is enabled, no 302 away
-        $I->waitForElementNotVisible('#checkout-loader', 30);   // Wait for the checkout to actually render
-
-        // Fill in checkout
-        // Pick United Kingdom from country dropdown
-        $I->click('select[name="country_id"]');
-        $I->click('select[name="country_id"] > option[value=GB]');
-
-        $I->fillField('#customer-email', 'example' . time() . '@example.com');
-        $I->fillField('input[name="firstname"]', 'given name');
-        $I->fillField('input[name="lastname"]', 'second name');
-        $I->fillField('input[name="street[0]"]', 'street 0');
-        $I->fillField('input[name="street[1]"]', 'street 1');
-        $I->fillField('input[name="street[2]"]', 'street 2');
-        $I->fillField('input[name="city"]', 'city');
-        $I->fillField('input[name="postcode"]', 'M1 1AA');
-        $I->fillField('input[name="telephone"]', '07700000000');
-
-        // Pick shipping method
-        $I->waitForElementNotVisible('#opc-shipping_method > div.loading-mask'); // Ensure shipping methods loaded
-        $I->retryDontSee('Best Way');
-        $I->see('Flat Rate');
-        $I->retryClick('input[value="flatrate_flatrate"]');
-        $I->retryClick('button[data-role="opc-continue"]');
-        $I->waitForElementNotVisible('#checkout-loader', 30);
-
-        // Place order and verify we hit the success page
-        $I->retrySee('Place Order');
-        $I->retryClick('button.primary.checkout[type="submit"]');
-        $I->waitForElementNotVisible('#checkout-loader', 30);   // Wait for the checkout to actually render
-        $I->waitPageLoad();
-        $I->seeInCurrentUrl('success');
-
-        $this->orderId = $I->grabFromDatabase('sales_order', 'entity_id');
-        $I->comment('Have order with id' . $this->orderId);
-    }
-
-    /**
-     * @depends addToBasketThenCheckout
+     * @depends dependenciesAreConfigured
      * @param AcceptanceTester $I
      */
     public function noInventoryIsReservedAndStockHasBeenDeducted(AcceptanceTester $I)
     {
+        $this->createGuestCheckMoOrder($I);
+
         //Prevent all writes to the inventory_reservations table
         $I->dontSeeInDatabase('inventory_reservation');
 
@@ -105,15 +90,16 @@ class CheckoutCest
     }
 
     /**
-     * @depends CheckoutCest:noInventoryIsReservedAndStockHasBeenDeducted
+     * @depends noInventoryIsReservedAndStockHasBeenDeducted
      * @param AcceptanceTester $I
      */
     public function preventStockDeductionOnOrderShipment(AcceptanceTester $I)
     {
+        $orderId = $this->createGuestCheckMoOrder($I);
+
         $I->amBearerAuthenticated(self::ACCESS_TOKEN);
         $I->haveHttpHeader('Content-Type', 'application/json');
-        $I->sendPOST("order/{$this->orderId}/ship");
-        $I->seeResponseCodeIs(200);
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/ship");
 
         // Verify stock is -1 from the start of the tests. We already see that it was deducted in the above test
         $newQty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $this->productEntityId]);
@@ -121,17 +107,91 @@ class CheckoutCest
     }
 
     /**
-     * @depends CheckoutCest:preventStockDeductionOnOrderShipment
+     * @depends noInventoryIsReservedAndStockHasBeenDeducted
      * @param AcceptanceTester $I
      */
     public function stockIsReturnedWhenOrderIsCancelled(AcceptanceTester $I)
     {
+        $orderId = $this->createGuestCheckMoOrder($I);
+
         $I->amBearerAuthenticated(self::ACCESS_TOKEN);
         $I->haveHttpHeader('Content-Type', 'application/json');
-        $I->sendPOST("orders/{$this->orderId}/cancel");
-        $I->seeResponseCodeIs(200);
+        //$I->haveRESTXdebugCookie(); # uncomment to add xdebug cookie to request
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/orders/{$orderId}/cancel");
 
         $newQty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $this->productEntityId]);
         $I->assertEquals($this->productQty, $newQty, 'The quantity should have been returned when cancelling');
+    }
+
+    /**
+     * @param $I
+     * @return string
+     */
+    private function createGuestCheckMoOrder($I)
+    {
+        /** @var AcceptanceTester $I*/
+        $qty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $this->productEntityId]);
+        $I->assertGreaterOrEquals(1, $qty, 'must have at least 1 qty in stock');
+        $this->productQty = $qty;
+
+        $I->haveHttpHeader('Content-Type', 'application/json');
+
+        // Create a guest quote
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/guest-carts");
+        $cartId = str_replace('"', '', $I->grabResponse());
+
+        // Add to basket
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/guest-carts/$cartId/items", json_encode([
+            'cartItem' => [
+                'quoteId' => $cartId,
+                'sku' => self::SKU,
+                'qty' => 1,
+            ],
+        ]));
+
+        //Estimate shipping method
+        $email = "example" . time() . "@example.com";
+        $address = [
+            "email" => $email,
+            "country_id" => 'GB',
+            "street" => [
+                "Street 0",
+                "Street 1",
+                "Street 2"
+            ],
+            "postcode" => "M1 1AA",
+            "city" => "Manchester",
+            "firstname" => "given name",
+            "lastname" => "second name",
+            "telephone" => "07700000000",
+        ];
+
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/guest-carts/$cartId/estimate-shipping-methods", json_encode([
+            "address" => array_merge($address, ["same_as_billing" => 1])
+        ]));
+        $I->assertStringContainsString('flatrate', $I->grabResponse(), 'Flat rate shipping method is not present');
+
+        // Use flat rate shipping method
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/guest-carts/$cartId/shipping-information", json_encode([
+            "addressInformation" => [
+                "shipping_address" => $address,
+                "billing_address" => $address,
+                "shipping_carrier_code" => "flatrate",
+                "shipping_method_code" => "flatrate"
+            ]
+        ]));
+        $I->assertStringContainsString('checkmo', $I->grabResponse(), 'Check Mo needs to be enabled');
+
+        // Check out with checkmo
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/guest-carts/$cartId/payment-information", json_encode([
+            'paymentMethod' => [
+                'method' => 'checkmo',
+            ],
+            'billing_address' => $address,
+            'email' => $email
+        ]));
+        $orderId = str_replace('"', '', $I->grabResponse());
+        $I->comment('Have order with id ' . $orderId);
+        return $orderId;
     }
 }

@@ -4,6 +4,3 @@
     'Ampersand_DisableStockReservation',
     __DIR__
 );
-
-
-

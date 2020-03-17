@@ -4,15 +4,15 @@ namespace Helper;
 // here you can define custom actions
 // all public methods declared in helper class will be available in $I
 use Codeception\Exception\ModuleException;
+use Symfony\Component\BrowserKit\Cookie;
 
 class Acceptance extends \Codeception\Module
 {
-    private $webDriver;
-    /** @var \Codeception\Module\WebDriver */
-    private $webDriverModule;
-
     /** @var  \Codeception\Module\Db */
     private $databaseModule;
+
+    /** @var  \Codeception\Module\REST */
+    private $restModule;
 
     /**
      * Event hook before a test starts.
@@ -23,65 +23,28 @@ class Acceptance extends \Codeception\Module
      */
     public function _before(\Codeception\TestInterface $test)
     {
-        $this->webDriverModule = $this->getModule('WebDriver');
-        $this->webDriver = $this->webDriverModule->webDriver;
-
         $this->databaseModule = $this->getModule('Db');
+        $this->restModule = $this->getModule('REST');
     }
 
     /**
-     * @param $link
-     * @param $timeout
+     * @param $url
+     * @param array $params
+     * @param array $files
      */
-    public function amOnPage($link, $timeout = 30)
+    public function sendPOSTAndVerifyResponseCodeIs200($url, $params = [], $files = [])
     {
-        $this->webDriverModule->amOnPage($link);
-        $this->waitPageLoad($timeout);
+        $this->restModule->sendPOST($url, $params, $files);
+        $this->restModule->seeResponseCodeIs(200);
     }
 
     /**
-     * @param $timeout
+     * Set XDEBUG cookie for debugging rest connections
      */
-    public function waitAjaxLoad($timeout = 30)
+    public function haveRESTXdebugCookie()
     {
-        $this->webDriverModule->waitForJS('return !!window.jQuery && window.jQuery.active == 0;', $timeout);
-        $this->webDriverModule->wait(1);
-        $this->dontSeeJsError();
+        $this->restModule->client->getCookieJar()->set(new Cookie('XDEBUG_SESSION', 'phpstorm'));
     }
-
-    /**
-     * @param $timeout
-     */
-    public function waitPageLoad($timeout = 30)
-    {
-        $this->webDriverModule->waitForJs('return document.readyState == "complete"', $timeout);
-        $this->waitAjaxLoad($timeout);
-        $this->dontSeeJsError();
-    }
-
-    /**
-     * @throws ModuleException
-     */
-    public function dontSeeJsError()
-    {
-        $messagesToIgnore = [
-            "Error: [object Object]",   ////https://github.com/magento/magento2/issues/6410
-            "Uncaught TypeError: Cannot read property 'customer' of undefined",
-        ];
-
-        $logs = $this->webDriver->manage()->getLog('browser');
-        foreach ($logs as $log) {
-            if ($log['source'] === 'javascript' && $log['level'] === 'SEVERE') {
-                foreach ($messagesToIgnore as $messageToIgnore) {
-                    if (strpos($log['message'], $messageToIgnore) !== false) {
-                        continue 2; //This message contains one of our ignored strings, move to next message.
-                    }
-                }
-                throw new ModuleException($this, 'Some error in JavaScript: ' . json_encode($log));
-            }
-        }
-    }
-
     /**
      * @param $table
      * @param $criteria

@@ -73,7 +73,7 @@ class GetInventoryRequestFromOrder
     /**
      * Same as GetInventoryRequestFromOrder, but takes an order instead of an order id
      * because in this scenario the order has not been saved yet.
-     * 
+     *
      * @param OrderInterface $order
      * @param array $requestItems
      * @return InventoryRequestInterface

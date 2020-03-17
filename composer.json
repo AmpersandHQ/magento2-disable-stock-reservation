@@ -12,7 +12,7 @@
             "src/registration.php"
         ],
         "psr-4": {
-            "Ampersand\\DisableStockReservation\\": ""
+            "Ampersand\\DisableStockReservation\\": "src"
         }
     },
     "repositories": [
@@ -23,11 +23,11 @@
     ],
     "require-dev": {
         "codeception/codeception": "^4.1.1",
-        "codeception/module-webdriver": "^1.0",
         "codeception/module-phpbrowser": "^1.0.0",
         "codeception/module-asserts": "^1.1.0",
         "codeception/module-db": "^1.0.1",
-        "ampersand/travis-vanilla-magento": "^1.0.0",
-        "codeception/module-rest": "^1.2.0"
+        "ampersand/travis-vanilla-magento": "^1.0",
+        "codeception/module-rest": "^1.2.0",
+        "friendsofphp/php-cs-fixer": "^2.16"
     }
 }
