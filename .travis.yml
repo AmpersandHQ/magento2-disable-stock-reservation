@@ -35,8 +35,10 @@ before_install:
   - test -f $HOME/bin/magerun2 || (wget https://files.magerun.net/n98-magerun2-latest.phar && chmod +x n98-magerun2-latest.phar && mv n98-magerun2-latest.phar $HOME/bin/magerun2)
 
 script:
+  - ADDITIONAL_ARGS="-v"
+  - if [[ $TRAVIS_COMMIT_MESSAGE == *"VERBOSE"* ]]; then ADDITIONAL_ARGS="-vvv"; fi;
   - ./vendor/bin/codecept build -c dev
-  - URL="https://magento-disablestockres.localhost/" MYSQL_USER="root" MYSQL_HOST="127.0.0.1" MYSQL_DB="databasedisablestockres" MYSQL_PORT="3306" ./vendor/bin/codecept run acceptance -c dev -vvv
+  - URL="https://magento-disablestockres.localhost/" MYSQL_USER="root" MYSQL_HOST="127.0.0.1" MYSQL_DB="databasedisablestockres" MYSQL_PORT="3306" ./vendor/bin/codecept run acceptance -c dev $ADDITIONAL_ARGS
 
 addons:
   apt:
