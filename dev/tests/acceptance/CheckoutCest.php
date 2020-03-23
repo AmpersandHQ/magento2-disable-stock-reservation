@@ -93,6 +93,35 @@ class CheckoutCest
      * @depends noInventoryIsReservedAndStockHasBeenDeducted
      * @param AcceptanceTester $I
      */
+    public function repeatSavesOfOrderDoNotDecrementQuantityUn(AcceptanceTester $I)
+    {
+        $orderId = $this->createGuestCheckMoOrder($I);
+
+        $I->amBearerAuthenticated(self::ACCESS_TOKEN);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+//        $I->haveRESTXdebugCookie(); # uncomment to add xdebug cookie to request
+
+        // Save this order a few times
+        for ($i=0; $i<5; $i++) {
+            $I->sendPOSTAndVerifyResponseCodeIs200("V1/orders", json_encode([
+                "entity"=> [
+                    "entity_id" => $orderId,
+                    "extension_attributes" => [
+                        "payment_additional_info" => "payment_additional_info"
+                    ]
+                ]
+            ]));
+        }
+
+        // Verify the stock has only gone down one, for the creation of the order and not the subsequent saves
+        $newQty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $this->productEntityId]);
+        $I->assertEquals($this->productQty-1, $newQty, 'The quantity should have gone down by 1');
+    }
+
+    /**
+     * @depends noInventoryIsReservedAndStockHasBeenDeducted
+     * @param AcceptanceTester $I
+     */
     public function preventStockDeductionOnOrderShipment(AcceptanceTester $I)
     {
         $orderId = $this->createGuestCheckMoOrder($I);
