@@ -1,0 +1,65 @@
+language: php
+php: 7.3
+
+env:
+  - TEST_GROUP=latest
+  - TEST_GROUP=two_three_three
+
+install:
+# Composer install
+  - composer install --no-interaction
+# Do a quick code style check
+  - ./vendor/bin/php-cs-fixer fix --dry-run --rules=@PSR2 --diff src/
+# Install magento
+  - if [[ $TEST_GROUP = two_three_three ]]; then  NAME=disablestockres VERSION=2.3.3 . ./vendor/bin/travis-install-magento.sh; fi
+  - if [[ $TEST_GROUP = latest ]];          then  NAME=disablestockres               . ./vendor/bin/travis-install-magento.sh; fi
+# Install this module
+  - cd vendor/ampersand/travis-vanilla-magento/instances/disablestockres
+  - export COMPOSER_MEMORY_LIMIT=-1
+  - composer config repo.disablestockres git "../../../../../"
+  - composer require ampersand/magento2-disable-stock-reservation dev-$TRAVIS_BRANCH || composer require ampersand/magento2-disable-stock-reservation $TRAVIS_BRANCH
+  - php bin/magento setup:upgrade
+# compile magento
+  - php bin/magento setup:di:compile
+# Set up test configuration
+  - magerun2 config:store:set checkout/options/guest_checkout 1
+  - magerun2 config:store:set payment/checkmo/active 1
+  - magerun2 integration:create disablestockres example@example.com https://example.com --access-token="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - magerun2 cache:flush
+# warm caches
+  - php bin/magento
+  - cd -
+
+before_install:
+  - mkdir -p $HOME/bin/
+# Install magerun2
+  - test -f $HOME/bin/magerun2 || (wget https://files.magerun.net/n98-magerun2-latest.phar && chmod +x n98-magerun2-latest.phar && mv n98-magerun2-latest.phar $HOME/bin/magerun2)
+
+script:
+  - ADDITIONAL_ARGS="-v"
+  - if [[ $TRAVIS_COMMIT_MESSAGE == *"VERBOSE"* ]]; then ADDITIONAL_ARGS="-vvv"; fi;
+  - ./vendor/bin/codecept build -c dev
+  - URL="https://magento-disablestockres.localhost/" MYSQL_USER="root" MYSQL_HOST="127.0.0.1" MYSQL_DB="databasedisablestockres" MYSQL_PORT="3306" ./vendor/bin/codecept run acceptance -c dev $ADDITIONAL_ARGS
+
+addons:
+  apt:
+    packages:
+    - postfix
+    - apache2
+    - libapache2-mod-fastcgi
+
+services:
+  - mysql
+
+cache:
+  apt: true
+  directories:
+    - $HOME/.composer/cache
+    - $HOME/bin
+
+after_failure:
+  - test -d ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/report/ && for r in ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/report/*; do cat $r; done
+  - test -f ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/system.log && grep -v "Broken reference" ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/system.log
+  - test -f ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/exception.log && cat ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/exception.log
+  - test -f ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/support_report.log && grep -v "Broken reference" ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/support_report.log
+  - sleep 10; # give log files time to render
