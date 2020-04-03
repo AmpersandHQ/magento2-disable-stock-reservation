@@ -109,4 +109,44 @@ class CheckoutCest
         $newQty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
         $I->assertEquals(100, $newQty, 'The quantity should have been returned when cancelling');
     }
+
+    /**
+     * @link https://github.com/AmpersandHQ/magento2-disable-stock-reservation/issues/13
+     *
+     * @depends noInventoryIsReservedAndStockHasBeenDeducted
+     * @param \Step\Acceptance\Magento $I
+     */
+    public function stockDeductionPreventsSubsequentAddToBasket(Step\Acceptance\Magento $I)
+    {
+        // Create product with 50 stock
+        $productId = $I->createSimpleProduct('amp_verify_stock_deduction_prevents_add_to_basket', 50);
+
+        // Verify the state of the database at this point
+        $qtyInDatabase = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
+        $I->assertEquals(50, $qtyInDatabase, 'The product should be created with qty 50');
+
+        $invQtyInDatabase = $I->grabFromDatabase('inventory_source_item', 'quantity', ['sku' => 'amp_verify_stock_deduction_prevents_add_to_basket']);
+        $I->assertEquals(50, $invQtyInDatabase, 'The product should be created with qty 50');
+
+        // Purchase 30 of unit, leaving 20
+        $cartId = $I->getGuestQuote();
+        $I->addSimpleProductToQuote($cartId, 'amp_verify_stock_deduction_prevents_add_to_basket', 30);
+        $I->completeGuestCheckout($cartId);
+
+        // Verify the state of the database at this point
+        $qtyInDatabase = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
+        $I->assertEquals(20, $qtyInDatabase, 'The product should have a remaining qty of 20');
+
+        $invQtyInDatabase = $I->grabFromDatabase('inventory_source_item', 'quantity', ['sku' => 'amp_verify_stock_deduction_prevents_add_to_basket']);
+        $I->assertEquals(20, $invQtyInDatabase, 'The product should have a remaining qty of 20');
+
+        // Add 30 of unit, 10 over the limit, this should error with "Requested qty is not available"
+        $newCartId = $I->getGuestQuote();
+        $I->expectThrowable(Exception\RequestedQtyNotAvailable::class, function() use ($newCartId, $I) {
+            $I->addSimpleProductToQuote($newCartId, 'amp_verify_stock_deduction_prevents_add_to_basket', 30);
+        });
+
+        // Add 20 of unit, this should work
+        $I->addSimpleProductToQuote($newCartId, 'amp_verify_stock_deduction_prevents_add_to_basket', 20);
+    }
 }

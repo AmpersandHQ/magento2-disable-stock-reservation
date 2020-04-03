@@ -90,18 +90,29 @@ class Magento extends \AcceptanceTester
      * @param $cartId
      * @param $sku
      * @param $qty
+     * @throws \Exception\RequestedQtyNotAvailable
      */
     public function addSimpleProductToQuote($cartId, $sku, $qty)
     {
         $I = $this;
 
-        $I->sendPOSTAndVerifyResponseCodeIs200("V1/guest-carts/$cartId/items", json_encode([
+        $I->sendPOST("V1/guest-carts/$cartId/items", json_encode([
             'cartItem' => [
                 'quoteId' => $cartId,
                 'sku' => $sku,
                 'qty' => $qty,
             ],
         ]));
+
+        /**
+         * This allows us to assume this function works with a 200 response most of the time, but still catch and handle
+         * specific errors
+         */
+        if ($I->tryToAssertStringContainsString('The requested qty is not available', $I->grabResponse())) {
+            throw new \Exception\RequestedQtyNotAvailable('The requested qty is not available');
+        }
+
+        $I->seeResponseCodeIs(200);
     }
 
     /**
