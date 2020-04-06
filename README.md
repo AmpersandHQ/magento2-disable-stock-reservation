@@ -20,3 +20,6 @@ This module will:
 * Prevent stock deductions on order shipment. See disabled `inventory_sales_source_deduction_processor` observer on `sales_order_shipment_save_after` event.
 * Replenish stock for cancelled order items. See `inventory` observer on `sales_order_item_cancel` event.
 
+## Additional Notes
+
+* Both the `inventory` and `cataloginventory_stock` should be on the same mode (`Update on Save` or `Schedule`) for this module to work as expected. If you are running this on `Schedule` you should have crons activated.

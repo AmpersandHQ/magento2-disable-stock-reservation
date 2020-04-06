@@ -28,6 +28,7 @@ install:
   - magerun2 cache:flush
 # warm caches
   - php bin/magento
+  - magerun2 sys:info
   - cd -
 
 before_install:
