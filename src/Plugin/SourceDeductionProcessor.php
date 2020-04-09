@@ -88,7 +88,7 @@ class SourceDeductionProcessor
     {
         /** @var Order $order */
         $order = $result;
-        if (is_null($order->getId())) {
+        if ($order->getId() === null) {
             return;
         }
 
