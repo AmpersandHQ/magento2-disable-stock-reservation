@@ -99,7 +99,7 @@ class GetSourceSelectionResultFromOrder
     {
         $selectionRequestItems = [];
         foreach ($orderItems as $orderItem) {
-            if(!$this->isSourceItemManagementAllowedForProductType->execute($orderItem->getProductType())) {
+            if (!$this->isSourceItemManagementAllowedForProductType->execute($orderItem->getProductType())) {
                 continue;
             }
 
