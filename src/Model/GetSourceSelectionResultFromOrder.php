@@ -4,6 +4,7 @@ namespace Ampersand\DisableStockReservation\Model;
 
 use Ampersand\DisableStockReservation\Model\GetInventoryRequestFromOrder;
 use Magento\Framework\App\ObjectManager;
+use Magento\InventoryConfigurationApi\Model\IsSourceItemManagementAllowedForProductTypeInterface;
 use Magento\InventorySalesApi\Model\GetSkuFromOrderItemInterface;
 use Magento\InventorySourceSelectionApi\Api\Data\ItemRequestInterfaceFactory;
 use Magento\Sales\Api\Data\OrderInterface;
@@ -41,6 +42,13 @@ class GetSourceSelectionResultFromOrder
     private $getInventoryRequestFromOrder;
 
     /**
+     * @var IsSourceItemManagementAllowedForProductTypeInterface
+     */
+    private $isSourceItemManagementAllowedForProductType;
+
+
+    /**
+     * @param IsSourceItemManagementAllowedForProductTypeInterface $isSourceItemManagementAllowedForProductType
      * @param GetSkuFromOrderItemInterface $getSkuFromOrderItem
      * @param ItemRequestInterfaceFactory $itemRequestFactory
      * @param GetDefaultSourceSelectionAlgorithmCodeInterface $getDefaultSourceSelectionAlgorithmCode
@@ -49,12 +57,14 @@ class GetSourceSelectionResultFromOrder
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function __construct(
+        IsSourceItemManagementAllowedForProductTypeInterface $isSourceItemManagementAllowedForProductType,
         GetSkuFromOrderItemInterface $getSkuFromOrderItem,
         ItemRequestInterfaceFactory $itemRequestFactory,
         GetDefaultSourceSelectionAlgorithmCodeInterface $getDefaultSourceSelectionAlgorithmCode,
         SourceSelectionServiceInterface $sourceSelectionService,
         GetInventoryRequestFromOrder $getInventoryRequestFromOrder = null
     ) {
+        $this->isSourceItemManagementAllowedForProductType = $isSourceItemManagementAllowedForProductType;
         $this->itemRequestFactory = $itemRequestFactory;
         $this->getDefaultSourceSelectionAlgorithmCode = $getDefaultSourceSelectionAlgorithmCode;
         $this->sourceSelectionService = $sourceSelectionService;
@@ -89,7 +99,7 @@ class GetSourceSelectionResultFromOrder
     {
         $selectionRequestItems = [];
         foreach ($orderItems as $orderItem) {
-            if ($orderItem->isDummy()) {
+            if(!$this->isSourceItemManagementAllowedForProductType->execute($orderItem->getProductType())) {
                 continue;
             }
 
