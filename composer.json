@@ -2,7 +2,6 @@
     "name": "ampersand/magento2-disable-stock-reservation",
     "description": "This module disables the inventory reservation logic introduced as part of MSI in Magento 2.3.3",
     "type": "magento2-module",
-    "minimum-stability": "dev",
     "require": {
         "magento/framework": "*",
         "php": "^7.1"
