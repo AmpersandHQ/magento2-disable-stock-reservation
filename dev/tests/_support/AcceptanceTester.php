@@ -1,7 +1,5 @@
 <?php
 
-namespace Ampersand\DisableStockReservation;
-
 /**
  * Inherited Methods
  * @method void wantToTest($text)

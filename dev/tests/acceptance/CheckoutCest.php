@@ -1,7 +1,5 @@
 <?php
 
-namespace Ampersand\DisableStockReservation;
-
 class CheckoutCest
 {
     /**

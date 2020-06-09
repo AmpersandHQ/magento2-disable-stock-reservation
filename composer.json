@@ -12,8 +12,7 @@
             "src/registration.php"
         ],
         "psr-4": {
-            "Ampersand\\DisableStockReservation\\": "src",
-            "Ampersand\\DisableStockReservation\\": "dev"
+            "Ampersand\\DisableStockReservation\\": "src"
         }
     },
     "repositories": [
