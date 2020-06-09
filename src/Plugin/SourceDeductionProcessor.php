@@ -78,7 +78,7 @@ class SourceDeductionProcessor
      * @param OrderService $subject
      * @param OrderInterface $result
      *
-     * @return OrderInterface
+     * @return OrderInterface|void
      * @throws CouldNotSaveException
      * @throws InputException
      * @throws LocalizedException

@@ -142,7 +142,7 @@ class CheckoutCest
 
         // Add 30 of unit, 10 over the limit, this should error with "Requested qty is not available"
         $newCartId = $I->getGuestQuote();
-        $I->expectThrowable(Exception\RequestedQtyNotAvailable::class, function() use ($newCartId, $I) {
+        $I->expectThrowable(Exception\RequestedQtyNotAvailable::class, function () use ($newCartId, $I) {
             $I->addSimpleProductToQuote($newCartId, 'amp_verify_stock_deduction_prevents_add_to_basket', 30);
         });
 
