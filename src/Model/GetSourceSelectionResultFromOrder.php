@@ -82,12 +82,13 @@ class GetSourceSelectionResultFromOrder
     /**
      * Get selection request items
      *
-     * @param OrderItemInterface[]|Traversable $orderItems
+     * @param OrderItemInterface[] $orderItems
      * @return array
      */
-    private function getSelectionRequestItems(iterable $orderItems): array
+    private function getSelectionRequestItems($orderItems): array
     {
         $selectionRequestItems = [];
+        /** @var \Magento\Sales\Model\Order\Item $orderItem */
         foreach ($orderItems as $orderItem) {
             if ($orderItem->isDummy()) {
                 continue;
