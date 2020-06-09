@@ -63,4 +63,4 @@ after_failure:
   - test -f ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/system.log && grep -v "Broken reference" ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/system.log
   - test -f ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/exception.log && cat ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/exception.log
   - test -f ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/support_report.log && grep -v "Broken reference" ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/support_report.log
-  - sleep 10; # give log files time to render
+  - sleep 10; # give log files time to render 
