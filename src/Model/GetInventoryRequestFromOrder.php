@@ -113,11 +113,13 @@ class GetInventoryRequestFromOrder
             return null;
         }
 
+        $region = $shippingAddress->getRegion() === '' ? null : $shippingAddress->getRegion();
+
         return $this->addressInterfaceFactory->create([
             'country' => $shippingAddress->getCountryId(),
             'postcode' => $shippingAddress->getPostcode(),
             'street' => implode("\n", $shippingAddress->getStreet()),
-            'region' => $shippingAddress->getRegion() ?? $shippingAddress->getRegionCode() ?? '',
+            'region' => $region ?? $shippingAddress->getRegionCode() ?? '',
             'city' => $shippingAddress->getCity()
         ]);
     }
