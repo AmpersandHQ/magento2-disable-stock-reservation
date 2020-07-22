@@ -28,5 +28,7 @@
         "ampersand/travis-vanilla-magento": "^1.0",
         "codeception/module-rest": "^1.2.0",
         "friendsofphp/php-cs-fixer": "^2.16"
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
