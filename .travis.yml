@@ -1,5 +1,6 @@
 language: php
-php: 7.3
+php: 7.4
+dist: xenial
 
 env:
   - TEST_GROUP=latest
@@ -32,6 +33,7 @@ install:
   - cd -
 
 before_install:
+  - if [[ $TEST_GROUP = two_three_three ]]; then  phpenv versions; phpenv global 7.2; fi
   - mkdir -p $HOME/bin/
 # Install magerun2
   - test -f $HOME/bin/magerun2 || (wget https://files.magerun.net/n98-magerun2-latest.phar && chmod +x n98-magerun2-latest.phar && mv n98-magerun2-latest.phar $HOME/bin/magerun2)
@@ -51,6 +53,7 @@ addons:
 
 services:
   - mysql
+  - elasticsearch
 
 cache:
   apt: true
