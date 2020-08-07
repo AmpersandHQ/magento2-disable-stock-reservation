@@ -75,7 +75,7 @@ class Magento extends \AcceptanceTester
 
     /**
      * @param $sku
-     * @param $qty
+     * @param array $simples
      * @return int
      */
     public function createBundleProduct($sku, array $simples = [])
