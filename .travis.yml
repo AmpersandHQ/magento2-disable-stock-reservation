@@ -17,10 +17,8 @@ install:
 # Install this module
   - cd vendor/ampersand/travis-vanilla-magento/instances/disablestockres
   - export COMPOSER_MEMORY_LIMIT=-1
-  - composer config minimum-stability dev
-  - composer config prefer-stable true
   - composer config repo.disablestockres git "../../../../../"
-  - composer require -vvv ampersand/magento2-disable-stock-reservation "dev-$TRAVIS_BRANCH" || composer require -vvv ampersand/magento2-disable-stock-reservation $TRAVIS_BRANCH
+  - composer require -vvv ampersand/magento2-disable-stock-reservation:"dev-$TRAVIS_BRANCH" || composer require -vvv ampersand/magento2-disable-stock-reservation $TRAVIS_BRANCH
   - php bin/magento setup:upgrade
 # compile magento
   - php bin/magento setup:di:compile
