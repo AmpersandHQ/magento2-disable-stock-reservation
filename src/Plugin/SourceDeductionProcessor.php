@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Ampersand\DisableStockReservation\Plugin;
 
+use Ampersand\DisableStockReservation\SkuNormalizer;
 use Ampersand\DisableStockReservation\Model\GetSourceSelectionResultFromOrder;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\InputException;
@@ -129,7 +130,7 @@ class SourceDeductionProcessor
         $items = [];
         foreach ($sourceDeductionRequest->getItems() as $item) {
             $items[] = $this->itemToSellFactory->create([
-                'sku' => $item->getSku(),
+                'sku' => SkuNormalizer::normalize($item->getSku()),
                 'qty' => $item->getQty()
             ]);
         }

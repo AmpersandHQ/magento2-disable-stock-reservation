@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Ampersand\DisableStockReservation\Model;
 
+use Ampersand\DisableStockReservation\SkuNormalizer;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item;
 use Magento\Framework\Serialize\Serializer\Json;
@@ -89,10 +90,11 @@ class GetItemsToDeductFromOrder
     {
         $processingItems = $groupedItems = [];
         foreach ($orderItems as $orderItem) {
-            if (empty($processingItems[$orderItem->getSku()])) {
-                $processingItems[$orderItem->getSku()] = $orderItem->getQty();
+            $sku = SkuNormalizer::normalize($orderItem->getSku());
+            if (empty($processingItems[$sku])) {
+                $processingItems[$sku] = $orderItem->getQty();
             } else {
-                $processingItems[$orderItem->getSku()] += $orderItem->getQty();
+                $processingItems[$sku] += $orderItem->getQty();
             }
         }
 

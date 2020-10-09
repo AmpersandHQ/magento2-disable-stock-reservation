@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Ampersand\DisableStockReservation\Observer;
 
+use Ampersand\DisableStockReservation\SkuNormalizer;
 use Magento\Catalog\Model\Indexer\Product\Price\Processor;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Framework\Event\ObserverInterface;
@@ -160,7 +161,7 @@ class CancelOrderItemObserver implements ObserverInterface
             $itemsToDeduct = [];
             foreach ($itemsToCancel as $itemToCancel) {
                 $itemsToDeduct[] = $this->itemToDeductFactory->create([
-                    'sku' => $itemToCancel->getSku(),
+                    'sku' => SkuNormalizer::normalize($itemToCancel->getSku()),
                     'qty' => -$itemToCancel->getQuantity(),
                 ]);
             }
