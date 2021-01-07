@@ -46,7 +46,6 @@ class GetSourceSelectionResultFromOrder
      */
     private $isSourceItemManagementAllowedForProductType;
 
-
     /**
      * @param IsSourceItemManagementAllowedForProductTypeInterface $isSourceItemManagementAllowedForProductType
      * @param GetSkuFromOrderItemInterface $getSkuFromOrderItem
