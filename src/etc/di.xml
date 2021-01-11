@@ -8,4 +8,13 @@
     <type name="Magento\Sales\Model\Service\OrderService">
         <plugin name="inventory_sales_source_deduction_processor" type="Ampersand\DisableStockReservation\Plugin\SourceDeductionProcessor"/>
     </type>
+    <!--
+        Fix M2.4 introduced bug caused by new interface implementation.
+        - @see \Magento\InventoryInStorePickupSales\Model\SourceSelection\GetSourceItemQtyAvailableService
+        - @see https://github.com/AmpersandHQ/magento2-disable-stock-reservation/issues/38
+     -->
+    <preference
+        for="Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableInterface"
+        type="Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableService"
+    />
 </config>
