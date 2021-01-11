@@ -10,7 +10,12 @@
     </type>
     <!--
         Fix M2.4 introduced bug caused by new interface implementation.
-        - @see \Magento\InventoryInStorePickupSales\Model\SourceSelection\GetSourceItemQtyAvailableService
+        New interface implementation checks against in-store reserved stock.
+        This in turn throws an error as this functionality is disabled.
+        Approach is to revert back to original implementation as new implementation errors due to redundant code.
+        
+        - @see New class: \Magento\InventoryInStorePickupSales\Model\SourceSelection\GetSourceItemQtyAvailableService
+        - @see Original class: \Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableService
         - @see https://github.com/AmpersandHQ/magento2-disable-stock-reservation/issues/38
      -->
     <preference
