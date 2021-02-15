@@ -8,4 +8,20 @@
     <type name="Magento\Sales\Model\Service\OrderService">
         <plugin name="inventory_sales_source_deduction_processor" type="Ampersand\DisableStockReservation\Plugin\SourceDeductionProcessor"/>
     </type>
+    <!--
+        Fix M2.4 introduced bug caused by new interface implementation.
+        New interface implementation checks against in-store reserved stock.
+        This in turn throws an error as this functionality is disabled.
+        Approach is to revert back to original implementation as new implementation errors due to redundant code.
+        
+        - @see New class: \Magento\InventoryInStorePickupSales\Model\SourceSelection\GetSourceItemQtyAvailableService
+        - https://github.com/magento/inventory/blob/31461f30fbc6e72433c2cf378ebbfdeb30738ed8/InventoryInStorePickupSales/etc/di.xml#L29
+        - @see Original class: \Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableService
+        - https://github.com/magento/inventory/blob/31461f30fbc6e72433c2cf378ebbfdeb30738ed8/InventorySourceSelectionApi/etc/di.xml#L14-L15
+        - @see https://github.com/AmpersandHQ/magento2-disable-stock-reservation/issues/38
+     -->
+    <preference
+        for="Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableInterface"
+        type="Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableService"
+    />
 </config>
