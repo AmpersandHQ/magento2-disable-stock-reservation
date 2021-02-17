@@ -54,6 +54,7 @@ class CheckoutCest
             $I->sendPOSTAndVerifyResponseCodeIs200("V1/orders", json_encode([
                 "entity"=> [
                     "entity_id" => $orderId,
+                    "customer_is_guest" => 1,
                     "extension_attributes" => [
                         "payment_additional_info" => "payment_additional_info"
                     ]
