@@ -69,7 +69,7 @@ class GetSourceSelectionResultFromOrder
         GetDefaultSourceSelectionAlgorithmCodeInterface $getDefaultSourceSelectionAlgorithmCode,
         SourceSelectionServiceInterface $sourceSelectionService,
         GetInventoryRequestFromOrder $getInventoryRequestFromOrder = null,
-        \Magento\InventoryCatalogApi\Model\GetProductTypesBySkusInterface $getProductTypesBySkus = null
+        GetProductTypesBySkusInterface $getProductTypesBySkus = null
     ) {
         $this->isSourceItemManagementAllowedForProductType = $isSourceItemManagementAllowedForProductType;
         $this->itemRequestFactory = $itemRequestFactory;
