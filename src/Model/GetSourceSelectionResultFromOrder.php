@@ -48,7 +48,7 @@ class GetSourceSelectionResultFromOrder
     private $isSourceItemManagementAllowedForProductType;
 
     /**
-     * @var GetProductTypesBySkusInterface 
+     * @var GetProductTypesBySkusInterface
      */
     private $getProductTypesBySkus;
 
@@ -107,7 +107,7 @@ class GetSourceSelectionResultFromOrder
     private function getSelectionRequestItems($orderItems): array
     {
         $itemsSkus = array_map(
-            function(OrderItemInterface $orderItem) {
+            function (OrderItemInterface $orderItem) {
                 return $this->getSkuFromOrderItem->execute($orderItem);
             },
             $orderItems
