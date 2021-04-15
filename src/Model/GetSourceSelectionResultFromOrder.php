@@ -4,6 +4,7 @@ namespace Ampersand\DisableStockReservation\Model;
 
 use Ampersand\DisableStockReservation\Model\GetInventoryRequestFromOrder;
 use Magento\Framework\App\ObjectManager;
+use Magento\InventoryCatalogApi\Model\GetProductTypesBySkusInterface;
 use Magento\InventoryConfigurationApi\Model\IsSourceItemManagementAllowedForProductTypeInterface;
 use Magento\InventorySalesApi\Model\GetSkuFromOrderItemInterface;
 use Magento\InventorySourceSelectionApi\Api\Data\ItemRequestInterfaceFactory;
@@ -47,12 +48,18 @@ class GetSourceSelectionResultFromOrder
     private $isSourceItemManagementAllowedForProductType;
 
     /**
+     * @var GetProductTypesBySkusInterface
+     */
+    private $getProductTypesBySkus;
+
+    /**
      * @param IsSourceItemManagementAllowedForProductTypeInterface $isSourceItemManagementAllowedForProductType
      * @param GetSkuFromOrderItemInterface $getSkuFromOrderItem
      * @param ItemRequestInterfaceFactory $itemRequestFactory
      * @param GetDefaultSourceSelectionAlgorithmCodeInterface $getDefaultSourceSelectionAlgorithmCode
      * @param SourceSelectionServiceInterface $sourceSelectionService
      * @param GetInventoryRequestFromOrder|null $getInventoryRequestFromOrder
+     * @param GetProductTypesBySkusInterface|null $getProductTypesBySkus
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function __construct(
@@ -61,7 +68,8 @@ class GetSourceSelectionResultFromOrder
         ItemRequestInterfaceFactory $itemRequestFactory,
         GetDefaultSourceSelectionAlgorithmCodeInterface $getDefaultSourceSelectionAlgorithmCode,
         SourceSelectionServiceInterface $sourceSelectionService,
-        GetInventoryRequestFromOrder $getInventoryRequestFromOrder = null
+        GetInventoryRequestFromOrder $getInventoryRequestFromOrder = null,
+        GetProductTypesBySkusInterface $getProductTypesBySkus = null
     ) {
         $this->isSourceItemManagementAllowedForProductType = $isSourceItemManagementAllowedForProductType;
         $this->itemRequestFactory = $itemRequestFactory;
@@ -70,6 +78,8 @@ class GetSourceSelectionResultFromOrder
         $this->getSkuFromOrderItem = $getSkuFromOrderItem;
         $this->getInventoryRequestFromOrder = $getInventoryRequestFromOrder ?:
             ObjectManager::getInstance()->get(GetInventoryRequestFromOrder::class);
+        $this->getProductTypesBySkus = $getProductTypesBySkus ?:
+            ObjectManager::getInstance()->get(GetProductTypesBySkusInterface::class);
     }
 
     /**
@@ -96,14 +106,24 @@ class GetSourceSelectionResultFromOrder
      */
     private function getSelectionRequestItems($orderItems): array
     {
+        $itemsSkus = array_map(
+            function (OrderItemInterface $orderItem) {
+                return $this->getSkuFromOrderItem->execute($orderItem);
+            },
+            $orderItems
+        );
+        $itemProductTypes = $this->getProductTypesBySkus->execute($itemsSkus);
+        
         $selectionRequestItems = [];
         /** @var \Magento\Sales\Model\Order\Item $orderItem */
         foreach ($orderItems as $orderItem) {
-            if (!$this->isSourceItemManagementAllowedForProductType->execute($orderItem->getProductType())) {
+            $itemSku = $this->getSkuFromOrderItem->execute($orderItem);
+
+            if (!isset($itemProductTypes[$itemSku]) ||
+                !$this->isSourceItemManagementAllowedForProductType->execute($itemProductTypes[$itemSku])) {
                 continue;
             }
-
-            $itemSku = $this->getSkuFromOrderItem->execute($orderItem);
+            
             $qty = $this->castQty($orderItem, $orderItem->getQtyOrdered());
 
             $selectionRequestItems[] = $this->itemRequestFactory->create([
