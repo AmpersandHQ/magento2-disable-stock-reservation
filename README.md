@@ -16,7 +16,7 @@ placement - it will only do so on order shipment and refund.
 This module will:
 
 * Prevent all writes to the inventory_reservations table. It does so by using an `around` plugin on `PlaceReservationsForSalesEventInterface`
-* Trigger stock deductions on order placement. See `inventory_sales_source_deduction_processor` observer on `sales_order_save_after` event.
+* Trigger stock deductions on order placement. See `inventory_sales_source_deduction_processor` plugin on `Magento\Sales\Model\Service\OrderService`.
 * Prevent stock deductions on order shipment. See disabled `inventory_sales_source_deduction_processor` observer on `sales_order_shipment_save_after` event.
 * Replenish stock for cancelled order items. See `inventory` observer on `sales_order_item_cancel` event.
 
