@@ -24,4 +24,13 @@
         for="Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableInterface"
         type="Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableService"
     />
+
+	<type name="Magento\Framework\Console\CommandList">
+		<arguments>
+			<argument name="commands" xsi:type="array">
+				<item name="truncateReservations" xsi:type="object">Ampersand\DisableStockReservation\Console\Command\TruncateReservations</item>
+			</argument>
+		</arguments>
+	</type>
+    
 </config>
