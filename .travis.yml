@@ -33,7 +33,7 @@ install:
   - cd -
 
 before_install:
-  - composer self-update 1.10.16
+  - composer self-update --1
   - if [[ $TEST_GROUP = two_three_three ]]; then  phpenv versions; phpenv global 7.2; fi
   - mkdir -p $HOME/bin/
 # Install magerun2
