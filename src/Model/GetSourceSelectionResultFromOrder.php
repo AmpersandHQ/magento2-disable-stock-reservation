@@ -2,7 +2,6 @@
 
 namespace Ampersand\DisableStockReservation\Model;
 
-use Ampersand\DisableStockReservation\Model\GetInventoryRequestFromOrder;
 use Magento\Framework\App\ObjectManager;
 use Magento\InventoryCatalogApi\Model\GetProductTypesBySkusInterface;
 use Magento\InventoryConfigurationApi\Model\IsSourceItemManagementAllowedForProductTypeInterface;
@@ -13,7 +12,6 @@ use Magento\InventorySourceSelectionApi\Api\SourceSelectionServiceInterface;
 use Magento\InventorySourceSelectionApi\Api\GetDefaultSourceSelectionAlgorithmCodeInterface;
 use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterface;
 use Magento\Sales\Api\Data\OrderItemInterface;
-use Traversable;
 
 class GetSourceSelectionResultFromOrder
 {
@@ -106,24 +104,14 @@ class GetSourceSelectionResultFromOrder
      */
     private function getSelectionRequestItems($orderItems): array
     {
-        $itemsSkus = array_map(
-            function (OrderItemInterface $orderItem) {
-                return $this->getSkuFromOrderItem->execute($orderItem);
-            },
-            $orderItems
-        );
-        $itemProductTypes = $this->getProductTypesBySkus->execute($itemsSkus);
-        
         $selectionRequestItems = [];
         /** @var \Magento\Sales\Model\Order\Item $orderItem */
         foreach ($orderItems as $orderItem) {
-            $itemSku = $this->getSkuFromOrderItem->execute($orderItem);
-
-            if (!isset($itemProductTypes[$itemSku]) ||
-                !$this->isSourceItemManagementAllowedForProductType->execute($itemProductTypes[$itemSku])) {
+            if (!$this->isDeductible($orderItem)) {
                 continue;
             }
-            
+
+            $itemSku = $this->getSkuFromOrderItem->execute($orderItem);
             $qty = $this->castQty($orderItem, $orderItem->getQtyOrdered());
 
             $selectionRequestItems[] = $this->itemRequestFactory->create([
@@ -131,7 +119,35 @@ class GetSourceSelectionResultFromOrder
                 'qty' => $qty,
             ]);
         }
-        return $selectionRequestItems;
+
+        return $this->groupItemsBySku($selectionRequestItems);
+    }
+
+    private function isDeductible(OrderItemInterface $orderItem): bool
+    {
+        $productType = $orderItem->getProduct() ? $orderItem->getProduct()->getTypeId() : '';
+        return $productType && $this->isSourceItemManagementAllowedForProductType->execute($productType);
+    }
+
+    private function groupItemsBySku(array $orderItems): array
+    {
+        $processingItems = $groupedItems = [];
+        foreach ($orderItems as $orderItem) {
+            if (empty($processingItems[$orderItem->getSku()])) {
+                $processingItems[$orderItem->getSku()] = $orderItem->getQty();
+            } else {
+                $processingItems[$orderItem->getSku()] += $orderItem->getQty();
+            }
+        }
+
+        foreach ($processingItems as $sku => $qty) {
+            $groupedItems[] = $this->itemRequestFactory->create([
+                'sku' => $sku,
+                'qty' => $qty
+            ]);
+        }
+
+        return $groupedItems;
     }
 
     /**
@@ -144,9 +160,9 @@ class GetSourceSelectionResultFromOrder
     private function castQty(OrderItemInterface $item, $qty): float
     {
         if ($item->getIsQtyDecimal()) {
-            $qty = (float) $qty;
+            $qty = (float)$qty;
         } else {
-            $qty = (int) $qty;
+            $qty = (int)$qty;
         }
 
         return $qty > 0 ? $qty : 0;
