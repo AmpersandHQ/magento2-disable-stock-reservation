@@ -28,14 +28,12 @@
     <type name="Magento\Sales\Model\OrderRepository">
         <plugin name="add_sources_to_order"
                 type="Ampersand\DisableStockReservation\Plugin\Model\OrderRepositoryPlugin"
-                sortOrder="2"/>
+                sortOrder="2" />
     </type>
 
-    <preference
-            for="Ampersand\DisableStockReservation\Api\Data\SourcesInterface"
-            type="Ampersand\DisableStockReservation\Model\Sources" />
+    <preference for="Ampersand\DisableStockReservation\Api\Data\SourcesInterface"
+                type="Ampersand\DisableStockReservation\Model\Sources" />
 
-    <preference
-            for="Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface"
-            type="Ampersand\DisableStockReservation\Model\SourcesRepository" />
+    <preference for="Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface"
+                type="Ampersand\DisableStockReservation\Model\SourcesRepository" />
 </config>
