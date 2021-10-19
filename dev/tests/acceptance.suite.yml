@@ -1,0 +1,29 @@
+# Codeception Test Suite Configuration
+#
+# Suite for acceptance tests.
+# Perform tests in browser using the WebDriver or PhpBrowser.
+# If you need both WebDriver and PHPBrowser tests - create a separate suite.
+
+actor: AcceptanceTester
+step_decorators:
+    - \Codeception\Step\Retry
+    - \Codeception\Step\TryTo
+modules:
+    enabled:
+        - PhpBrowser
+        - Asserts
+        - Db
+        - REST
+        - \Helper\Acceptance
+    config:
+        REST:
+           depends: PhpBrowser
+           url: '%URL%rest/'
+           shortDebugResponse: 1000 # only the first 300 chars of the response
+        PhpBrowser:
+            url: '%URL%'
+            timeout: 60
+        Db:
+            dsn: 'mysql:host=%MYSQL_HOST%;dbname=%MYSQL_DB%;port=%MYSQL_PORT%'
+            user: '%MYSQL_USER%'
+            password:

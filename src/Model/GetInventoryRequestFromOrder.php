@@ -11,7 +11,6 @@ use Magento\InventorySourceSelectionApi\Api\Data\AddressInterface;
 use Magento\InventorySalesApi\Model\StockByWebsiteIdResolverInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order\Address;
-use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
 class GetInventoryRequestFromOrder
@@ -25,11 +24,6 @@ class GetInventoryRequestFromOrder
      * @var InventoryRequestExtensionInterfaceFactory
      */
     private $inventoryRequestExtensionFactory;
-
-    /**
-     * @var OrderRepositoryInterface
-     */
-    private $orderRepository;
 
     /**
      * @var AddressInterfaceFactory
@@ -49,7 +43,6 @@ class GetInventoryRequestFromOrder
     /**
      * @param InventoryRequestInterfaceFactory $inventoryRequestFactory
      * @param InventoryRequestExtensionInterfaceFactory $inventoryRequestExtensionFactory
-     * @param OrderRepositoryInterface $orderRepository
      * @param AddressInterfaceFactory $addressInterfaceFactory
      * @param StoreManagerInterface $storeManager
      * @param StockByWebsiteIdResolverInterface $stockByWebsiteIdResolver
@@ -57,14 +50,12 @@ class GetInventoryRequestFromOrder
     public function __construct(
         InventoryRequestInterfaceFactory $inventoryRequestFactory,
         InventoryRequestExtensionInterfaceFactory $inventoryRequestExtensionFactory,
-        OrderRepositoryInterface $orderRepository,
         AddressInterfaceFactory $addressInterfaceFactory,
         StoreManagerInterface $storeManager,
         StockByWebsiteIdResolverInterface $stockByWebsiteIdResolver
     ) {
         $this->inventoryRequestFactory = $inventoryRequestFactory;
         $this->inventoryRequestExtensionFactory = $inventoryRequestExtensionFactory;
-        $this->orderRepository = $orderRepository;
         $this->addressInterfaceFactory = $addressInterfaceFactory;
         $this->storeManager = $storeManager;
         $this->stockByWebsiteIdResolver = $stockByWebsiteIdResolver;
@@ -113,12 +104,14 @@ class GetInventoryRequestFromOrder
             return null;
         }
 
+        $region = $shippingAddress->getRegion() === '' ? null : $shippingAddress->getRegion();
+
         return $this->addressInterfaceFactory->create([
             'country' => $shippingAddress->getCountryId(),
-            'postcode' => $shippingAddress->getPostcode(),
+            'postcode' => $shippingAddress->getPostcode() ?? '',
             'street' => implode("\n", $shippingAddress->getStreet()),
-            'region' => $shippingAddress->getRegion() ?? $shippingAddress->getRegionCode() ?? '',
-            'city' => $shippingAddress->getCity()
+            'region' => $region ?? $shippingAddress->getRegionCode() ?? '',
+            'city' => $shippingAddress->getCity() ?? ''
         ]);
     }
 }

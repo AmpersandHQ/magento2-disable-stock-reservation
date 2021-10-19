@@ -45,7 +45,7 @@ class CancelOrderItemObserver implements ObserverInterface
      */
     public function execute(EventObserver $observer): void
     {
-        /** @var OrderItem $item */
+        /** @var OrderItem $orderItem */
         $orderItem = $observer->getEvent()->getItem();
 
         if (!$orderItem instanceof OrderItem) {

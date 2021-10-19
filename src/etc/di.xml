@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!--  Prevent any writes to the inventory_reservations table  -->
+    <type name="Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface">
+        <plugin name="disable_place_reservations" type="Ampersand\DisableStockReservation\Plugin\PlaceReservationsForSalesEventPlugin"/>
+    </type>
+    <type name="Magento\Sales\Model\Service\OrderService">
+        <plugin name="inventory_sales_source_deduction_processor" type="Ampersand\DisableStockReservation\Plugin\SourceDeductionProcessor"/>
+    </type>
+    <!--
+        Fix M2.4 introduced bug caused by new interface implementation.
+        New interface implementation checks against in-store reserved stock.
+        This in turn throws an error as this functionality is disabled.
+        Approach is to revert back to original implementation as new implementation errors due to redundant code.
+
+        - @see New class: \Magento\InventoryInStorePickupSales\Model\SourceSelection\GetSourceItemQtyAvailableService
+        - https://github.com/magento/inventory/blob/31461f30fbc6e72433c2cf378ebbfdeb30738ed8/InventoryInStorePickupSales/etc/di.xml#L29
+        - @see Original class: \Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableService
+        - https://github.com/magento/inventory/blob/31461f30fbc6e72433c2cf378ebbfdeb30738ed8/InventorySourceSelectionApi/etc/di.xml#L14-L15
+        - @see https://github.com/AmpersandHQ/magento2-disable-stock-reservation/issues/38
+     -->
+    <preference
+        for="Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableInterface"
+        type="Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableService"
+    />
+
+    <type name="Magento\Sales\Model\OrderRepository">
+        <plugin name="add_sources_to_order"
+                type="Ampersand\DisableStockReservation\Plugin\Model\OrderRepositoryPlugin"
+                sortOrder="2"/>
+    </type>
+
+    <preference
+            for="Ampersand\DisableStockReservation\Api\Data\SourcesInterface"
+            type="Ampersand\DisableStockReservation\Model\Sources" />
+
+    <preference
+            for="Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface"
+            type="Ampersand\DisableStockReservation\Model\SourcesRepository" />
+</config>
