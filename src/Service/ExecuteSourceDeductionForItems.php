@@ -131,7 +131,8 @@ class ExecuteSourceDeductionForItems
 
             $itemsIds[] = $item->getProductId();
             $sourceItem = $this->sourceRepository->getSourceItemBySku(
-                (string)$order->getId(), $item->getSku()
+                (string)$order->getId(),
+                $item->getSku()
             );
 
             $sourceCode = $sourceItem ? $sourceItem->getSourceCode() : 'default';
