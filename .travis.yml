@@ -4,7 +4,7 @@ dist: xenial
 
 env:
   - TEST_GROUP=latest
-  - TEST_GROUP=two_three_seven
+  - TEST_GROUP=two_three_three
 
 install:
 # Composer install
@@ -12,7 +12,7 @@ install:
 # Do a quick code style check
   - ./vendor/bin/php-cs-fixer fix --dry-run --rules=@PSR2 --diff src/
 # Install magento
-  - if [[ $TEST_GROUP = two_three_seven ]]; then  NAME=disablestockres VERSION=2.3.7 . ./vendor/bin/travis-install-magento.sh; fi
+  - if [[ $TEST_GROUP = two_three_three ]]; then  NAME=disablestockres VERSION=2.3.3 . ./vendor/bin/travis-install-magento.sh; fi
   - if [[ $TEST_GROUP = latest ]];          then  NAME=disablestockres               . ./vendor/bin/travis-install-magento.sh; fi
 # Install this module
   - cd vendor/ampersand/travis-vanilla-magento/instances/disablestockres
@@ -34,7 +34,8 @@ install:
 
 before_install:
   - if [ ! "$TRAVIS_PULL_REQUEST" = "false" ]; then git branch; git branch -D "$TRAVIS_BRANCH" || true; git checkout -b "$TRAVIS_BRANCH"; fi
-  - composer self-update --2
+  - composer self-update --1
+  - if [[ $TEST_GROUP = two_three_three ]]; then  phpenv versions; phpenv global 7.2; fi
   - mkdir -p $HOME/bin/
 # Install magerun2
   - test -f $HOME/bin/magerun2 || (wget https://files.magerun.net/n98-magerun2-latest.phar && chmod +x n98-magerun2-latest.phar && mv n98-magerun2-latest.phar $HOME/bin/magerun2)
