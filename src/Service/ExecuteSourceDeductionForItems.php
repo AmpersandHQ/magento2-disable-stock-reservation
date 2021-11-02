@@ -5,7 +5,6 @@ namespace Ampersand\DisableStockReservation\Service;
 use Magento\InventorySalesApi\Api\Data\SalesChannelInterface;
 use Magento\InventorySalesApi\Api\Data\SalesEventInterface;
 use Magento\Sales\Api\Data\OrderInterface;
-use Magento\Sales\Model\Order\Creditmemo;
 use Magento\Store\Api\WebsiteRepositoryInterface;
 use Magento\InventorySalesApi\Api\Data\SalesChannelInterfaceFactory;
 use Magento\InventorySalesApi\Api\Data\SalesEventInterfaceFactory;
@@ -15,7 +14,6 @@ use Magento\InventorySourceDeductionApi\Model\ItemToDeductFactory;
 use Magento\InventorySourceDeductionApi\Model\SourceDeductionService;
 use Magento\Catalog\Model\Indexer\Product\Price\Processor;
 use Magento\Sales\Model\Order\Item as OrderItem;
-use Magento\Sales\Model\Order\Creditmemo\Item as CreditmemoItem;
 
 /**
  * Class ExecuteSourceDeductionForItems
@@ -97,14 +95,10 @@ class ExecuteSourceDeductionForItems
     /**
      * @param OrderInterface $order
      * @param array $itemsToCancel
-     * @param bool $isCreditmemo
      */
-    public function executeSourceDeductionForItems(OrderInterface $order, array $itemsToCancel, bool $isCreditmemo = false)
+    public function executeSourceDeductionForItems(OrderInterface $order, array $itemsToCancel)
     {
         $type = SalesEventInterface::EVENT_ORDER_CANCELED;
-        if ($isCreditmemo) {
-            $type = SalesEventInterface::EVENT_CREDITMEMO_CREATED;
-        }
 
         $websiteId = $order->getStore()->getWebsiteId();
         $websiteCode = $this->websiteRepository->getById($websiteId)->getCode();
@@ -123,9 +117,9 @@ class ExecuteSourceDeductionForItems
 
         $itemsIds = [];
 
-        /** @var OrderItem|CreditmemoItem $item */
+        /** @var OrderItem $item */
         foreach ($itemsToCancel as $item) {
-            if ($isCreditmemo && !$item->getBackToStock()) {
+            if (!$item->getBackToStock()) {
                 continue;
             }
 
