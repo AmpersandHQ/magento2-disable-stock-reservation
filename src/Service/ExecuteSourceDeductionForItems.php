@@ -14,6 +14,7 @@ use Magento\InventorySourceDeductionApi\Model\ItemToDeductFactory;
 use Magento\InventorySourceDeductionApi\Model\SourceDeductionService;
 use Magento\Catalog\Model\Indexer\Product\Price\Processor;
 use Magento\Sales\Model\Order\Item as OrderItem;
+use Magento\Catalog\Model\ProductRepository;
 
 /**
  * Class ExecuteSourceDeductionForItems
@@ -62,6 +63,11 @@ class ExecuteSourceDeductionForItems
     private $sourceRepository;
 
     /**
+     * @var ProductRepository
+     */
+    protected $productRepository;
+
+    /**
      * ExecuteSourceDeductionForItems constructor.
      * @param WebsiteRepositoryInterface $websiteRepository
      * @param SalesEventInterfaceFactory $salesEventFactory
@@ -71,6 +77,7 @@ class ExecuteSourceDeductionForItems
      * @param SourceDeductionService $sourceDeductionService
      * @param SourcesRepositoryInterface $sourceRepository
      * @param Processor $priceIndexer
+     * @param ProductRepository $productRepository
      */
     public function __construct(
         WebsiteRepositoryInterface $websiteRepository,
@@ -80,7 +87,8 @@ class ExecuteSourceDeductionForItems
         SourceDeductionRequestFactory $sourceDeductionRequestFactory,
         SourceDeductionService $sourceDeductionService,
         SourcesRepositoryInterface $sourceRepository,
-        Processor $priceIndexer
+        Processor $priceIndexer,
+        ProductRepository $productRepository
     ) {
         $this->websiteRepository = $websiteRepository;
         $this->salesEventFactory = $salesEventFactory;
@@ -90,6 +98,7 @@ class ExecuteSourceDeductionForItems
         $this->sourceDeductionService = $sourceDeductionService;
         $this->sourceRepository = $sourceRepository;
         $this->priceIndexer = $priceIndexer;
+        $this->productRepository = $productRepository;
     }
 
     /**
@@ -99,7 +108,6 @@ class ExecuteSourceDeductionForItems
     public function executeSourceDeductionForItems(OrderItem $orderItem, array $itemsToCancel)
     {
         $order = $orderItem->getOrder();
-        $type = SalesEventInterface::EVENT_ORDER_CANCELED;
 
         $websiteId = $order->getStore()->getWebsiteId();
         $websiteCode = $this->websiteRepository->getById($websiteId)->getCode();
@@ -111,13 +119,16 @@ class ExecuteSourceDeductionForItems
         ]);
 
         $salesEvent = $this->salesEventFactory->create([
-            'type' => $type,
+            'type' => SalesEventInterface::EVENT_ORDER_CANCELED,
             'objectType' => SalesEventInterface::OBJECT_TYPE_ORDER,
-            'objectId' => (string)$order->getId()
+            'objectId' => (string)$orderItem->getOrderId()
         ]);
+
+        $itemsIds = [];
 
         /** @var OrderItem $item */
         foreach ($itemsToCancel as $item) {
+            $itemsIds[] = $this->productRepository->get($item->getSku())->getId();
             $sourceItem = $this->sourceRepository->getSourceItemBySku(
                 (string)$order->getId(),
                 $item->getSku()
@@ -137,6 +148,6 @@ class ExecuteSourceDeductionForItems
 
             $this->sourceDeductionService->execute($sourceDeductionRequest);
         }
-        $this->priceIndexer->reindexList($orderItem->getProductId());
+        $this->priceIndexer->reindexList($itemsIds);
     }
 }
