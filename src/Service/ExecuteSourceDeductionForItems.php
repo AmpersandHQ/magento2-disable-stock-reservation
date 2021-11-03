@@ -93,11 +93,12 @@ class ExecuteSourceDeductionForItems
     }
 
     /**
-     * @param OrderInterface $order
+     * @param OrderItem $orderItem
      * @param array $itemsToCancel
      */
-    public function executeSourceDeductionForItems(OrderInterface $order, array $itemsToCancel)
+    public function executeSourceDeductionForItems(OrderItem $orderItem, array $itemsToCancel)
     {
+        $order = $orderItem->getOrder();
         $type = SalesEventInterface::EVENT_ORDER_CANCELED;
 
         $websiteId = $order->getStore()->getWebsiteId();
@@ -115,15 +116,8 @@ class ExecuteSourceDeductionForItems
             'objectId' => (string)$order->getId()
         ]);
 
-        $itemsIds = [];
-
         /** @var OrderItem $item */
         foreach ($itemsToCancel as $item) {
-            if (!$item->getBackToStock()) {
-                continue;
-            }
-
-            $itemsIds[] = $item->getProductId();
             $sourceItem = $this->sourceRepository->getSourceItemBySku(
                 (string)$order->getId(),
                 $item->getSku()
@@ -135,7 +129,7 @@ class ExecuteSourceDeductionForItems
                 'sourceCode' => $sourceCode,
                 'items' => [$this->itemToDeductFactory->create([
                     'sku' => $item->getSku(),
-                    'qty' => -$item->getQty()
+                    'qty' => -$item->getQuantity()
                 ])],
                 'salesChannel' => $salesChannel,
                 'salesEvent' => $salesEvent
@@ -143,6 +137,6 @@ class ExecuteSourceDeductionForItems
 
             $this->sourceDeductionService->execute($sourceDeductionRequest);
         }
-        $this->priceIndexer->reindexList($itemsIds);
+        $this->priceIndexer->reindexList($orderItem->getProductId());
     }
 }
