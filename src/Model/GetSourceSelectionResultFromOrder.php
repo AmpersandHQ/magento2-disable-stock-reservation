@@ -101,10 +101,10 @@ class GetSourceSelectionResultFromOrder
     /**
      * Get selection request items
      *
-     * @param OrderItemInterface[] $orderItems
+     * @param iterable $orderItems
      * @return array
      */
-    private function getSelectionRequestItems($orderItems): array
+    private function getSelectionRequestItems(iterable $orderItems): array
     {
         $itemsSkus = array_map(
             function (OrderItemInterface $orderItem) {
@@ -113,7 +113,7 @@ class GetSourceSelectionResultFromOrder
             $orderItems
         );
         $itemProductTypes = $this->getProductTypesBySkus->execute($itemsSkus);
-        
+
         $selectionRequestItems = [];
         /** @var \Magento\Sales\Model\Order\Item $orderItem */
         foreach ($orderItems as $orderItem) {
@@ -123,7 +123,7 @@ class GetSourceSelectionResultFromOrder
                 !$this->isSourceItemManagementAllowedForProductType->execute($itemProductTypes[$itemSku])) {
                 continue;
             }
-            
+
             $qty = $this->castQty($orderItem, $orderItem->getQtyOrdered());
 
             $selectionRequestItems[] = $this->itemRequestFactory->create([

@@ -1,0 +1,5 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Api/etc/extension_attributes.xsd">
+    <extension_attributes for="Magento\Sales\Api\Data\OrderInterface">
+        <attribute code="sources" type="Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionItemInterface[]" />
+    </extension_attributes>
+</config>

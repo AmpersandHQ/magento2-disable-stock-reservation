@@ -69,7 +69,7 @@ class SourceDeductionRequestFromOrderFactory
         $salesEvent = $this->salesEventFactory->create([
             'type' => SalesEventInterface::EVENT_SHIPMENT_CREATED,
             'objectType' => SalesEventInterface::OBJECT_TYPE_ORDER,
-            'objectId' => $order->getEntityId()
+            'objectId' => $order->getId()
         ]);
 
         $websiteCode = $this->websiteRepository->getById($websiteId)->getCode();

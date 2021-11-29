@@ -17,6 +17,10 @@ use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Service\OrderService;
+use Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface;
+use Magento\Sales\Api\Data\OrderExtensionFactory;
+use Ampersand\DisableStockReservation\Service\SourcesConverter;
+use Ampersand\DisableStockReservation\Api\Data\SourcesInterfaceFactory;
 
 class SourceDeductionProcessor
 {
@@ -51,12 +55,36 @@ class SourceDeductionProcessor
     private $placeReservationsForSalesEvent;
 
     /**
+     * @var SourcesRepositoryInterface
+     */
+    private $sourceRepository;
+
+    /**
+     * @var OrderExtensionFactory
+     */
+    private $orderExtensionFactory;
+
+    /**
+     * @var SourcesConverter
+     */
+    private $sourcesConverter;
+
+    /**
+     * @var SourcesInterfaceFactory
+     */
+    protected $sourcesFactory;
+
+    /**
      * @param GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder
      * @param SourceDeductionServiceInterface $sourceDeductionService
      * @param SourceDeductionRequestsFromSourceSelectionFactory $sourceDeductionRequestsFromSourceSelectionFactory
      * @param SalesEventInterfaceFactory $salesEventFactory
      * @param ItemToSellInterfaceFactory $itemToSellFactory
      * @param PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent
+     * @param SourcesRepositoryInterface $sourceRepository
+     * @param OrderExtensionFactory $orderExtensionFactory
+     * @param SourcesConverter $sourcesConverter
+     * @param SourcesInterfaceFactory $sourcesFactory
      */
     public function __construct(
         GetSourceSelectionResultFromOrder $getSourceSelectionResultFromOrder,
@@ -64,7 +92,11 @@ class SourceDeductionProcessor
         SourceDeductionRequestsFromSourceSelectionFactory $sourceDeductionRequestsFromSourceSelectionFactory,
         SalesEventInterfaceFactory $salesEventFactory,
         ItemToSellInterfaceFactory $itemToSellFactory,
-        PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent
+        PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent,
+        SourcesRepositoryInterface $sourceRepository,
+        OrderExtensionFactory $orderExtensionFactory,
+        SourcesConverter $sourcesConverter,
+        SourcesInterfaceFactory $sourcesFactory
     ) {
         $this->getSourceSelectionResultFromOrder = $getSourceSelectionResultFromOrder;
         $this->sourceDeductionService = $sourceDeductionService;
@@ -72,6 +104,10 @@ class SourceDeductionProcessor
         $this->salesEventFactory = $salesEventFactory;
         $this->itemToSellFactory = $itemToSellFactory;
         $this->placeReservationsForSalesEvent = $placeReservationsForSalesEvent;
+        $this->sourceRepository = $sourceRepository;
+        $this->orderExtensionFactory = $orderExtensionFactory;
+        $this->sourcesConverter = $sourcesConverter;
+        $this->sourcesFactory = $sourcesFactory;
     }
 
     /**
@@ -94,11 +130,20 @@ class SourceDeductionProcessor
 
         $sourceSelectionResult = $this->getSourceSelectionResultFromOrder->execute($order);
 
+        $sourceModel = $this->sourcesFactory->create();
+        $sourceModel->setOrderId($order->getId());
+        $sourceModel->setSources(
+            $this->sourcesConverter->convertSourceSelectionItemsToJson(
+                $sourceSelectionResult->getSourceSelectionItems()
+            )
+        );
+        $this->sourceRepository->save($sourceModel);
+
         /** @var SalesEventInterface $salesEvent */
         $salesEvent = $this->salesEventFactory->create([
             'type' => SalesEventInterface::EVENT_ORDER_PLACED,
             'objectType' => SalesEventInterface::OBJECT_TYPE_ORDER,
-            'objectId' => $order->getEntityId(),
+            'objectId' => $order->getId(),
         ]);
 
         $sourceDeductionRequests = $this->sourceDeductionRequestsFromSourceSelectionFactory->create(
