@@ -14,7 +14,7 @@ use Magento\InventorySourceDeductionApi\Model\ItemToDeductFactory;
 use Magento\InventorySourceDeductionApi\Model\SourceDeductionService;
 use Magento\Catalog\Model\Indexer\Product\Price\Processor;
 use Magento\Sales\Model\Order\Item as OrderItem;
-use Magento\Catalog\Model\ProductRepository;
+use Magento\Catalog\Model\ResourceModel\Product;
 
 /**
  * Class ExecuteSourceDeductionForItems
@@ -63,9 +63,9 @@ class ExecuteSourceDeductionForItems
     private $sourceRepository;
 
     /**
-     * @var ProductRepository
+     * @var Product
      */
-    protected $productRepository;
+    protected $product;
 
     /**
      * ExecuteSourceDeductionForItems constructor.
@@ -78,6 +78,7 @@ class ExecuteSourceDeductionForItems
      * @param SourcesRepositoryInterface $sourceRepository
      * @param Processor $priceIndexer
      * @param ProductRepository $productRepository
+     * @param Product $product
      */
     public function __construct(
         WebsiteRepositoryInterface $websiteRepository,
@@ -88,7 +89,7 @@ class ExecuteSourceDeductionForItems
         SourceDeductionService $sourceDeductionService,
         SourcesRepositoryInterface $sourceRepository,
         Processor $priceIndexer,
-        ProductRepository $productRepository
+        Product $product
     ) {
         $this->websiteRepository = $websiteRepository;
         $this->salesEventFactory = $salesEventFactory;
@@ -98,7 +99,7 @@ class ExecuteSourceDeductionForItems
         $this->sourceDeductionService = $sourceDeductionService;
         $this->sourceRepository = $sourceRepository;
         $this->priceIndexer = $priceIndexer;
-        $this->productRepository = $productRepository;
+        $this->product = $product;
     }
 
     /**
