@@ -2,6 +2,7 @@
 
 namespace Ampersand\DisableStockReservation\Service;
 
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\InventorySalesApi\Api\Data\SalesChannelInterface;
 use Magento\InventorySalesApi\Api\Data\SalesEventInterface;
 use Magento\Sales\Api\Data\OrderInterface;
@@ -129,12 +130,16 @@ class ExecuteSourceDeductionForItems
         /** @var OrderItem $item */
         foreach ($itemsToCancel as $item) {
             $itemsSkus[] = $item->getSku();
-            $sourceItem = $this->sourceRepository->getSourceItemBySku(
-                (string)$order->getId(),
-                $item->getSku()
-            );
 
-            $sourceCode = $sourceItem ? $sourceItem->getSourceCode() : 'default';
+            try {
+                $sourceItem = $this->sourceRepository->getSourceItemBySku(
+                    (string)$order->getId(),
+                    $item->getSku()
+                );
+                $sourceCode = $sourceItem->getSourceCode();
+            } catch (NoSuchEntityException $exception) {
+                $sourceCode = 'default';
+            }
 
             $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
                 'sourceCode' => $sourceCode,
