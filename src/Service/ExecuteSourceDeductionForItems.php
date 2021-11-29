@@ -77,7 +77,6 @@ class ExecuteSourceDeductionForItems
      * @param SourceDeductionService $sourceDeductionService
      * @param SourcesRepositoryInterface $sourceRepository
      * @param Processor $priceIndexer
-     * @param ProductRepository $productRepository
      * @param Product $product
      */
     public function __construct(
