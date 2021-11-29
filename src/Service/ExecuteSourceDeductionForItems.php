@@ -124,11 +124,11 @@ class ExecuteSourceDeductionForItems
             'objectId' => (string)$orderItem->getOrderId()
         ]);
 
-        $itemsIds = [];
+        $itemsSkus = [];
 
         /** @var OrderItem $item */
         foreach ($itemsToCancel as $item) {
-            $itemsIds[] = $this->productRepository->get($item->getSku())->getId();
+            $itemsSkus[] = $item->getSku();
             $sourceItem = $this->sourceRepository->getSourceItemBySku(
                 (string)$order->getId(),
                 $item->getSku()
@@ -148,6 +148,9 @@ class ExecuteSourceDeductionForItems
 
             $this->sourceDeductionService->execute($sourceDeductionRequest);
         }
+
+        $itemsIds = $this->product->getProductsIdsBySkus($itemsSkus);
+        $itemsIds = array_values(array_map('intval', $itemsIds));
         $this->priceIndexer->reindexList($itemsIds);
     }
 }
