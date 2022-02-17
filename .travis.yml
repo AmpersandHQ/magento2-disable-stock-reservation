@@ -32,6 +32,9 @@ install:
 # warm caches
   - php bin/magento
   - magerun2 sys:info
+  - magerun2 db:query 'show create table order_sources'
+  - magerun2 db:query 'select @@VERSION'
+  - mysql --version
   - cd -
 
 before_install:
@@ -44,6 +47,7 @@ before_install:
 script:
   - ADDITIONAL_ARGS="-v"
   - if [[ $TRAVIS_COMMIT_MESSAGE == *"VERBOSE"* ]]; then ADDITIONAL_ARGS="-vvv"; fi;
+  - mysql --version
   - ./vendor/bin/codecept build -c dev
   - URL="https://magento-disablestockres.localhost/" MYSQL_USER="root" MYSQL_HOST="127.0.0.1" MYSQL_DB="databasedisablestockres" MYSQL_PORT="3306" ./vendor/bin/codecept run acceptance -c dev $ADDITIONAL_ARGS
 
