@@ -14,7 +14,7 @@ install:
 # Do a quick code style check
   - PHP_CS_FIXER_IGNORE_ENV=1 ./vendor/bin/php-cs-fixer fix --dry-run --rules=@PSR2 --diff src/
 # Install magento
-  - if [[ $TEST_GROUP = two_three ]];       then  phpenv global 7.4; fi
+  - if [[ $TEST_GROUP = two_three ]];       then  phpenv versions; phpenv global 7.4; fi
   - if [[ $TEST_GROUP = two_three ]];       then  NAME=disablestockres VERSION=2.3.7-p2 . ./vendor/bin/travis-install-magento.sh; fi
   - if [[ $TEST_GROUP = latest ]];          then  NAME=disablestockres                  . ./vendor/bin/travis-install-magento.sh; fi
 # Install this module
