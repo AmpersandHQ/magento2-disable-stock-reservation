@@ -26,6 +26,7 @@ install:
 # compile magento
   - php bin/magento setup:di:compile
 # Set up test configuration
+  - magerun2 config:store:set oauth/consumer/enable_integration_as_bearer 1
   - magerun2 config:store:set checkout/options/guest_checkout 1
   - magerun2 config:store:set payment/checkmo/active 1
   - magerun2 integration:create disablestockres example@example.com https://example.com --access-token="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
