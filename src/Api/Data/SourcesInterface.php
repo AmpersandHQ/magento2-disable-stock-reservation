@@ -8,14 +8,8 @@ namespace Ampersand\DisableStockReservation\Api\Data;
  */
 interface SourcesInterface
 {
-    /**
-     * Order ID key
-     */
     const ORDER_ID_KEY = 'order_id';
 
-    /**
-     * Sources Key
-     */
     const SOURCES_KEY = 'sources';
 
     /**

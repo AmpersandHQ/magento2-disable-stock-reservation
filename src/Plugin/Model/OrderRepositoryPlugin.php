@@ -68,6 +68,7 @@ class OrderRepositoryPlugin
     }
 
     /**
+     * phpcs:disable Magento2.CodeAnalysis.EmptyBlock.DetectedCatch
      * @param OrderRepositoryInterface $subject
      * @param OrderInterface $result
      * @return OrderInterface
