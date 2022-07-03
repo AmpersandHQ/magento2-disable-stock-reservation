@@ -1,0 +1,42 @@
+name: Installation Test
+
+on:
+  push:
+    branches:
+    - master
+    paths-ignore:
+    - "docs/**"
+    - "*.md"
+  pull_request:
+    branches:
+    - master
+    paths-ignore:
+    - "docs/**"
+    - "*.md"
+
+jobs:
+  compute_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.supported-version.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: graycoreio/github-actions-magento2/supported-version@main
+        id: supported-version
+      - run: echo ${{ steps.supported-version.outputs.matrix }}
+
+  install-test:
+    needs: compute_matrix
+    strategy:
+      matrix: ${{ fromJSON(needs.compute_matrix.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: graycoreio/github-actions-magento2/installation-test@main
+      with:
+        composer_version: ${{ matrix.composer }}
+        php_version: ${{ matrix.php }}
+        magento_version: ${{ matrix.magento }}
+        composer_auth: ${{ secrets.COMPOSER_AUTH }}
+        package_name: ampersand/magento2-disable-stock-reservation
+        source_folder: $GITHUB_WORKSPACE

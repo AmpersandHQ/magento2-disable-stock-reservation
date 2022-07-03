@@ -1,0 +1,35 @@
+name: Integration Test
+
+on:
+  push:
+    branches:
+    - master
+    paths-ignore:
+    - "docs/**"
+    - "*.md"
+  pull_request:
+    branches:
+    - master
+    paths-ignore:
+    - "docs/**"
+    - "*.md"
+
+jobs:
+  compute_matrix:
+      runs-on: ubuntu-latest
+      outputs:
+        matrix: ${{ steps.supported-version.outputs.matrix }}
+      steps:
+        - uses: actions/checkout@v2
+        - uses: graycoreio/github-actions-magento2/supported-version@main
+          id: supported-version
+        - run: echo ${{ steps.supported-version.outputs.matrix }}
+  integration-workflow:
+    needs: compute_matrix
+    uses: graycoreio/github-actions-magento2/.github/workflows/integration.yaml@main
+    with:
+      package_name: ampersand/magento2-disable-stock-reservation
+      matrix: ${{ needs.compute_matrix.outputs.matrix }}
+      test_command: ../../../vendor/bin/phpunit ../../../vendor/ampersand/magento2-disable-stock-reservation/src/Test/Integration
+    secrets:
+      composer_auth: ${{ secrets.COMPOSER_AUTH }}

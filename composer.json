@@ -6,6 +6,9 @@
         "magento/framework": "*",
         "php": "^7.1|^8.0"
     },
+    "scripts": {
+        "test:unit": "vendor/bin/phpunit ./src/Test/Unit"
+    },
     "autoload": {
         "files": [
             "src/registration.php"
