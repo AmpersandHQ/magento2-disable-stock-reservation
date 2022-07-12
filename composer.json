@@ -14,6 +14,11 @@
             "Ampersand\\DisableStockReservation\\": "src"
         }
     },
+    "config": {
+        "allow-plugins": {
+            "magento/magento-composer-installer": true
+        }
+    },
     "repositories": [
         {
             "type": "composer",
