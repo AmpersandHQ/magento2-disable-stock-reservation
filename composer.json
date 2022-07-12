@@ -14,6 +14,11 @@
             "Ampersand\\DisableStockReservation\\": "src"
         }
     },
+    "config": {
+        "allow-plugins": {
+            "magento/*": true
+        }
+    },
     "repositories": [
         {
             "type": "composer",
