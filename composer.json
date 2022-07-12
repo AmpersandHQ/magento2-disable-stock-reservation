@@ -16,7 +16,7 @@
     },
     "config": {
         "allow-plugins": {
-            "magento/magento-composer-installer": true
+            "magento/*": true
         }
     },
     "repositories": [
