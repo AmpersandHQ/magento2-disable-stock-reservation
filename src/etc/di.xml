@@ -20,20 +20,28 @@
         - https://github.com/magento/inventory/blob/31461f30fbc6e72433c2cf378ebbfdeb30738ed8/InventorySourceSelectionApi/etc/di.xml#L14-L15
         - @see https://github.com/AmpersandHQ/magento2-disable-stock-reservation/issues/38
      -->
-    <preference
-        for="Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableInterface"
-        type="Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableService"
-    />
+    <preference for="Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableInterface"
+                type="Magento\InventorySourceSelectionApi\Model\GetSourceItemQtyAvailableService"/>
+
+    <!--
+        Fix M2.4.3 introduced bug when a product should back in stock caused by order canceled event.
+        With the preference we restore 1.2.1 (included into M2.4.2) method SourceDeductionService::getSourceStockStatus
+
+        - @see https://github.com/magento/inventory/blob/1.2.3/InventorySourceDeductionApi/Model/SourceDeductionService.php : cause the bug
+        - @see https://github.com/magento/inventory/blob/1.2.2/InventorySourceDeductionApi/Model/SourceDeductionService.php : restored
+     -->
+    <preference for="Magento\InventorySourceDeductionApi\Model\SourceDeductionServiceInterface"
+                type="Ampersand\DisableStockReservation\Model\SourceDeductionService"></preference>
 
     <type name="Magento\Sales\Model\OrderRepository">
         <plugin name="add_sources_to_order"
                 type="Ampersand\DisableStockReservation\Plugin\Model\OrderRepositoryPlugin"
-                sortOrder="2" />
+                sortOrder="2"/>
     </type>
 
     <preference for="Ampersand\DisableStockReservation\Api\Data\SourcesInterface"
-                type="Ampersand\DisableStockReservation\Model\Sources" />
+                type="Ampersand\DisableStockReservation\Model\Sources"/>
 
     <preference for="Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface"
-                type="Ampersand\DisableStockReservation\Model\SourcesRepository" />
+                type="Ampersand\DisableStockReservation\Model\SourcesRepository"/>
 </config>
