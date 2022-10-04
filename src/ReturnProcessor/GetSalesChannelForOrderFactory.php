@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Ampersand\DisableStockReservation\ReturnProcessor;
 
 use Magento\Framework\ObjectManagerInterface;
+use Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder as GetSalesChannelForOrder24;
 
 class GetSalesChannelForOrderFactory
 {
@@ -12,7 +13,7 @@ class GetSalesChannelForOrderFactory
     private $objectManager;
 
     /**
-     * ResponseFactory constructor.
+     * constructor.
      */
     public function __construct(
         ObjectManagerInterface $objectManager
@@ -24,14 +25,12 @@ class GetSalesChannelForOrderFactory
      * For magento 2.4 return the core provided class
      * For magento 2.3 return the workaround copy of that class
      *
-     * @return GetSalesChannelForOrder|\Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder|mixed
+     * @return GetSalesChannelForOrder|GetSalesChannelForOrder24|mixed
      */
     public function create()
     {
-        if (\class_exists(\Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder::class)) {
-            return $this->objectManager->create(
-                \Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder::class
-            );
+        if (\class_exists(GetSalesChannelForOrder24::class)) {
+            return $this->objectManager->create(GetSalesChannelForOrder24::class);
         }
         return $this->objectManager->create(
             GetSalesChannelForOrder::class
