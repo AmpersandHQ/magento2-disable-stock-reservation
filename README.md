@@ -24,3 +24,4 @@ This module will:
 
 * Make sure to truncate any existing reservations after installing this module, see https://github.com/AmpersandHQ/magento2-disable-stock-reservation/issues/41
 * Both the `inventory` and `cataloginventory_stock` should be on the same mode (`Update on Save` or `Schedule`) for this module to work as expected. If you are running this on `Schedule` you should have crons activated.
+ 
