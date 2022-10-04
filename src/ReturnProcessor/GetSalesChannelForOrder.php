@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace Ampersand\DisableStockReservation\Model\ReturnProcessor;
+namespace Ampersand\DisableStockReservation\ReturnProcessor;
 
 use Magento\InventorySalesApi\Api\Data\SalesChannelInterface;
 use Magento\InventorySalesApi\Api\Data\SalesChannelInterfaceFactory;

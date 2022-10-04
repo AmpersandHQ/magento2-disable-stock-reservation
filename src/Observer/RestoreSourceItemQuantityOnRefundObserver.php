@@ -2,7 +2,8 @@
 
 namespace Ampersand\DisableStockReservation\Observer;
 
-use Ampersand\DisableStockReservation\Model\ReturnProcessor\GetSalesChannelForOrder;
+use Ampersand\DisableStockReservation\ReturnProcessor\GetSalesChannelForOrder;
+use Ampersand\DisableStockReservation\ReturnProcessor\GetSalesChannelForOrderFactory;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\LocalizedException;
@@ -72,10 +73,9 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
     private $salesEventExtensionFactory;
 
     /**
-     * @var GetSalesChannelForOrder
+     * @var GetSalesChannelForOrder|\Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder
      */
     private $getSalesChannelForOrder;
-
 
     /**
      * @var SourceDeductionService
@@ -110,7 +110,7 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
      * @param StockByWebsiteIdResolverInterface $stockByWebsiteIdResolver
      * @param SourceDeductionRequestFactory $sourceDeductionRequestFactory
      * @param SalesEventExtensionFactory $salesEventExtensionFactory
-     * @param GetSalesChannelForOrder $getSalesChannelForOrder
+     * @param GetSalesChannelForOrderFactory $getSalesChannelForOrderFactory
      * @param SourceDeductionService $sourceDeductionService
      * @param GetSourceItemsBySkuInterface $getSourceItemsBySku
      * @param SalesEventInterfaceFactory $salesEventFactory
@@ -126,7 +126,7 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
         StockByWebsiteIdResolverInterface $stockByWebsiteIdResolver,
         SourceDeductionRequestFactory $sourceDeductionRequestFactory,
         SalesEventExtensionFactory $salesEventExtensionFactory,
-        GetSalesChannelForOrder $getSalesChannelForOrder,
+        GetSalesChannelForOrderFactory $getSalesChannelForOrderFactory,
         SourceDeductionService $sourceDeductionService,
         GetSourceItemsBySkuInterface $getSourceItemsBySku,
         SalesEventInterfaceFactory $salesEventFactory,
@@ -144,7 +144,7 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
 
         $this->sourceDeductionRequestFactory = $sourceDeductionRequestFactory;
         $this->salesEventExtensionFactory = $salesEventExtensionFactory;
-        $this->getSalesChannelForOrder = $this->setGetSalesChannelForOrder($getSalesChannelForOrder);
+        $this->getSalesChannelForOrder = $getSalesChannelForOrderFactory->create();
         $this->sourceDeductionService = $sourceDeductionService;
         $this->getSourceItemsBySku = $getSourceItemsBySku;
         $this->salesEventFactory = $salesEventFactory;
@@ -251,30 +251,5 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
         }
 
         return $sourceCode;
-    }
-
-    /**
-     * A 2.3 and 2.4 compatability workaround
-     *
-     * If we are on a 2.3 instance this will use Model\ReturnProcessor\GetSalesChannelForOrder which is a copy of the
-     * file which is available in magento 2.4
-     *
-     * If we are on a 2.4 instance, just use that file in any case.
-     *
-     * This is to provide a little more support for 2.3, it is only just EOL and there will still be projects existing
-     * on it for some time.
-     *
-     * @param GetSalesChannelForOrder $getSalesChannelForOrder
-     * @return GetSalesChannelForOrder|\Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder
-     */
-    private function setGetSalesChannelForOrder(GetSalesChannelForOrder $getSalesChannelForOrder)
-    {
-        // phpcs:disable
-        if (\class_exists(\Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder::class)) {
-            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-            return $objectManager->get(\Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder::class);
-        }
-        // phpcs:enable
-        return $getSalesChannelForOrder;
     }
 }
