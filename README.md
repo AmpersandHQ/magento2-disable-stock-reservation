@@ -19,6 +19,9 @@ This module will:
 * Trigger stock deductions on order placement. See `inventory_sales_source_deduction_processor` plugin on `Magento\Sales\Model\Service\OrderService`.
 * Prevent stock deductions on order shipment. See disabled `inventory_sales_source_deduction_processor` observer on `sales_order_shipment_save_after` event.
 * Replenish stock for cancelled order items. See `inventory` observer on `sales_order_item_cancel` event.
+* Replenish stock when a credit memo is issued. See `src/Observer/RestoreSourceItemQuantityOnRefundObserver.php`
+  * Requires that "Back to stock" is checked or "Automatically Return Credit Memo Item to Stock" is configured
+    * https://docs.magento.com/user-guide/configuration/catalog/inventory.html#product-stock-options
 
 ## Additional Notes
 
