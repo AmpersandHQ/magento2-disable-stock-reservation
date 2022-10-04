@@ -50,7 +50,6 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
      */
     private $defaultSourceProvider;
 
-
     /**
      * @var GetSourcesAssignedToStockOrderedByPriorityInterface
      */
@@ -60,7 +59,6 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
      * @var StockByWebsiteIdResolverInterface
      */
     private $stockByWebsiteIdResolver;
-
 
     /**
      * @var SourceDeductionRequestFactory
@@ -81,7 +79,6 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
      * @var SourceDeductionService
      */
     private $sourceDeductionService;
-
 
     /**
      * @var GetSourceItemsBySkuInterface
@@ -134,7 +131,6 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
     ) {
         $this->getSkuFromOrderItem = $getSkuFromOrderItem;
 
-
         $this->isSourceItemManagementAllowedForProductType = $isSourceItemManagementAllowedForProductType;
         $this->getProductTypesBySkus = $getProductTypesBySkus;
         $this->orderRepository = $orderRepository;
@@ -150,7 +146,6 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
         $this->salesEventFactory = $salesEventFactory;
         $this->itemToDeductFactory = $itemToDeductFactory;
     }
-
 
     public function execute(Observer $observer)
     {
