@@ -1,6 +1,6 @@
 # AmpersandHQ/magento2-disable-stock-reservation
 
-[![Build Status](https://travis-ci.com/AmpersandHQ/magento2-disable-stock-reservation.svg?branch=master)](https://travis-ci.com/AmpersandHQ/magento2-disable-stock-reservation)
+[![Build Status](https://app.travis-ci.com/AmpersandHQ/magento2-disable-stock-reservation.svg?branch=master)](https://app.travis-ci.com/AmpersandHQ/magento2-disable-stock-reservation)
 
 This module disables the inventory reservation logic introduced as part of MSI in Magento 2.3.3 - see 
 https://github.com/magento/inventory/issues/2269 for more information about the way MSI was implemented, and the issues
