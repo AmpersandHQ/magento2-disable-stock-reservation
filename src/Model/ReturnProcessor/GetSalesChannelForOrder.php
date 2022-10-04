@@ -8,7 +8,9 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Store\Api\WebsiteRepositoryInterface;
 
 if (\class_exists(\Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder::class)) {
-    class GetSalesChannelForOrder extends \Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder {}
+    class GetSalesChannelForOrder extends \Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder
+    {
+    }
     return;
 }
 
