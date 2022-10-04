@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="order_sources" resource="default" comment="Order Sources Table">
+        <column xsi:type="int" name="extension_id" identity="true" nullable="false" comment="Extension ID"/>
+        <column xsi:type="int" name="order_id" padding="10" unsigned="true" nullable="false" comment="Order ID"/>
+        <column xsi:type="text" name="sources" nullable="false" comment="Sources"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="extension_id"/>
+        </constraint>
+        <constraint xsi:type="foreign"
+                    referenceId="ORDER_SOURCES_ORDER_ID_SALES_ORDER_ITEM_ORDER_ID"
+                    table="order_sources"
+                    column="order_id" referenceTable="sales_order" referenceColumn="entity_id"
+                    onDelete="CASCADE"/>
+    </table>
+</schema>

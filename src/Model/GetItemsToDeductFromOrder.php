@@ -54,14 +54,12 @@ class GetItemsToDeductFromOrder
 
         /** @var \Magento\Sales\Model\Order\Item|null $orderItem */
         foreach ($order->getAllVisibleItems() as $orderItem) {
-            if ($orderItem->getParentItem() !== null) {
-                continue;
-            }
-            // This code was added as quick fix for merge mainline
+            // checking (null === $orderItem) was added as quick fix for merge mainline
             // https://github.com/magento-engcom/msi/issues/1586
-            if (null === $orderItem) {
+            if (null === $orderItem || $orderItem->getParentItem() !== null) {
                 continue;
             }
+
             if ($orderItem->getHasChildren()) {
                 if (!$orderItem->isDummy(true)) {
                     foreach ($this->processComplexItem($orderItem) as $item) {

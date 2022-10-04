@@ -1,19 +1,29 @@
 language: php
-php: 7.4
+php:
+    - 7.4
+    - 8.1
+git:
+  depth: false
 dist: xenial
-
 env:
-  - TEST_GROUP=latest
-  - TEST_GROUP=two_three_three
+    - TEST_GROUP=magento_latest
+    - TEST_GROUP=magento_23
+jobs:
+    exclude:
+        -   php: 8.1
+            env: TEST_GROUP=magento_23
+        -   php: 7.4
+            env: TEST_GROUP=magento_latest
+
 
 install:
 # Composer install
   - composer install --no-interaction
 # Do a quick code style check
-  - ./vendor/bin/php-cs-fixer fix --dry-run --rules=@PSR2 --diff src/
+  - PHP_CS_FIXER_IGNORE_ENV=1 ./vendor/bin/php-cs-fixer fix --dry-run --rules=@PSR2 --diff src/
 # Install magento
-  - if [[ $TEST_GROUP = two_three_three ]]; then  NAME=disablestockres VERSION=2.3.3 . ./vendor/bin/travis-install-magento.sh; fi
-  - if [[ $TEST_GROUP = latest ]];          then  NAME=disablestockres               . ./vendor/bin/travis-install-magento.sh; fi
+  - if [[ $TEST_GROUP = magento_23 ]];       then  NAME=disablestockres VERSION=2.3.7-p2 . ./vendor/bin/travis-install-magento.sh; fi
+  - if [[ $TEST_GROUP = magento_latest ]];   then  NAME=disablestockres                  . ./vendor/bin/travis-install-magento.sh; fi
 # Install this module
   - cd vendor/ampersand/travis-vanilla-magento/instances/disablestockres
   - export COMPOSER_MEMORY_LIMIT=-1 
@@ -23,6 +33,7 @@ install:
 # compile magento
   - php bin/magento setup:di:compile
 # Set up test configuration
+  - magerun2 config:store:set oauth/consumer/enable_integration_as_bearer 1
   - magerun2 config:store:set checkout/options/guest_checkout 1
   - magerun2 config:store:set payment/checkmo/active 1
   - magerun2 integration:create disablestockres example@example.com https://example.com --access-token="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -33,8 +44,8 @@ install:
   - cd -
 
 before_install:
-  - composer self-update 1.10.16
-  - if [[ $TEST_GROUP = two_three_three ]]; then  phpenv versions; phpenv global 7.2; fi
+  - if [ ! "$TRAVIS_PULL_REQUEST" = "false" ]; then git branch; git branch -D "$TRAVIS_BRANCH" || true; git checkout -b "$TRAVIS_BRANCH"; fi
+  - composer self-update --2
   - mkdir -p $HOME/bin/
 # Install magerun2
   - test -f $HOME/bin/magerun2 || (wget https://files.magerun.net/n98-magerun2-latest.phar && chmod +x n98-magerun2-latest.phar && mv n98-magerun2-latest.phar $HOME/bin/magerun2)
