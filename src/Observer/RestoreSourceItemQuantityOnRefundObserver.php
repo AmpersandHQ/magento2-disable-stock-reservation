@@ -1,9 +1,9 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Ampersand\DisableStockReservation\Observer;
 
+use Ampersand\DisableStockReservation\ReturnProcessor\GetSalesChannelForOrder;
+use Ampersand\DisableStockReservation\ReturnProcessor\GetSalesChannelForOrderFactory;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\LocalizedException;
@@ -12,7 +12,6 @@ use Magento\InventoryApi\Api\GetSourcesAssignedToStockOrderedByPriorityInterface
 use Magento\InventoryCatalogApi\Api\DefaultSourceProviderInterface;
 use Magento\InventoryCatalogApi\Model\GetProductTypesBySkusInterface;
 use Magento\InventoryConfigurationApi\Model\IsSourceItemManagementAllowedForProductTypeInterface;
-use Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder;
 use Magento\InventorySalesApi\Api\Data\SalesEventExtensionFactory;
 use Magento\InventorySalesApi\Api\Data\SalesEventExtensionInterface;
 use Magento\InventorySalesApi\Api\Data\SalesEventInterface;
@@ -21,85 +20,80 @@ use Magento\InventorySalesApi\Model\GetSkuFromOrderItemInterface;
 use Magento\InventorySalesApi\Model\StockByWebsiteIdResolverInterface;
 use Magento\InventorySourceDeductionApi\Model\ItemToDeductFactory;
 use Magento\InventorySourceDeductionApi\Model\SourceDeductionRequestFactory;
-use Magento\InventorySourceDeductionApi\Model\SourceDeductionServiceInterface;
-use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order\Creditmemo;
+use Magento\InventorySourceDeductionApi\Model\SourceDeductionService;
+use Magento\Sales\Model\OrderRepository;
 
 class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
 {
     /**
      * @var GetSkuFromOrderItemInterface
      */
-    private GetSkuFromOrderItemInterface $getSkuFromOrderItem;
+    private $getSkuFromOrderItem;
 
     /**
      * @var IsSourceItemManagementAllowedForProductTypeInterface
      */
-    private IsSourceItemManagementAllowedForProductTypeInterface $isSourceItemManagementAllowedForProductType;
+    private $isSourceItemManagementAllowedForProductType;
 
     /**
      * @var GetProductTypesBySkusInterface
      */
-    private GetProductTypesBySkusInterface $getProductTypesBySkus;
+    private $getProductTypesBySkus;
 
     /**
-     * @var OrderRepositoryInterface
+     * @var OrderRepository
      */
-    private OrderRepositoryInterface $orderRepository;
+    private $orderRepository;
 
     /**
      * @var DefaultSourceProviderInterface
      */
-    private DefaultSourceProviderInterface $defaultSourceProvider;
-
+    private $defaultSourceProvider;
 
     /**
      * @var GetSourcesAssignedToStockOrderedByPriorityInterface
      */
-    private GetSourcesAssignedToStockOrderedByPriorityInterface $getSourcesAssignedToStockOrderedByPriority;
+    private $getSourcesAssignedToStockOrderedByPriority;
 
     /**
      * @var StockByWebsiteIdResolverInterface
      */
-    private StockByWebsiteIdResolverInterface $stockByWebsiteIdResolver;
-
+    private $stockByWebsiteIdResolver;
 
     /**
      * @var SourceDeductionRequestFactory
      */
-    private SourceDeductionRequestFactory $sourceDeductionRequestFactory;
+    private $sourceDeductionRequestFactory;
 
     /**
      * @var SalesEventExtensionFactory;
      */
-    private SalesEventExtensionFactory $salesEventExtensionFactory;
+    private $salesEventExtensionFactory;
 
     /**
-     * @var GetSalesChannelForOrder
+     * @var GetSalesChannelForOrder|\Magento\InventorySales\Model\ReturnProcessor\GetSalesChannelForOrder
      */
-    private GetSalesChannelForOrder $getSalesChannelForOrder;
-
+    private $getSalesChannelForOrder;
 
     /**
-     * @var SourceDeductionServiceInterface
+     * @var SourceDeductionService
      */
-    private SourceDeductionServiceInterface $sourceDeductionService;
-
+    private $sourceDeductionService;
 
     /**
      * @var GetSourceItemsBySkuInterface
      */
-    private GetSourceItemsBySkuInterface $getSourceItemsBySku;
+    private $getSourceItemsBySku;
 
     /**
      * @var SalesEventInterfaceFactory
      */
-    private SalesEventInterfaceFactory $salesEventFactory;
+    private $salesEventFactory;
 
     /**
      * @var ItemToDeductFactory
      */
-    private ItemToDeductFactory $itemToDeductFactory;
+    private $itemToDeductFactory;
 
     /**
      * RestoreSourceItemQuantityOnRefundObserver constructor.
@@ -107,14 +101,14 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
      * @param GetSkuFromOrderItemInterface $getSkuFromOrderItem
      * @param IsSourceItemManagementAllowedForProductTypeInterface $isSourceItemManagementAllowedForProductType
      * @param GetProductTypesBySkusInterface $getProductTypesBySkus
-     * @param OrderRepositoryInterface $orderRepository
+     * @param OrderRepository $orderRepository
      * @param DefaultSourceProviderInterface $defaultSourceProvider
      * @param GetSourcesAssignedToStockOrderedByPriorityInterface $getSourcesAssignedToStockOrderedByPriority
      * @param StockByWebsiteIdResolverInterface $stockByWebsiteIdResolver
      * @param SourceDeductionRequestFactory $sourceDeductionRequestFactory
      * @param SalesEventExtensionFactory $salesEventExtensionFactory
-     * @param GetSalesChannelForOrder $getSalesChannelForOrder
-     * @param SourceDeductionServiceInterface $sourceDeductionService
+     * @param GetSalesChannelForOrderFactory $getSalesChannelForOrderFactory
+     * @param SourceDeductionService $sourceDeductionService
      * @param GetSourceItemsBySkuInterface $getSourceItemsBySku
      * @param SalesEventInterfaceFactory $salesEventFactory
      * @param ItemToDeductFactory $itemToDeductFactory
@@ -123,20 +117,19 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
         GetSkuFromOrderItemInterface $getSkuFromOrderItem,
         IsSourceItemManagementAllowedForProductTypeInterface $isSourceItemManagementAllowedForProductType,
         GetProductTypesBySkusInterface $getProductTypesBySkus,
-        OrderRepositoryInterface $orderRepository,
+        OrderRepository $orderRepository,
         DefaultSourceProviderInterface $defaultSourceProvider,
         GetSourcesAssignedToStockOrderedByPriorityInterface $getSourcesAssignedToStockOrderedByPriority,
         StockByWebsiteIdResolverInterface $stockByWebsiteIdResolver,
         SourceDeductionRequestFactory $sourceDeductionRequestFactory,
         SalesEventExtensionFactory $salesEventExtensionFactory,
-        GetSalesChannelForOrder $getSalesChannelForOrder,
-        SourceDeductionServiceInterface $sourceDeductionService,
+        GetSalesChannelForOrderFactory $getSalesChannelForOrderFactory,
+        SourceDeductionService $sourceDeductionService,
         GetSourceItemsBySkuInterface $getSourceItemsBySku,
         SalesEventInterfaceFactory $salesEventFactory,
         ItemToDeductFactory $itemToDeductFactory
     ) {
         $this->getSkuFromOrderItem = $getSkuFromOrderItem;
-
 
         $this->isSourceItemManagementAllowedForProductType = $isSourceItemManagementAllowedForProductType;
         $this->getProductTypesBySkus = $getProductTypesBySkus;
@@ -147,31 +140,31 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
 
         $this->sourceDeductionRequestFactory = $sourceDeductionRequestFactory;
         $this->salesEventExtensionFactory = $salesEventExtensionFactory;
-        $this->getSalesChannelForOrder = $getSalesChannelForOrder;
+        $this->getSalesChannelForOrder = $getSalesChannelForOrderFactory->create();
         $this->sourceDeductionService = $sourceDeductionService;
         $this->getSourceItemsBySku = $getSourceItemsBySku;
         $this->salesEventFactory = $salesEventFactory;
         $this->itemToDeductFactory = $itemToDeductFactory;
     }
 
-
     public function execute(Observer $observer)
     {
-        /* @var $creditMemo Creditmemo */
+        /* @var $creditMemo \Magento\Sales\Model\Order\Creditmemo */
         $creditMemo = $observer->getEvent()->getCreditmemo();
         $order = $this->orderRepository->get($creditMemo->getOrderId());
         $websiteId = (int)$order->getStore()->getWebsiteId();
         $salesChannel = $this->getSalesChannelForOrder->execute($order);
 
-        $items = [];
+        $items = $returnToStockItems = [];
         foreach ($creditMemo->getItems() as $item) {
             $orderItem = $item->getOrderItem();
             $itemSku = $this->getSkuFromOrderItem->execute($orderItem);
 
             if ($this->isValidItem($itemSku, $orderItem->getProductType()) && $item->getBackToStock()) {
+                $returnToStockItems[] = $item->getOrderItemId();
                 $qty = $item->getQty();
                 $stockId = (int)$this->stockByWebsiteIdResolver->execute($websiteId)->getStockId();
-                $sourceCode = $this->getSourceCodeWithHighestPriorityBySku($itemSku, $stockId);
+                $sourceCode = $this->getSourceCodeWithHighestPriorityBySku((string)$itemSku, $stockId);
                 $items[$sourceCode][] = $this->itemToDeductFactory->create([
                     'sku' => $itemSku,
                     'qty' => -$qty
@@ -191,10 +184,10 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
         ]);
         $salesEvent->setExtensionAttributes($salesEventExtension);
 
-        foreach ($items as $sourceCode => $sources) {
+        foreach ($items as $sourceCode => $items) {
             $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
                 'sourceCode' => $sourceCode,
-                'items' => $sources,
+                'items' => $items,
                 'salesChannel' => $salesChannel,
                 'salesEvent' => $salesEvent
             ]);
@@ -226,7 +219,7 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
     }
 
     /**
-     * Returns source code with the highest priority by sku
+     * Returns source code with highest priority by sku
      *
      * @param string $sku
      * @param int $stockId

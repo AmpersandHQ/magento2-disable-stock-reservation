@@ -8,9 +8,10 @@
         <!--  Disable observer that deducts stock from credit memo save -->
         <observer name="deduct_source_item_quantity_on_refund" disabled="true"/>
         <!--  Return stock on order credit memo creation  -->
-        <!--  This observer is based on the magento core to restore product qty, when no shipped was already done.  -->
+        <!--  This observer is based on the magento core to restore product qty, when flag "Back in stock" is ON.  -->
         <observer name="add_source_item_quantity_on_refund" instance="Ampersand\DisableStockReservation\Observer\RestoreSourceItemQuantityOnRefundObserver"/>
     </event>
+
     <!--  Return stock on order cancellation  -->
     <!--  This observer replaces the original to avoid reindexing the price twice  -->
     <event name="sales_order_item_cancel">
