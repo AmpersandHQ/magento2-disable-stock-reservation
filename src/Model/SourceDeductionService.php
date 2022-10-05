@@ -84,10 +84,12 @@ class SourceDeductionService implements SourceDeductionServiceInterface
             $sourceItem = $this->getSourceItemBySourceCodeAndSku->execute($sourceCode, $itemSku);
 
             /*
-             * Fix a problem when a product has a large negative quantity, and an order with that product is canceled from backend.
+             * Fix a problem when a product has a large negative quantity, and an order with that product is canceled
+             * from backend.
             */
             $salesEvent = $sourceDeductionRequest->getSalesEvent();
-            if ($salesEvent->getType() == \Magento\InventorySalesApi\Api\Data\SalesEventInterface::EVENT_ORDER_CANCELED) {
+            if ($salesEvent->getType() ==
+                \Magento\InventorySalesApi\Api\Data\SalesEventInterface::EVENT_ORDER_CANCELED) {
                 if (($sourceItem->getQuantity() - $qty) < 0) {
                     $sourceItem->setQuantity($sourceItem->getQuantity() - $qty);
                     $stockStatus = $this->getSourceStockStatus(
@@ -124,7 +126,8 @@ class SourceDeductionService implements SourceDeductionServiceInterface
 
     /**
      * Get source item stock status after quantity deduction.
-     * We revert https://github.com/magento/inventory/commit/6f20ba6f96c1d124f8d0770745261a90c907f9e4
+     *
+     * We revert https://github.com/magento/inventory/commit/6f20ba6f96c1d124f8d0770745261a90c907f9e4.
      *
      * @param StockItemConfigurationInterface $stockItemConfiguration
      * @param SourceItemInterface $sourceItem
@@ -136,6 +139,7 @@ class SourceDeductionService implements SourceDeductionServiceInterface
         SourceItemInterface $sourceItem
     ): int {
         $sourceItemQty = $sourceItem->getQuantity() ?: self::ZERO_STOCK_QUANTITY;
+
         return $sourceItemQty === $stockItemConfiguration->getMinQty() && !$stockItemConfiguration->getBackorders()
             ? SourceItemInterface::STATUS_OUT_OF_STOCK
             : SourceItemInterface::STATUS_IN_STOCK;
