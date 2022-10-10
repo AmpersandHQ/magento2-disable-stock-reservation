@@ -45,9 +45,9 @@ install:
   - php bin/magento setup:db-declaration:generate-whitelist --module-name=Ampersand_DisableStockReservation
   - cat vendor/ampersand/magento2-disable-stock-reservation/src/etc/db_schema_whitelist.json 
   - cp vendor/ampersand/magento2-disable-stock-reservation/src/etc/db_schema_whitelist.json $TRAVIS_BUILD_DIR/src/etc/db_schema_whitelist.json
+  - cd -
   - git status
   - false
-  - cd -
 
 before_install:
   - if [ ! "$TRAVIS_PULL_REQUEST" = "false" ]; then git branch; git branch -D "$TRAVIS_BRANCH" || true; git checkout -b "$TRAVIS_BRANCH"; fi
