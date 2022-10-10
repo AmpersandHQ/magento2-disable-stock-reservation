@@ -2,8 +2,8 @@
 declare(strict_types=1);
 namespace Ampersand\DisableStockReservation\Model\SourceDeductionService;
 
+use Ampersand\DisableStockReservation\Model\SourceItem\Command\DecrementSourceItemQtyFactory;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Inventory\Model\SourceItem\Command\DecrementSourceItemQty;
 use Magento\InventoryApi\Api\Data\SourceItemInterface;
 use Magento\InventoryConfigurationApi\Api\Data\StockItemConfigurationInterface;
 use Magento\InventoryConfigurationApi\Api\GetStockItemConfigurationInterface;
@@ -37,24 +37,24 @@ class PatchedSourceDeductionService implements SourceDeductionServiceInterface
     /**
      * @var DecrementSourceItemQty
      */
-    private $decrementSourceItem;
+    private $decrementSourceItemFactory;
 
     /**
      * @param GetSourceItemBySourceCodeAndSku $getSourceItemBySourceCodeAndSku
      * @param GetStockItemConfigurationInterface $getStockItemConfiguration
      * @param GetStockBySalesChannelInterface $getStockBySalesChannel
-     * @param DecrementSourceItemQty $decrementSourceItem
+     * @param DecrementSourceItemQtyFactory $decrementSourceItemFactory
      */
     public function __construct(
         GetSourceItemBySourceCodeAndSku $getSourceItemBySourceCodeAndSku,
         GetStockItemConfigurationInterface $getStockItemConfiguration,
         GetStockBySalesChannelInterface $getStockBySalesChannel,
-        DecrementSourceItemQty $decrementSourceItem
+        DecrementSourceItemQtyFactory $decrementSourceItemFactory
     ) {
         $this->getSourceItemBySourceCodeAndSku = $getSourceItemBySourceCodeAndSku;
         $this->getStockItemConfiguration = $getStockItemConfiguration;
         $this->getStockBySalesChannel = $getStockBySalesChannel;
-        $this->decrementSourceItem = $decrementSourceItem;
+        $this->decrementSourceItemFactory = $decrementSourceItemFactory;
     }
 
     /**
@@ -123,7 +123,7 @@ class PatchedSourceDeductionService implements SourceDeductionServiceInterface
         }
 
         if (!empty($sourceItemDecrementData)) {
-            $this->decrementSourceItem->execute($sourceItemDecrementData);
+            $this->decrementSourceItemFactory->create()->execute($sourceItemDecrementData);
         }
     }
 
