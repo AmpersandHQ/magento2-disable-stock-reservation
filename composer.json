@@ -4,7 +4,7 @@
     "type": "magento2-module",
     "require": {
         "magento/framework": "*",
-        "php": "^7.1"
+        "php": "^7.1|^8.0"
     },
     "autoload": {
         "files": [
@@ -12,6 +12,11 @@
         ],
         "psr-4": {
             "Ampersand\\DisableStockReservation\\": "src"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "magento/*": true
         }
     },
     "repositories": [
