@@ -1,7 +1,7 @@
 {
     "order_sources": {
         "column": {
-            "extension_idddd": true,
+            "extension_id": true,
             "order_id": true,
             "sources": true
         },
