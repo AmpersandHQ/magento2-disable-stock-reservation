@@ -12,7 +12,7 @@ use Magento\InventorySalesApi\Api\Data\SalesEventInterfaceFactory;
 use Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface;
 use Magento\InventorySourceDeductionApi\Model\SourceDeductionRequestFactory;
 use Magento\InventorySourceDeductionApi\Model\ItemToDeductFactory;
-use Magento\InventorySourceDeductionApi\Model\SourceDeductionService;
+use Magento\InventorySourceDeductionApi\Model\SourceDeductionServiceInterface;
 use Magento\Catalog\Model\Indexer\Product\Price\Processor;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Catalog\Model\ResourceModel\Product;
@@ -54,7 +54,7 @@ class ExecuteSourceDeductionForItems
     private $sourceDeductionRequestFactory;
 
     /**
-     * @var SourceDeductionService
+     * @var SourceDeductionServiceInterface
      */
     private $sourceDeductionService;
 
@@ -75,7 +75,7 @@ class ExecuteSourceDeductionForItems
      * @param SalesChannelInterfaceFactory $salesChannelFactory
      * @param ItemToDeductFactory $itemToDeductFactory
      * @param SourceDeductionRequestFactory $sourceDeductionRequestFactory
-     * @param SourceDeductionService $sourceDeductionService
+     * @param SourceDeductionServiceInterface $sourceDeductionService
      * @param SourcesRepositoryInterface $sourceRepository
      * @param Processor $priceIndexer
      * @param Product $product
@@ -86,7 +86,7 @@ class ExecuteSourceDeductionForItems
         SalesChannelInterfaceFactory $salesChannelFactory,
         ItemToDeductFactory $itemToDeductFactory,
         SourceDeductionRequestFactory $sourceDeductionRequestFactory,
-        SourceDeductionService $sourceDeductionService,
+        SourceDeductionServiceInterface $sourceDeductionService,
         SourcesRepositoryInterface $sourceRepository,
         Processor $priceIndexer,
         Product $product
