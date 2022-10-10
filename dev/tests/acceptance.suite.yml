@@ -24,6 +24,8 @@ modules:
             url: '%URL%'
             timeout: 60
         Db:
+            populate: true
+            dump: './tests/_data/cleanup.sql'
             dsn: 'mysql:host=%MYSQL_HOST%;dbname=%MYSQL_DB%;port=%MYSQL_PORT%'
             user: '%MYSQL_USER%'
-            password:
+            password: ''

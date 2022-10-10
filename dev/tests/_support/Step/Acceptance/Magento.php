@@ -12,9 +12,10 @@ class Magento extends \AcceptanceTester
     /**
      * @param $sku
      * @param $qty
+     * @param array $productDefinition
      * @return int
      */
-    public function createSimpleProduct($sku, $qty)
+    public function createSimpleProduct($sku, $qty, array $productDefinition = [])
     {
         $I = $this;
 
@@ -39,7 +40,7 @@ class Magento extends \AcceptanceTester
         $I->retry(4, 100);
         $I->amBearerAuthenticated(self::ACCESS_TOKEN);
         $I->haveHttpHeader('Content-Type', 'application/json');
-        $I->retrySendPOSTAndVerifyResponseCodeIs200('V1/products', json_encode([
+        $baseProductDefinition = [
             'product' => [
                 'sku' => $sku,
                 'name' => $sku,
@@ -61,7 +62,11 @@ class Magento extends \AcceptanceTester
                     ]
                 ]
             ]
-        ]));
+        ];
+        $I->retrySendPOSTAndVerifyResponseCodeIs200(
+            'V1/products',
+            json_encode(array_merge_recursive($baseProductDefinition, $productDefinition))
+        );
 
         $productData = \json_decode($I->grabResponse(), true);
         $I->assertArrayHasKey('id', $productData);
