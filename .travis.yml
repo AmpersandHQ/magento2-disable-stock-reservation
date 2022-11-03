@@ -48,7 +48,8 @@ before_install:
   - composer self-update --2
   - mkdir -p $HOME/bin/
 # Install magerun2
-  - test -f $HOME/bin/magerun2 || (wget https://files.magerun.net/n98-magerun2-latest.phar && chmod +x n98-magerun2-latest.phar && mv n98-magerun2-latest.phar $HOME/bin/magerun2)
+  - test -f $HOME/bin/magerun2 || (mkdir -p $HOME/bin/ && wget https://files.magerun.net/n98-magerun2-4.9.1.phar && chmod +x n98-magerun2-4.9.1.phar && mv n98-magerun2-4.9.1.phar $HOME/bin/magerun2)
+
 
 script:
   - ADDITIONAL_ARGS="-v"
