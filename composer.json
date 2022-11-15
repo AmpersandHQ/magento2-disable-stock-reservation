@@ -32,6 +32,15 @@
         "codeception/module-db": "^1.0.1",
         "ampersand/travis-vanilla-magento": "^1.0",
         "codeception/module-rest": "^1.2.0",
-        "friendsofphp/php-cs-fixer": "^2.16"
+        "friendsofphp/php-cs-fixer": "^2.16",
+        "magento/magento-coding-standard": "<16"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/)"
+        ],
+        "post-update-cmd": [
+            "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/)"
+        ]
     }
 }

@@ -96,10 +96,10 @@ class CheckoutCest
      */
     public function stockIsReturnedWhenOrderIsCancelled(Step\Acceptance\Magento $I)
     {
-        $productId = $I->createSimpleProduct('amp_stock_deducts_on_shipment', 100);
+        $productId = $I->createSimpleProduct('amp_stock_returns_qty_on_cancel', 100);
 
         $cartId = $I->getGuestQuote();
-        $I->addSimpleProductToQuote($cartId, 'amp_stock_deducts_on_shipment', 5);
+        $I->addSimpleProductToQuote($cartId, 'amp_stock_returns_qty_on_cancel', 5);
         $orderId = $I->completeGuestCheckout($cartId);
 
         $I->amBearerAuthenticated(Step\Acceptance\Magento::ACCESS_TOKEN);
@@ -109,6 +109,58 @@ class CheckoutCest
 
         $newQty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
         $I->assertEquals(100, $newQty, 'The quantity should have been returned when cancelling');
+    }
+
+    /**
+     * @link https://github.com/AmpersandHQ/magento2-disable-stock-reservation/pull/81
+     *
+     * @depends stockIsReturnedWhenOrderIsCancelled
+     * @param Step\Acceptance\Magento $I
+     */
+    public function productGoesBackInStockWhenOrderIsCancelled(Step\Acceptance\Magento $I)
+    {
+        $productId = $I->createSimpleProduct('amp_stock_returns_in_stock_on_cancel',1);
+        $I->assertEquals(
+            1,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product has not started with qty=1'
+        );
+        $I->assertEquals(
+            1,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product has not started with is_in_stock=1'
+        );
+
+        $cartId = $I->getGuestQuote();
+        $I->addSimpleProductToQuote($cartId, 'amp_stock_returns_in_stock_on_cancel', 1);
+        $orderId = $I->completeGuestCheckout($cartId);
+
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product did not go qty=0 after an order'
+        );
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product did not go is_in_stock=0 after an order'
+        );
+
+        $I->amBearerAuthenticated(Step\Acceptance\Magento::ACCESS_TOKEN);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        //$I->haveRESTXdebugCookie(); # uncomment to add xdebug cookie to request
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/orders/{$orderId}/cancel");
+
+        $I->assertEquals(
+            1,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product did not go qty=1 after cancel'
+        );
+        $I->assertEquals(
+            1,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product did not go is_in_stock=1 after cancel'
+        );
     }
 
     /**

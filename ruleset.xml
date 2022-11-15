@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="PSR2" xsi:noNamespaceSchemaLocation="../../../phpcs.xsd">
+    <description>Adjusted ruleset to relax a few constraints</description>
+    <arg name="tab-width" value="4"/>
+    <rule ref="Magento2">
+        <exclude name="Magento2.Commenting.ClassAndInterfacePHPDocFormatting.InvalidDescription"/>
+        <exclude name="Magento2.Commenting.ClassAndInterfacePHPDocFormatting.ForbiddenTags"/>
+        <exclude name="Magento2.Annotation.MethodAnnotationStructure.MethodAnnotation"/>
+        <exclude name="Magento2.Annotation.MethodArguments.MethodArguments"/>
+    </rule>
+</ruleset>

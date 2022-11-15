@@ -95,8 +95,10 @@ class OrderRepositoryPlugin
      * @param OrderSearchResultInterface $result
      * @return OrderSearchResultInterface
      */
-    public function afterGetList(OrderRepositoryInterface $subject, OrderSearchResultInterface $result): OrderSearchResultInterface
-    {
+    public function afterGetList(
+        OrderRepositoryInterface $subject,
+        OrderSearchResultInterface $result
+    ): OrderSearchResultInterface {
         $resultIds = [];
         foreach ($result->getItems() as $resultItem) {
             $resultIds[] = $resultItem->getId();
