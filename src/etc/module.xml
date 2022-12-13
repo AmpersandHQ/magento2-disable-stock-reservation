@@ -3,6 +3,7 @@
     <module name="Ampersand_DisableStockReservation" setup_version="0.1.0">
         <sequence>
             <module name="Magento_Sales"/>
+            <module name="Magento_Inventory"/>
             <module name="Magento_InventorySales"/>
             <module name="Magento_InventorySalesApi"/>
             <module name="Magento_InventoryShipping"/>
