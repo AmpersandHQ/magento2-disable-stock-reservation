@@ -42,6 +42,8 @@ install:
   - magerun2 config:store:set oauth/consumer/enable_integration_as_bearer 1
   - magerun2 config:store:set checkout/options/guest_checkout 1
   - magerun2 config:store:set payment/checkmo/active 1
+  - cd /tmp && magerun2 integration:create --help && cd - 
+  - magerun2 integration:create --help 
   - magerun2 integration:create disablestockres example@example.com https://example.com --access-token="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" -vvv
   - magerun2 cache:flush
 # warm caches
