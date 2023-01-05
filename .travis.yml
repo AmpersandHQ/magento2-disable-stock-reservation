@@ -29,7 +29,7 @@ install:
 # Install magento
   - if [[ $TEST_GROUP = magento_242 ]];      then  NAME=disablestockres VERSION=2.4.2 . ./vendor/bin/travis-install-magento.sh; fi
   - if [[ $TEST_GROUP = magento_23 ]];       then  NAME=disablestockres VERSION=2.3.7-p2 . ./vendor/bin/travis-install-magento.sh; fi
-  - if [[ $TEST_GROUP = magento_latest ]];   then  NAME=disablestockres                  . ./vendor/bin/travis-install-magento.sh; fi
+  - if [[ $TEST_GROUP = magento_latest ]];   then  NAME=disablestockres VERSION=2.4.5                 . ./vendor/bin/travis-install-magento.sh; fi
 # Install this module
   - cd vendor/ampersand/travis-vanilla-magento/instances/disablestockres
   - export COMPOSER_MEMORY_LIMIT=-1 
