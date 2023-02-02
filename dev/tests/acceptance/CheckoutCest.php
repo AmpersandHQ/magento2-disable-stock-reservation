@@ -87,7 +87,38 @@ class CheckoutCest
         $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/ship");
 
         $newQty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
-        $I->assertEquals(97, $newQty, 'The quantity should have been decremented on creation of the order and not changed since that point');
+        $I->assertEquals(97, $newQty, 'qty should have been decremented on creation of the order and not changed later');
+    }
+
+    /**
+     * @depends noInventoryIsReservedAndStockHasBeenDeducted
+     * @param Step\Acceptance\Magento $I
+     */
+    public function preventStockDeductionOnOrderShipmentForBundles(Step\Acceptance\Magento $I)
+    {
+        $productIdA = $I->createSimpleProduct($firstSku = 'amp_stock_deducts_on_shipment_bundle_a', 100);
+        $productIdB = $I->createSimpleProduct($secondSku = 'amp_stock_deducts_on_shipment_bundle_b', 100);
+
+        // Create product with 50 stock
+        $I->createBundleProduct('amp_stock_deducts_on_shipment_bundle', [
+            ['sku' => $firstSku, 'id' => $productIdA],
+            ['sku' => $secondSku, 'id' => $productIdB]
+        ]);
+
+        $cartId = $I->getGuestQuote();
+        $I->addBundleProductToQuote($cartId, 'amp_stock_deducts_on_shipment_bundle', 3);
+        $orderId = $I->completeGuestCheckout($cartId);
+
+        $I->assertEquals(97, $this->getStockQty($I, $productIdA));
+        $I->assertEquals(97, $this->getStockQty($I, $productIdB));
+
+        $I->amBearerAuthenticated(Step\Acceptance\Magento::ACCESS_TOKEN);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/ship");
+
+        // The quantity should have been decremented on creation of the order and not changed since that point
+        $I->assertEquals(97, $this->getStockQty($I, $productIdA));
+        $I->assertEquals(97, $this->getStockQty($I, $productIdB));
     }
 
     /**
@@ -107,8 +138,35 @@ class CheckoutCest
         //$I->haveRESTXdebugCookie(); # uncomment to add xdebug cookie to request
         $I->sendPOSTAndVerifyResponseCodeIs200("V1/orders/{$orderId}/cancel");
 
-        $newQty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
-        $I->assertEquals(100, $newQty, 'The quantity should have been returned when cancelling');
+        $I->assertEquals(100, $this->getStockQty($I, $productId), 'The qty should have been returned when cancelling');
+    }
+
+    /**
+     * @depends noInventoryIsReservedAndStockHasBeenDeducted
+     * @param Step\Acceptance\Magento $I
+     */
+    public function stockIsReturnedWhenOrderIsCancelledForBundles(Step\Acceptance\Magento $I)
+    {
+        $productIdA = $I->createSimpleProduct($firstSku = 'amp_stock_deducts_on_shipment_bundle_a', 100);
+        $productIdB = $I->createSimpleProduct($secondSku = 'amp_stock_deducts_on_shipment_bundle_b', 100);
+
+        // Create product with 50 stock
+        $I->createBundleProduct('amp_stock_deducts_on_shipment_bundle', [
+            ['sku' => $firstSku, 'id' => $productIdA],
+            ['sku' => $secondSku, 'id' => $productIdB]
+        ]);
+
+        $cartId = $I->getGuestQuote();
+        $I->addBundleProductToQuote($cartId, 'amp_stock_deducts_on_shipment_bundle', 5);
+        $orderId = $I->completeGuestCheckout($cartId);
+
+        $I->amBearerAuthenticated(Step\Acceptance\Magento::ACCESS_TOKEN);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/orders/{$orderId}/cancel");
+
+        // The quantity should have been returned when cancelling
+        $I->assertEquals(100, $this->getStockQty($I, $productIdA));
+        $I->assertEquals(100, $this->getStockQty($I, $productIdB));
     }
 
     /**
@@ -174,24 +232,18 @@ class CheckoutCest
         // Create product with 50 stock
         $productId = $I->createSimpleProduct('amp_verify_stock_deduction_prevents_add_to_basket', 50);
 
-        // Verify the state of the database at this point
-        $qtyInDatabase = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
-        $I->assertEquals(50, $qtyInDatabase, 'The product should be created with qty 50');
-
-        $invQtyInDatabase = $I->grabFromDatabase('inventory_source_item', 'quantity', ['sku' => 'amp_verify_stock_deduction_prevents_add_to_basket']);
-        $I->assertEquals(50, $invQtyInDatabase, 'The product should be created with qty 50');
+        // Verify the state of the database at this point, The product should be created with qty 50
+        $I->assertEquals(50, $this->getStockQty($I, $productId));
+        $I->assertEquals(50, $this->getInventoryQty($I, 'amp_verify_stock_deduction_prevents_add_to_basket'));
 
         // Purchase 30 of unit, leaving 20
         $cartId = $I->getGuestQuote();
         $I->addSimpleProductToQuote($cartId, 'amp_verify_stock_deduction_prevents_add_to_basket', 30);
         $I->completeGuestCheckout($cartId);
 
-        // Verify the state of the database at this point
-        $qtyInDatabase = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
-        $I->assertEquals(20, $qtyInDatabase, 'The product should have a remaining qty of 20');
-
-        $invQtyInDatabase = $I->grabFromDatabase('inventory_source_item', 'quantity', ['sku' => 'amp_verify_stock_deduction_prevents_add_to_basket']);
-        $I->assertEquals(20, $invQtyInDatabase, 'The product should have a remaining qty of 20');
+        // Verify the state of the database at this point, The product should have a remaining qty of 20
+        $I->assertEquals(20, $this->getStockQty($I, $productId));
+        $I->assertEquals(20, $this->getInventoryQty($I, 'amp_verify_stock_deduction_prevents_add_to_basket'));
 
         // Add 30 of unit, 10 over the limit, this should error with "Requested qty is not available"
         $newCartId = $I->getGuestQuote();
@@ -201,5 +253,59 @@ class CheckoutCest
 
         // Add 20 of unit, this should work
         $I->addSimpleProductToQuote($newCartId, 'amp_verify_stock_deduction_prevents_add_to_basket', 20);
+    }
+
+    /**
+     * @depends noInventoryIsReservedAndStockHasBeenDeducted
+     * @param \Step\Acceptance\Magento $I
+     */
+    public function stockDeductionPreventsSubsequentAddToBasketForBundles(Step\Acceptance\Magento $I)
+    {
+        $firstProductId = $I->createSimpleProduct($firstSku = 'bundle_simple_a', 50);
+        $secondProductId = $I->createSimpleProduct($secondSku = 'bundle_simple_b', 50);
+
+        // Create product with 50 stock
+        $I->createBundleProduct('amp_verify_stock_deduction_prevents_add_to_basket_bundle', [
+            ['sku' => $firstSku, 'id' => $firstProductId],
+            ['sku' => $secondSku, 'id' => $secondProductId]
+        ]);
+
+        // Verify the state of the database at this point
+        $I->assertEquals(50, $this->getStockQty($I, $firstProductId), 'The product A should be created with qty 50');
+        $I->assertEquals(50, $this->getInventoryQty($I, $firstSku), 'The product A should be created with qty 50');
+
+        $I->assertEquals(50, $this->getStockQty($I, $secondProductId), 'The product B should be created with qty 50');
+        $I->assertEquals(50, $this->getInventoryQty($I, $secondSku), 'The product B should be created with qty 50');
+
+        // Purchase 30 of unit, leaving 20
+        $cartId = $I->getGuestQuote();
+        $I->addBundleProductToQuote($cartId, 'amp_verify_stock_deduction_prevents_add_to_basket_bundle', 30);
+        $I->completeGuestCheckout($cartId);
+
+        // Verify the state of the database at this point
+        $I->assertEquals(20, $this->getStockQty($I, $firstProductId), 'The product A should be created with qty 20');
+        $I->assertEquals(20, $this->getInventoryQty($I, $firstSku), 'The product A should be created with qty 20');
+
+        $I->assertEquals(20, $this->getStockQty($I, $secondProductId), 'The product B should be created with qty 20');
+        $I->assertEquals(20, $this->getInventoryQty($I, $secondSku), 'The product B should be created with qty 20');
+
+        // Add 30 of unit, 10 over the limit, this should error with "Requested qty is not available"
+        $newCartId = $I->getGuestQuote();
+        $I->expectThrowable(Exception\RequestedQtyNotAvailable::class, function () use ($newCartId, $I) {
+            $I->addBundleProductToQuote($newCartId, 'amp_verify_stock_deduction_prevents_add_to_basket_bundle', 30);
+        });
+
+        // Add 20 of unit, this should work
+        $I->addBundleProductToQuote($newCartId, 'amp_verify_stock_deduction_prevents_add_to_basket_bundle', 20);
+    }
+
+    private function getStockQty(Step\Acceptance\Magento $I, $productId)
+    {
+        return $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
+    }
+
+    private function getInventoryQty(Step\Acceptance\Magento $I, $sku)
+    {
+        return $I->grabFromDatabase('inventory_source_item', 'quantity', ['sku' => $sku]);
     }
 }
