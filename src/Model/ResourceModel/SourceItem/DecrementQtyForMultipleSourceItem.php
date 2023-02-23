@@ -30,7 +30,7 @@ class DecrementQtyForMultipleSourceItem extends MagentoDecrementQtyForMultipleSo
 
     /**
      * Decrement qty for source item.
-     * 
+     *
      * In addition to the quantity, we add the status that needs to be updated when
      * product is either going out of stock, or going back in stock.
      *
