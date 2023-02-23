@@ -8,6 +8,7 @@ namespace Ampersand\DisableStockReservation\Model\ResourceModel\SourceItem;
 
 use Magento\Framework\App\ResourceConnection;
 use Magento\Inventory\Model\ResourceModel\SourceItem as SourceItemResourceModel;
+// phpcs:ignore Generic.Files.LineLength.TooLong
 use Magento\Inventory\Model\ResourceModel\SourceItem\DecrementQtyForMultipleSourceItem as MagentoDecrementQtyForMultipleSourceItem;
 
 /**
