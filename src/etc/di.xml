@@ -8,6 +8,10 @@
     <type name="Magento\Sales\Model\Service\OrderService">
         <plugin name="inventory_sales_source_deduction_processor" type="Ampersand\DisableStockReservation\Plugin\SourceDeductionProcessor"/>
     </type>
+    <!-- Fix the double SourceDeductionService call when an order is shipped -->
+    <type name="Magento\SalesInventory\Model\Order\ReturnProcessor">
+        <plugin name="process_return_product_qty_on_credit_memo" disabled="true" />
+    </type>
     <!--
         Fix M2.4 introduced bug caused by new interface implementation.
         New interface implementation checks against in-store reserved stock.
