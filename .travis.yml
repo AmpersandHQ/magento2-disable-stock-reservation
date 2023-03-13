@@ -7,11 +7,11 @@ git:
 dist: xenial
 env:
     - TEST_GROUP=magento_latest
-    - TEST_GROUP=magento_242
+    - TEST_GROUP=magento_243
 jobs:
     exclude:
         -   php: 8.1
-            env: TEST_GROUP=magento_242
+            env: TEST_GROUP=magento_243
         -   php: 7.4
             env: TEST_GROUP=magento_latest
 
@@ -24,8 +24,7 @@ install:
 # Magento coding standard check
   - vendor/bin/phpcs -s --standard=./ruleset.xml src/
 # Install magento
-  - if [[ $TEST_GROUP = magento_242 ]];      then  NAME=disablestockres VERSION=2.4.2 . ./vendor/bin/travis-install-magento.sh; fi
-  - if [[ $TEST_GROUP = magento_23 ]];       then  NAME=disablestockres VERSION=2.3.7-p2 . ./vendor/bin/travis-install-magento.sh; fi
+  - if [[ $TEST_GROUP = magento_243 ]];      then  NAME=disablestockres VERSION=2.4.3 . ./vendor/bin/travis-install-magento.sh; fi
   - if [[ $TEST_GROUP = magento_latest ]];   then  magerun2 self-update; fi
   - if [[ $TEST_GROUP = magento_latest ]];   then  NAME=disablestockres                  . ./vendor/bin/travis-install-magento.sh; fi
 # Install this module
