@@ -3,7 +3,7 @@
     "description": "This module disables the inventory reservation logic introduced as part of MSI in Magento 2.3.3",
     "type": "magento2-module",
     "require": {
-        "magento/framework": ">=103.0.4",
+        "magento/framework": ">=103.0.5",
         "php": "^7.1|^8.0|^8.2"
     },
     "autoload": {
