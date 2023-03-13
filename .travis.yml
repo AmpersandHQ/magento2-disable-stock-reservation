@@ -23,8 +23,8 @@ install:
 # Magento coding standard check
   - vendor/bin/phpcs -s --standard=./ruleset.xml src/
 # Install magento
+  - magerun2 self-update
   - if [[ $TEST_GROUP = magento_243 ]];      then  NAME=disablestockres VERSION=2.4.5 . ./vendor/bin/travis-install-magento.sh; fi
-  - if [[ $TEST_GROUP = magento_latest ]];   then  magerun2 self-update; fi
   - if [[ $TEST_GROUP = magento_latest ]];   then  NAME=disablestockres                  . ./vendor/bin/travis-install-magento.sh; fi
 # Install this module
   - cd vendor/ampersand/travis-vanilla-magento/instances/disablestockres
