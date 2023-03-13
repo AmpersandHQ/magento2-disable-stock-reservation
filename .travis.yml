@@ -8,11 +8,8 @@ dist: xenial
 env:
     - TEST_GROUP=magento_latest
     - TEST_GROUP=magento_242
-    - TEST_GROUP=magento_23
 jobs:
     exclude:
-        -   php: 8.1
-            env: TEST_GROUP=magento_23
         -   php: 8.1
             env: TEST_GROUP=magento_242
         -   php: 7.4
