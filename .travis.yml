@@ -1,6 +1,5 @@
 language: php
 php:
-    - 7.4
     - 8.1
 git:
   depth: false
@@ -10,7 +9,7 @@ env:
     - TEST_GROUP=magento_243
 jobs:
     exclude:
-        -   php: 8.1
+        -   php: 7.4
             env: TEST_GROUP=magento_243
         -   php: 7.4
             env: TEST_GROUP=magento_latest
@@ -24,7 +23,7 @@ install:
 # Magento coding standard check
   - vendor/bin/phpcs -s --standard=./ruleset.xml src/
 # Install magento
-  - if [[ $TEST_GROUP = magento_243 ]];      then  NAME=disablestockres VERSION=2.4.4-p2 . ./vendor/bin/travis-install-magento.sh; fi
+  - if [[ $TEST_GROUP = magento_243 ]];      then  NAME=disablestockres VERSION=2.4.5 . ./vendor/bin/travis-install-magento.sh; fi
   - if [[ $TEST_GROUP = magento_latest ]];   then  magerun2 self-update; fi
   - if [[ $TEST_GROUP = magento_latest ]];   then  NAME=disablestockres                  . ./vendor/bin/travis-install-magento.sh; fi
 # Install this module
