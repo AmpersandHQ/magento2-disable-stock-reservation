@@ -4,7 +4,7 @@
     "type": "magento2-module",
     "require": {
         "magento/framework": ">=103.0.2",
-        "php": "^7.1|^8.0"
+        "php": "^7.1|^8.0|^8.2"
     },
     "autoload": {
         "files": [
