@@ -44,4 +44,8 @@
 
     <preference for="Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface"
                 type="Ampersand\DisableStockReservation\Model\SourcesRepository"/>
+
+    <!-- Fix DecrementQty on table inventory_source_item not updating status properly -->
+    <preference for="Magento\Inventory\Model\ResourceModel\SourceItem\DecrementQtyForMultipleSourceItem"
+                type="Ampersand\DisableStockReservation\Model\ResourceModel\SourceItem\DecrementQtyForMultipleSourceItem" />
 </config>
