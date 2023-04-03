@@ -149,6 +149,56 @@ class CheckoutCest
     }
 
     /**
+     * @depends noInventoryIsReservedAndStockHasBeenDeducted
+     * @param Step\Acceptance\Magento $I
+     */
+    public function refundOnShippedOrderDoesNotAffectQuantityWhenNotReturnedToStock(Step\Acceptance\Magento $I)
+    {
+        $productId = $I->createSimpleProduct('amp_stock_refund_double_quantity_not_returned', 100);
+
+        $cartId = $I->getGuestQuote();
+        $I->addSimpleProductToQuote($cartId, 'amp_stock_refund_double_quantity_not_returned', 5);
+        $orderId = $I->completeGuestCheckout($cartId);
+
+        $newQty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
+        $I->assertEquals(95, $newQty);
+
+        $I->amBearerAuthenticated(Step\Acceptance\Magento::ACCESS_TOKEN);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        // If the payment method chosen is banktransfer, you must invoice the order
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/invoice", json_encode([
+            "capture" => true,
+            "notify" => false
+        ]));
+
+        // Ship the order by creating a sales_shipment
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/ship");
+
+        $newQty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
+        $I->assertEquals(95, $newQty, 'The quantity should have been decremented on creation of the order');
+
+        $orderItemId = $I->grabFromDatabase('sales_order_item', 'item_id', ['order_id' => $orderId]);
+        //Create a creditmemo from the invoice and make sure return_to_stock_items is not set
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/refund", json_encode([
+            "items" => [
+                [
+                    "order_item_id" => $orderItemId,
+                    "qty" => 5
+                ]
+            ],
+            "notify" => false,
+            "arguments" => [
+                "shipping_amount" =>  0,
+                "adjustment_positive" => 0,
+                "adjustment_negative" =>  0
+            ]
+        ]));
+
+        $refundedQty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
+        $I->assertEquals(95, $refundedQty, 'The quantity should remain at 95 when not returned');
+    }
+
+    /**
      * @link https://github.com/AmpersandHQ/magento2-disable-stock-reservation/pull/92
      *
      * @depends stockIsReturnedWhenOrderIsCancelled
