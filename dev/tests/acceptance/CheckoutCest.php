@@ -8,6 +8,7 @@ class CheckoutCest
     public function dependenciesAreConfigured(Step\Acceptance\Magento $I)
     {
         $I->seeNumRecords(1, 'inventory_source');
+        $I->seeInDatabase('core_config_data', ['path' => 'oauth/consumer/enable_integration_as_bearer', 'value' => '1']);
         $I->seeInDatabase('core_config_data', ['path' => 'checkout/options/guest_checkout', 'value' => '1']);
         $I->seeInDatabase('core_config_data', ['path' => 'payment/checkmo/active', 'value' => '1']);
         $I->seeInDatabase('oauth_token', ['token' => Step\Acceptance\Magento::ACCESS_TOKEN]);
