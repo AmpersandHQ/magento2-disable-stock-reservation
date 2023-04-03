@@ -8,6 +8,7 @@ namespace Ampersand\DisableStockReservation\Model\ResourceModel\SourceItem;
 
 use Magento\Framework\App\ResourceConnection;
 use Magento\Inventory\Model\ResourceModel\SourceItem as SourceItemResourceModel;
+// phpcs:ignore Magento2.Files.LineLength.MaxExceeded
 use Magento\Inventory\Model\ResourceModel\SourceItem\DecrementQtyForMultipleSourceItem as MagentoDecrementQtyForMultipleSourceItem;
 
 /**
@@ -30,7 +31,7 @@ class DecrementQtyForMultipleSourceItem extends MagentoDecrementQtyForMultipleSo
 
     /**
      * Decrement qty for source item.
-     * 
+     *
      * In addition to the quantity, we add the status that needs to be updated when
      * product is either going out of stock, or going back in stock.
      *
