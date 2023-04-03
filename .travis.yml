@@ -3,14 +3,13 @@ php: 8.1
 
 env:
   - TEST_GROUP=2-3-7
-  - TEST_GROUP=2-3-7
   - TEST_GROUP=2-4-0
   - TEST_GROUP=2-4-1
   - TEST_GROUP=2-4-2
   - TEST_GROUP=2-4-3
+  - TEST_GROUP=2-4-4
   - TEST_GROUP=2-4-5
   - TEST_GROUP=2-4-6
-  - TEST_GROUP=2-latest 
 
 before_install:
   - travis_retry wget https://github.com/docker/compose/releases/download/v2.17.0/docker-compose-linux-x86_64
@@ -34,7 +33,7 @@ cache:
     - $HOME/bin
 
 after_failure:
-  - vendor/bin/mtest 'for r in ./var/report/*; do cat $r; done'
+  - vendor/bin/mtest 'for r in /var/www/html/var/report/*; do cat $r; done'
   - vendor/bin/mtest 'cat /var/www/html/var/log/*.log'
   - docker ps
   - sleep 10; # give log files time to render
