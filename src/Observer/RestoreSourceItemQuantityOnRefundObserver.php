@@ -20,7 +20,7 @@ use Magento\InventorySalesApi\Model\GetSkuFromOrderItemInterface;
 use Magento\InventorySalesApi\Model\StockByWebsiteIdResolverInterface;
 use Magento\InventorySourceDeductionApi\Model\ItemToDeductFactory;
 use Magento\InventorySourceDeductionApi\Model\SourceDeductionRequestFactory;
-use Magento\InventorySourceDeductionApi\Model\SourceDeductionService;
+use Magento\InventorySourceDeductionApi\Model\SourceDeductionServiceInterface;
 use Magento\Sales\Model\OrderRepository;
 
 class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
@@ -76,7 +76,7 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
     private $getSalesChannelForOrder;
 
     /**
-     * @var SourceDeductionService
+     * @var SourceDeductionServiceInterface
      */
     private $sourceDeductionService;
 
@@ -108,7 +108,7 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
      * @param SourceDeductionRequestFactory $sourceDeductionRequestFactory
      * @param SalesEventExtensionFactory $salesEventExtensionFactory
      * @param GetSalesChannelForOrderFactory $getSalesChannelForOrderFactory
-     * @param SourceDeductionService $sourceDeductionService
+     * @param SourceDeductionServiceInterface $sourceDeductionService
      * @param GetSourceItemsBySkuInterface $getSourceItemsBySku
      * @param SalesEventInterfaceFactory $salesEventFactory
      * @param ItemToDeductFactory $itemToDeductFactory
@@ -124,7 +124,7 @@ class RestoreSourceItemQuantityOnRefundObserver implements ObserverInterface
         SourceDeductionRequestFactory $sourceDeductionRequestFactory,
         SalesEventExtensionFactory $salesEventExtensionFactory,
         GetSalesChannelForOrderFactory $getSalesChannelForOrderFactory,
-        SourceDeductionService $sourceDeductionService,
+        SourceDeductionServiceInterface $sourceDeductionService,
         GetSourceItemsBySkuInterface $getSourceItemsBySku,
         SalesEventInterfaceFactory $salesEventFactory,
         ItemToDeductFactory $itemToDeductFactory
