@@ -1,97 +1,40 @@
 language: php
-php:
-    - 7.4
-    - 8.1
-git:
-  depth: false
-dist: xenial
+php: 8.1
+
 env:
-    - TEST_GROUP=magento_23
-    - TEST_GROUP=magento_242
-    - TEST_GROUP=magento_243
-    - TEST_GROUP=magento_244
-    - TEST_GROUP=magento_245
-jobs:
-    exclude:
-        -   php: 8.1
-            env: TEST_GROUP=magento_23
-        -   php: 8.1
-            env: TEST_GROUP=magento_244
-        -   php: 8.1
-            env: TEST_GROUP=magento_243
-        -   php: 8.1
-            env: TEST_GROUP=magento_242
-        -   php: 7.4
-            env: TEST_GROUP=magento_245
-
-
-install:
-# Composer install
-  - composer install --no-interaction
-# Do a quick code style check
-  - PHP_CS_FIXER_IGNORE_ENV=1 ./vendor/bin/php-cs-fixer fix --dry-run --rules=@PSR2 --diff src/
-# Magento coding standard check
-  - vendor/bin/phpcs -s --standard=./ruleset.xml src/
-# Install magento
-  - if [[ $TEST_GROUP = magento_23 ]];       then  NAME=disablestockres VERSION=2.3.7-p2 . ./vendor/bin/travis-install-magento.sh; fi
-  - if [[ $TEST_GROUP = magento_242 ]];      then  NAME=disablestockres VERSION=2.4.2-p2 . ./vendor/bin/travis-install-magento.sh; fi
-  - if [[ $TEST_GROUP = magento_243 ]];      then  NAME=disablestockres VERSION=2.4.3-p3 . ./vendor/bin/travis-install-magento.sh; fi
-  - if [[ $TEST_GROUP = magento_244 ]];      then  NAME=disablestockres VERSION=2.4.4-p2 . ./vendor/bin/travis-install-magento.sh; fi
-  - if [[ $TEST_GROUP = magento_245 ]];   then  magerun2 self-update; fi
-  - if [[ $TEST_GROUP = magento_245 ]];   then  NAME=disablestockres   VERSION=2.4.5     . ./vendor/bin/travis-install-magento.sh; fi
-# Install this module
-  - cd vendor/ampersand/travis-vanilla-magento/instances/disablestockres
-  - export COMPOSER_MEMORY_LIMIT=-1 
-  - composer config repo.disablestockres git "../../../../../"
-  - composer require -vvv ampersand/magento2-disable-stock-reservation:"dev-$TRAVIS_BRANCH" || composer require -vvv ampersand/magento2-disable-stock-reservation $TRAVIS_BRANCH
-  - php bin/magento setup:upgrade
-# compile magento
-  - php bin/magento setup:di:compile
-# Set up test configuration
-  - magerun2 config:store:set oauth/consumer/enable_integration_as_bearer 1
-  - magerun2 config:store:set checkout/options/guest_checkout 1
-  - magerun2 config:store:set payment/checkmo/active 1
-  - magerun2 integration:create disablestockres example@example.com https://example.com --access-token="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-  - magerun2 cache:flush
-# warm caches
-  - php bin/magento
-  - magerun2 sys:info
-  - cd -
+  - TEST_GROUP=2-3-7
+  - TEST_GROUP=2-3-7
+  - TEST_GROUP=2-4-0
+  - TEST_GROUP=2-4-1
+  - TEST_GROUP=2-4-2
+  - TEST_GROUP=2-4-3
+  - TEST_GROUP=2-4-5
+  - TEST_GROUP=2-4-6
+  - TEST_GROUP=2-latest 
 
 before_install:
-  - if [ ! "$TRAVIS_PULL_REQUEST" = "false" ]; then git branch; git branch -D "$TRAVIS_BRANCH" || true; git checkout -b "$TRAVIS_BRANCH"; fi
-  - composer self-update --2
-  - mkdir -p $HOME/bin/
-# Install magerun2
-  - test -f $HOME/bin/magerun2 || (mkdir -p $HOME/bin/ && wget https://files.magerun.net/n98-magerun2-4.9.1.phar && chmod +x n98-magerun2-4.9.1.phar && mv n98-magerun2-4.9.1.phar $HOME/bin/magerun2)
+  - travis_retry wget https://github.com/docker/compose/releases/download/v2.17.0/docker-compose-linux-x86_64
+  - sudo mv docker-compose-linux-x86_64 /usr/libexec/docker/cli-plugins/docker-compose
+  - sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+  - docker --version && docker compose version
 
+install:
+  - composer install --no-interaction
+  - PHP_CS_FIXER_IGNORE_ENV=1 ./vendor/bin/php-cs-fixer fix --dry-run --rules=@PSR2 --diff src/
+  - vendor/bin/phpcs -s --standard=./ruleset.xml src/
+  - CURRENT_EXTENSION="." FULL_INSTALL=1 vendor/bin/mtest-make $TEST_GROUP
 
 script:
-  - ADDITIONAL_ARGS="-v"
-  - if [[ $TRAVIS_COMMIT_MESSAGE == *"VERBOSE"* ]]; then ADDITIONAL_ARGS="-vvv"; fi;
-  - ./vendor/bin/codecept build -c dev
-  - URL="https://magento-disablestockres.localhost/" MYSQL_USER="root" MYSQL_HOST="127.0.0.1" MYSQL_DB="databasedisablestockres" MYSQL_PORT="3306" ./vendor/bin/codecept run acceptance -c dev $ADDITIONAL_ARGS
-
-addons:
-  apt:
-    packages:
-    - postfix
-    - apache2
-    - libapache2-mod-fastcgi
-
-services:
-  - mysql
-  - elasticsearch
+  - composer docker-configure-magento
+  - composer docker-run-codeception
 
 cache:
-  apt: true
   directories:
     - $HOME/.composer/cache
     - $HOME/bin
 
 after_failure:
-  - test -d ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/report/ && for r in ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/report/*; do cat $r; done
-  - test -f ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/system.log && grep -v "Broken reference" ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/system.log
-  - test -f ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/exception.log && cat ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/exception.log
-  - test -f ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/support_report.log && grep -v "Broken reference" ./vendor/ampersand/travis-vanilla-magento/instances/disablestockres/var/log/support_report.log
+  - vendor/bin/mtest 'for r in ./var/report/*; do cat $r; done'
+  - vendor/bin/mtest 'cat /var/www/html/var/log/*.log'
+  - docker ps
   - sleep 10; # give log files time to render
