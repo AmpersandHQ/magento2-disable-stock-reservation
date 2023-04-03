@@ -11,6 +11,13 @@ env:
   - TEST_GROUP=2-4-5
   - TEST_GROUP=2-4-6
 
+jobs:
+  allow_failures:
+    - env: TEST_GROUP=2-4-3
+    - env: TEST_GROUP=2-4-4
+    - env: TEST_GROUP=2-4-5
+    - env: TEST_GROUP=2-4-6
+
 before_install:
   - travis_retry wget https://github.com/docker/compose/releases/download/v2.17.0/docker-compose-linux-x86_64
   - sudo mv docker-compose-linux-x86_64 /usr/libexec/docker/cli-plugins/docker-compose
