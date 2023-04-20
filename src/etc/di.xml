@@ -44,16 +44,6 @@
 
     <preference for="Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface"
                 type="Ampersand\DisableStockReservation\Model\SourcesRepository"/>
-    <!-- Show all assigned sources for all items during shipment creation (regardless of in/out of stock -->
-    <preference
-            for="Magento\InventorySourceSelectionApi\Model\GetInStockSourceItemsBySkusAndSortedSource"
-            type="Ampersand\DisableStockReservation\Model\InventoryApi\GetInStockSourceItemsBySkusAndSortedSource" />
-
-    <!--  Pretend All Items are not Manage Stock for shipping purposes  -->
-    <type name="Magento\InventoryShippingAdminUi\Ui\DataProvider\SourceSelectionDataProvider">
-        <plugin name="disable_manage_stock_for_shipping" type="Ampersand\DisableStockReservation\Plugin\InventoryShippingAdminUi\Ui\DataProvider\SourceSelectionDataProviderPlugin"/>
-    </type>
-
     <!--  Allow sending pickup notif at 0 qty/out of stock  -->
     <type name="Magento\InventoryInStorePickupSales\Model\Order\IsFulfillable">
         <plugin name="allow_pickup_notif" type="Ampersand\DisableStockReservation\Plugin\InventoryInStorePickupSales\Model\Order\IsFulfillablePlugin"/>
