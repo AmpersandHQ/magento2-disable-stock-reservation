@@ -4,7 +4,6 @@
     "type": "magento2-module",
     "require": {
         "magento/framework": "*",
-        "magento/module-inventory-in-store-pickup-sales": "^1.1",
         "php": "^7.1|^8.0"
     },
     "autoload": {
