@@ -31,7 +31,7 @@
         "codeception/module-phpbrowser": "^1.0.0",
         "codeception/module-asserts": "^1.1.0",
         "codeception/module-db": "^1.0.1",
-        "ampersand/magento-docker-test-instance": "dev-increase-composer1-timeout-add-verbose-debug-mode",
+        "ampersand/magento-docker-test-instance": "^0.1",
         "codeception/module-rest": "^1.2.0",
         "friendsofphp/php-cs-fixer": "^2.16",
         "magento/magento-coding-standard": "<16",
@@ -39,7 +39,7 @@
     },
     "scripts": {
         "docker-install-magento": [
-            "COMPOSER_INSTALL_VERBOSE=1 CURRENT_EXTENSION=\".\" FULL_INSTALL=1 TWOFACTOR_ENABLED=1 UNIT_TESTS_PATH='dev/MagentoTests/Unit' INTEGRATION_TESTS_PATH='dev/MagentoTests/Integration' vendor/bin/mtest-make $TEST_GROUP"
+            "CURRENT_EXTENSION=\".\" FULL_INSTALL=1 TWOFACTOR_ENABLED=1 UNIT_TESTS_PATH='dev/MagentoTests/Unit' INTEGRATION_TESTS_PATH='dev/MagentoTests/Integration' vendor/bin/mtest-make $TEST_GROUP"
         ],
         "docker-configure-magento": [
             "vendor/bin/mtest 'vendor/bin/n98-magerun2 config:store:set checkout/options/guest_checkout 1'",
@@ -64,7 +64,5 @@
         "post-update-cmd": [
             "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/)"
         ]
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true
+    }
 }
