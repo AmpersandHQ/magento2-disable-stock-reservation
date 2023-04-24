@@ -28,11 +28,13 @@ install:
   - composer install --no-interaction
   - PHP_CS_FIXER_IGNORE_ENV=1 ./vendor/bin/php-cs-fixer fix --dry-run --rules=@PSR2 --diff src/
   - vendor/bin/phpcs -s --standard=./ruleset.xml src/
-  - CURRENT_EXTENSION="." FULL_INSTALL=1 vendor/bin/mtest-make $TEST_GROUP
+  - TEST_GROUP=$TEST_GROUP composer docker-install-magento
 
 script:
   - composer docker-configure-magento
   - composer docker-run-codeception
+  - composer docker-run-unit-tests
+  - composer docker-run-integration-tests
 
 cache:
   directories:
