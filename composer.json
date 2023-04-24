@@ -63,5 +63,7 @@
         "post-update-cmd": [
             "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/)"
         ]
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
