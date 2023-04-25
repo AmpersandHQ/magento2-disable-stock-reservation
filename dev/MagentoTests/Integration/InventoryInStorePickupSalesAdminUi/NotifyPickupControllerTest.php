@@ -111,6 +111,7 @@ class NotifyPickupControllerTest extends \Magento\TestFramework\TestCase\Abstrac
             $order->getId()
         );
         $this->dispatch('backend/sales/order/notifyPickup');
+        $this->assertEquals(1, count($this->getSessionMessages()), 'We should only have 1 session message');
         $this->assertSessionMessages(
             $this->equalTo(
                 ['The customer has been notified and shipment created.'],
