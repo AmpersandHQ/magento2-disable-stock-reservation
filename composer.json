@@ -17,7 +17,8 @@
     "config": {
         "allow-plugins": {
             "magento/*": true
-        }
+        },
+        "process-timeout": 1200
     },
     "repositories": [
         {
@@ -30,12 +31,33 @@
         "codeception/module-phpbrowser": "^1.0.0",
         "codeception/module-asserts": "^1.1.0",
         "codeception/module-db": "^1.0.1",
-        "ampersand/travis-vanilla-magento": "^1.0",
+        "ampersand/magento-docker-test-instance": "^0.1",
         "codeception/module-rest": "^1.2.0",
         "friendsofphp/php-cs-fixer": "^2.16",
-        "magento/magento-coding-standard": "<16"
+        "magento/magento-coding-standard": "<16",
+        "tddwizard/magento2-fixtures": "^1.1"
     },
     "scripts": {
+        "docker-install-magento": [
+            "CURRENT_EXTENSION=\".\" FULL_INSTALL=1 COMPOSER_REQUIRE_EXTRA='tddwizard/magento2-fixtures' TWOFACTOR_ENABLED=1 UNIT_TESTS_PATH='dev/MagentoTests/Unit' INTEGRATION_TESTS_PATH='dev/MagentoTests/Integration' vendor/bin/mtest-make $TEST_GROUP"
+        ],
+        "docker-configure-magento": [
+            "vendor/bin/mtest 'vendor/bin/n98-magerun2 config:store:set checkout/options/guest_checkout 1'",
+            "vendor/bin/mtest 'vendor/bin/n98-magerun2 config:store:set payment/checkmo/active 1'",
+            "vendor/bin/mtest 'vendor/bin/n98-magerun2 config:store:set oauth/consumer/enable_integration_as_bearer 1'",
+            "vendor/bin/mtest 'vendor/bin/n98-magerun2 integration:create disablestockres example@example.com https://example.com --access-token=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'",
+            "vendor/bin/mtest 'php bin/magento cache:flush'",
+            "vendor/bin/mtest 'php bin/magento --version'"
+        ],
+        "docker-run-codeception": [
+            "URL=\"http://0.0.0.0:1234/\" MYSQL_USER=\"root\" MYSQL_HOST=\"0.0.0.0\" MYSQL_DB=\"magento\" MYSQL_PORT=\"1235\" ./dev/run-codeception.sh"
+        ],
+        "docker-run-unit-tests": [
+            "vendor/bin/mtest 'vendor/bin/phpunit -c /var/www/html/dev/tests/unit/phpunit.xml.dist --testsuite Unit --debug'"
+        ],
+        "docker-run-integration-tests": [
+            "vendor/bin/mtest 'vendor/bin/phpunit -c /var/www/html/dev/tests/integration/phpunit.xml.dist --testsuite Integration --debug'"
+        ],
         "post-install-cmd": [
             "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/)"
         ],
