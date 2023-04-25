@@ -132,6 +132,11 @@ class CheckoutCest
             ]
         ]));
         $I->assertEquals(
+            100,
+            $I->grabFromDatabase('sales_shipment_item', 'qty', ['order_item_id' => $orderItemId]),
+            'Product shipment was not for qty=100'
+        );
+        $I->assertEquals(
             0,
             $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
             'Product has not stayed at qty=0'
