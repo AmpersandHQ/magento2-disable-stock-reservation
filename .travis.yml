@@ -28,6 +28,7 @@ install:
   - composer install --no-interaction
   - PHP_CS_FIXER_IGNORE_ENV=1 ./vendor/bin/php-cs-fixer fix --dry-run --rules=@PSR2 --diff src/
   - vendor/bin/phpcs -s --standard=./ruleset.xml src/
+  - chmod 666 src/etc/db_schema_whitelist.json # so that docker container can write via volume
   - TEST_GROUP=$TEST_GROUP composer docker-install-magento
   - fileschanged=$(git ls-files -m -d | wc -l); if [[ ! "$fileschanged" -eq "0" ]]; then echo "Do you need to update the db_schema_whitelist.json file?" && git status  && git --no-pager diff && sleep 5 && exit 1; fi
 
