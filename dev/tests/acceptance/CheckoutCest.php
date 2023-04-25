@@ -121,8 +121,16 @@ class CheckoutCest
 
         $I->amBearerAuthenticated(Step\Acceptance\Magento::ACCESS_TOKEN);
         $I->haveHttpHeader('Content-Type', 'application/json');
-        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/ship");
-
+        // Ship the 100 items
+        $orderItemId = $I->grabFromDatabase('sales_order_item', 'item_id', ['order_id' => $orderId]);
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/ship", json_encode([
+            "items" => [
+                [
+                    "order_item_id" => $orderItemId,
+                    "qty" => 100
+                ]
+            ]
+        ]));
         $I->assertEquals(
             0,
             $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
