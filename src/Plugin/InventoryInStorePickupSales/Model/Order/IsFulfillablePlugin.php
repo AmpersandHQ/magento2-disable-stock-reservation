@@ -14,6 +14,6 @@ class IsFulfillablePlugin
      */
     public function afterExecute(IsFulfillable $subject, bool $result): bool
     {
-        return true;
+        return $result;
     }
 }
