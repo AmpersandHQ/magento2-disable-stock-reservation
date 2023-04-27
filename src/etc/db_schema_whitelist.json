@@ -1,2 +1,13 @@
 {
+    "order_sources": {
+        "column": {
+            "extension_id": true,
+            "order_id": true,
+            "sources": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "ORDER_SOURCES_ORDER_ID_SALES_ORDER_ENTITY_ID": true
+        }
+    }
 }
