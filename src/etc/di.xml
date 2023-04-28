@@ -52,4 +52,9 @@
     <!-- Fix DecrementQty on table inventory_source_item not updating status properly -->
     <preference for="Magento\Inventory\Model\ResourceModel\SourceItem\DecrementQtyForMultipleSourceItem"
                 type="Ampersand\DisableStockReservation\Model\ResourceModel\SourceItem\DecrementQtyForMultipleSourceItem" />
+
+    <!--  Allow sending pickup notif at 0 qty/out of stock  -->
+    <type name="Magento\InventoryInStorePickupSales\Model\Order\IsFulfillable">
+        <plugin name="allow_pickup_notif" type="Ampersand\DisableStockReservation\Plugin\InventoryInStorePickupSales\Model\Order\IsFulfillablePlugin"/>
+    </type>
 </config>

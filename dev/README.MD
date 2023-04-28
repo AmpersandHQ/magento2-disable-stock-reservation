@@ -8,7 +8,7 @@ cd magento2-disable-stock-reservation
 
 Boot the docker test instance for testing against (run `./vendor/bin/mtest-make` to see supported versions)
 ```
-CURRENT_EXTENSION="." FULL_INSTALL=1 vendor/bin/mtest-make 2-4-5
+TEST_GROUP=2-4-5 composer docker-install-magento
 ```
 
 Configure magento test settings
@@ -18,6 +18,8 @@ composer docker-configure-magento
 
 Run the tests
 ```
-composer docker-run-codeception
+composer docker-run-unit-tests          # unit tests
+composer docker-run-integration-tests   # integration tests
+composer docker-run-codeception         # codeception rest api tests
 ```
 
