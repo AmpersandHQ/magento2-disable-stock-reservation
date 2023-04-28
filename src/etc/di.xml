@@ -48,4 +48,8 @@
 
     <preference for="Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface"
                 type="Ampersand\DisableStockReservation\Model\SourcesRepository"/>
+    <!--  Allow sending pickup notif at 0 qty/out of stock  -->
+    <type name="Magento\InventoryInStorePickupSales\Model\Order\IsFulfillable">
+        <plugin name="allow_pickup_notif" type="Ampersand\DisableStockReservation\Plugin\InventoryInStorePickupSales\Model\Order\IsFulfillablePlugin"/>
+    </type>
 </config>
