@@ -8,10 +8,9 @@
     <type name="Magento\Sales\Model\Service\OrderService">
         <plugin name="inventory_sales_source_deduction_processor" type="Ampersand\DisableStockReservation\Plugin\SourceDeductionProcessor"/>
     </type>
-    <!-- Fix the double SourceDeductionService call when an order is shipped -->
-    <type name="Magento\SalesInventory\Model\Order\ReturnProcessor">
-        <plugin name="process_return_product_qty_on_credit_memo" disabled="true" />
-    </type>
+    <!-- Fix the double SourceDeductionService call when an order is shipped by conditionally disabling process_return_product_qty_on_credit_memo plugin-->
+    <preference for="Magento\InventorySales\Plugin\SalesInventory\ProcessReturnQtyOnCreditMemoPlugin" type="Ampersand\DisableStockReservation\Plugin\Preference\SalesInventory\ProcessReturnQtyOnCreditMemoPlugin"/>
+
     <!--
         Fix M2.4 introduced bug caused by new interface implementation.
         New interface implementation checks against in-store reserved stock.
@@ -52,6 +51,8 @@
     <!-- Fix DecrementQty on table inventory_source_item not updating status properly -->
     <preference for="Magento\Inventory\Model\ResourceModel\SourceItem\DecrementQtyForMultipleSourceItem"
                 type="Ampersand\DisableStockReservation\Model\ResourceModel\SourceItem\DecrementQtyForMultipleSourceItem" />
+    <preference for="Magento\Inventory\Model\SourceItem\Command\DecrementSourceItemQty"
+                type="Ampersand\DisableStockReservation\Model\SourceItem\Command\DecrementSourceItemQty"/>
 
     <!--  Allow sending pickup notif at 0 qty/out of stock  -->
     <type name="Magento\InventoryInStorePickupSales\Model\Order\IsFulfillable">

@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 /**
  * @author Mark Fischmann https://github.com/markfischmann
@@ -8,13 +9,11 @@ namespace Ampersand\DisableStockReservation\Model\ResourceModel\SourceItem;
 
 use Magento\Framework\App\ResourceConnection;
 use Magento\Inventory\Model\ResourceModel\SourceItem as SourceItemResourceModel;
-//phpcs:ignore Magento2.Files.LineLength.MaxExceeded
-use Magento\Inventory\Model\ResourceModel\SourceItem\DecrementQtyForMultipleSourceItem as MagentoDecrementQtyForMultipleSourceItem;
 
 /**
  * Preference class to override Magento\Inventory\Model\ResourceModel\SourceItem\DecrementQtyForMultipleSourceItem
  */
-class DecrementQtyForMultipleSourceItem extends MagentoDecrementQtyForMultipleSourceItem
+class DecrementQtyForMultipleSourceItem
 {
     /**
      * @var ResourceConnection
