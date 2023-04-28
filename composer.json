@@ -39,7 +39,8 @@
     },
     "scripts": {
         "docker-install-magento": [
-            "CURRENT_EXTENSION=\".\" FULL_INSTALL=1 COMPOSER_REQUIRE_EXTRA='tddwizard/magento2-fixtures' TWOFACTOR_ENABLED=1 UNIT_TESTS_PATH='dev/MagentoTests/Unit' INTEGRATION_TESTS_PATH='dev/MagentoTests/Integration' vendor/bin/mtest-make $TEST_GROUP"
+            "CURRENT_EXTENSION=\".\" FULL_INSTALL=1 COMPOSER_REQUIRE_EXTRA='tddwizard/magento2-fixtures' TWOFACTOR_ENABLED=1 UNIT_TESTS_PATH='dev/MagentoTests/Unit' INTEGRATION_TESTS_PATH='dev/MagentoTests/Integration' vendor/bin/mtest-make $TEST_GROUP",
+            "vendor/bin/mtest 'php bin/magento setup:db-declaration:generate-whitelist --module-name=Ampersand_DisableStockReservation'"
         ],
         "docker-configure-magento": [
             "vendor/bin/mtest 'vendor/bin/n98-magerun2 config:store:set checkout/options/guest_checkout 1'",
