@@ -3,6 +3,7 @@ php: 8.1
 
 env:
   - TEST_GROUP=2-3-7
+  - TEST_GROUP=2-3-7-p4
   - TEST_GROUP=2-4-0
   - TEST_GROUP=2-4-1
   - TEST_GROUP=2-4-2
@@ -11,10 +12,10 @@ env:
   - TEST_GROUP=2-4-5
   - TEST_GROUP=2-4-6
 
-#jobs:
-#  allow_failures:
-#    - env: TEST_GROUP=2-4-3
-#    - env: TEST_GROUP=2-4-4
+jobs:
+  allow_failures:
+    - env: TEST_GROUP=2-3-7-p4
+    - env: TEST_GROUP=2-3-7
 #    - env: TEST_GROUP=2-4-5
 #    - env: TEST_GROUP=2-4-6
 
