@@ -130,28 +130,25 @@ class ExecuteSourceDeductionForItems
         /** @var OrderItem $item */
         foreach ($itemsToCancel as $item) {
             $itemsSkus[] = $item->getSku();
+            $sourceItems = $this->sourceRepository->getSourceItemBySku(
+                (string)$order->getId(),
+                $item->getSku()
+            );
+            foreach ($sourceItems as $sourceItem) {
+                $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
+                    'sourceCode' => $sourceItem->getSourceCode(),
+                    'items' => [
+                        $this->itemToDeductFactory->create([
+                            'sku' => $item->getSku(),
+                            'qty' => -$sourceItem->getQtyToDeduct()
+                        ])
+                    ],
+                    'salesChannel' => $salesChannel,
+                    'salesEvent' => $salesEvent
+                ]);
 
-            try {
-                $sourceItem = $this->sourceRepository->getSourceItemBySku(
-                    (string)$order->getId(),
-                    $item->getSku()
-                );
-                $sourceCode = $sourceItem->getSourceCode();
-            } catch (NoSuchEntityException $exception) {
-                $sourceCode = 'default';
+                $this->sourceDeductionService->execute($sourceDeductionRequest);
             }
-
-            $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
-                'sourceCode' => $sourceCode,
-                'items' => [$this->itemToDeductFactory->create([
-                    'sku' => $item->getSku(),
-                    'qty' => -$item->getQuantity()
-                ])],
-                'salesChannel' => $salesChannel,
-                'salesEvent' => $salesEvent
-            ]);
-
-            $this->sourceDeductionService->execute($sourceDeductionRequest);
         }
 
         $itemsIds = $this->product->getProductsIdsBySkus($itemsSkus);
