@@ -88,13 +88,14 @@ class SourcesRepository implements SourcesRepositoryInterface
             $this->getByOrderId($orderId)->getSources()
         );
 
+        $items = [];
         foreach ($sourceSelectionItems as $sourceSelectionItem) {
-            if ($sourceSelectionItem->getSku() !== $itemSku) {
-                $sourceSelectionItem->setSourceCode('default');
+            if ($sourceSelectionItem->getSku() === $itemSku) {
+                $items[] = $sourceSelectionItem;
             }
         }
 
-        return $sourceSelectionItems;
+        return $items;
     }
 
     /**
