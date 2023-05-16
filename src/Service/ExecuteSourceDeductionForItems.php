@@ -148,7 +148,7 @@ class ExecuteSourceDeductionForItems
                 $sourceCode = $sourceItem->getSourceCode();
 
                 // if source has been unassigned, return to default stock
-                if(!in_array($sourceCode, $sourceCodesBySku)){
+                if (!in_array($sourceCode, $sourceCodesBySku)) {
                     $sourceCode = 'default';
                 }
                 $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
