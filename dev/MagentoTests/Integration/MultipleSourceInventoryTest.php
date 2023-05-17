@@ -270,9 +270,7 @@ class MultipleSourceInventoryTest extends TestCase
         $sources = [];
         $sourceItems = $this->getSourceItemsBySku->execute($sku);
         foreach ($sourceItems as $sourceItem) {
-            if ($sourceItem->getStatus() === SourceItemInterface::STATUS_IN_STOCK) {
-                $sources [$sourceItem->getSourceCode()] = $sourceItem->getQuantity();
-            }
+            $sources [$sourceItem->getSourceCode()] = $sourceItem->getQuantity();
         }
         return $sources;
     }
@@ -292,11 +290,13 @@ class MultipleSourceInventoryTest extends TestCase
                 [
                     "eu-1" => 0,
                     "eu-2" => 0,
+                    "eu-3" => 10,
                     "eu-disabled" => 10
                 ],
                 [
                     "eu-1" => 5.5,
                     "eu-2" => 3,
+                    "eu-3" => 10,
                     "eu-disabled" => 10
                 ]
             ],
@@ -309,11 +309,13 @@ class MultipleSourceInventoryTest extends TestCase
                 [
                     "eu-1" => 3.5,
                     "eu-2" => 3,
+                    "eu-3" => 10,
                     "eu-disabled" => 10
                 ],
                 [
                     "eu-1" => 5.5,
                     "eu-2" => 3,
+                    "eu-3" => 10,
                     "eu-disabled" => 10
                 ]
             ]
