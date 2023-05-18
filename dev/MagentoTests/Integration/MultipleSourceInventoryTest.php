@@ -153,8 +153,7 @@ class MultipleSourceInventoryTest extends TestCase
 
         /** @var Product $product */
         $product = $this->productRepository->get($sku);
-        $product->setIsSalable(1);
-       // throw new LocalizedException(__(json_encode($product->getData())));
+
         $cartItem = $this->getCartItem($product, $quoteItemQty, (int)$cart->getId());
         $cart->addItem($cartItem);
         $this->cartRepository->save($cart);
