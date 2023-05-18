@@ -5,6 +5,7 @@ namespace Ampersand\DisableStockReservation\Test\Integration;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
+use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -25,10 +26,10 @@ use Magento\Quote\Api\Data\CartItemInterfaceFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\StoreRepositoryInterface;
+use Magento\Store\Api\WebsiteRepositoryInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
-
 
 class MultipleSourceInventoryTest extends TestCase
 {
@@ -91,6 +92,16 @@ class MultipleSourceInventoryTest extends TestCase
      */
     private $orderRepository;
 
+    /**
+     * @var StockRegistryInterface
+     */
+    private $stockRegistry;
+
+    /**
+     * @var WebsiteRepositoryInterface
+     */
+    private $websiteRepository;
+
 
     protected function setUp(): void
     {
@@ -106,6 +117,8 @@ class MultipleSourceInventoryTest extends TestCase
         $this->cartRepository = $this->objectManager->get(CartRepositoryInterface::class);
         $this->cartManagement = $this->objectManager->get(CartManagementInterface::class);
         $this->orderRepository = $this->objectManager->get(OrderRepositoryInterface::class);
+        $this->stockRegistry = $this->objectManager->get(StockRegistryInterface::class);
+        $this->websiteRepository = $this->objectManager->get(WebsiteRepositoryInterface::class);
     }
 
 
@@ -114,11 +127,11 @@ class MultipleSourceInventoryTest extends TestCase
      * @magentoDataFixture Magento_InventoryApi::Test/_files/products.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/sources.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/stocks.php
-     * @magentoDataFixture Ampersand_DisableStockReservation::Test/_files/stock_source_links.php
+     * @magentoDataFixture Magento_InventoryApi::Test/_files/stock_source_links.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/source_items.php
      * @magentoDataFixture Magento_InventorySalesApi::Test/_files/websites_with_stores.php
      * @magentoDataFixture Magento_InventorySalesApi::Test/_files/stock_website_sales_channels.php
-     * @magentoDataFixture Ampersand_DisableStockReservation::Test/_files/quote.php
+     * @magentoDataFixture Magento_InventorySalesApi::Test/_files/quote.php
      * @magentoDataFixture Magento_InventoryIndexer::Test/_files/reindex_inventory.php
      * @magentoDbIsolation disabled
      *
@@ -140,6 +153,8 @@ class MultipleSourceInventoryTest extends TestCase
 
         /** @var Product $product */
         $product = $this->productRepository->get($sku);
+        $product->setIsSalable(1);
+       // throw new LocalizedException(__(json_encode($product->getData())));
         $cartItem = $this->getCartItem($product, $quoteItemQty, (int)$cart->getId());
         $cart->addItem($cartItem);
         $this->cartRepository->save($cart);
@@ -208,7 +223,7 @@ class MultipleSourceInventoryTest extends TestCase
 
         /** @var StoreInterface $store */
         $store = $this->storeRepository->get($storeCode);
-        $this->storeManager->setCurrentStore($storeCode);
+        $this->storeManager->setCurrentStore($store->getId());
         $cart->setStoreId($store->getId());
         return $cart;
     }
