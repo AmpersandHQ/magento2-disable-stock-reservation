@@ -122,8 +122,6 @@ class MultipleSourceInventoryTest extends TestCase
         array $expectedSourceDataAfterPlace,
         array $expectedSourceDataBeforePlace
     ) {
-        $this->assertEquals(true, true);
-        return;
         $sku = $sourceData["sku"];
         $quoteItemQty = $sourceData["qty"];
         $stockId = $sourceData["stock_id"];
