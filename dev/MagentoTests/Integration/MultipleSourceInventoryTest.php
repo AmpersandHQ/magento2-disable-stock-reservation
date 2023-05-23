@@ -134,6 +134,7 @@ class MultipleSourceInventoryTest extends TestCase
      * @magentoDataFixture Magento_InventorySalesApi::Test/_files/quote.php
      * @magentoDataFixture Magento_InventoryIndexer::Test/_files/reindex_inventory.php
      * @magentoDbIsolation disabled
+     * @magentoCache disabled
      *
      * @throws LocalizedException
      * @throws \Exception
