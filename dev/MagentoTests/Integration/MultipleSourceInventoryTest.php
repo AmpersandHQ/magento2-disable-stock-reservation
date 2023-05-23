@@ -125,8 +125,9 @@ class MultipleSourceInventoryTest extends TestCase
     /**
      * @magentoDbIsolation disabled
      * @magentoAppIsolation enabled
+     * @magentoCache all disabled
      * @dataProvider sourcesDataProvider
-     * @magentoDataFixtureBeforeTransaction Magento_InventorySalesApi::Test/_files/websites_with_stores.php
+     * @magentoDataFixture Magento_InventorySalesApi::Test/_files/websites_with_stores.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/products.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/sources.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/stocks.php
