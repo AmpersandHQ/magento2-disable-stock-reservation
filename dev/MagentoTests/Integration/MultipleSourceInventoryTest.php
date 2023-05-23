@@ -123,6 +123,14 @@ class MultipleSourceInventoryTest extends TestCase
 
 
     /**
+     * TODO nano +61 /var/www/html/vendor/magento/module-inventory-indexer/Indexer/SourceItem/SourceItemReindexStrategy.php
+     * TODO nano +59 /var/www/html/vendor/magento/module-inventory-indexer/Indexer/Stock/StockReindexStrategy.php
+     *
+     * TODO I think these config fixtures fire after the other fixtures, so these configs have no effect
+     * TODO can i spoof this by making a data fixture which sets the config and putting that first?
+     * @magentoConfigFixture current_store cataloginventory/indexer/strategy async
+     * @magentoAdminConfigFixture cataloginventory/indexer/strategy async
+     *
      * @magentoConfigFixture current_store cataloginventory/indexer/strategy async
      * @dataProvider sourcesDataProvider
      * @magentoDataFixture Magento_InventoryApi::Test/_files/products.php
@@ -162,6 +170,7 @@ class MultipleSourceInventoryTest extends TestCase
         $this->assertEquals(1, $cart->getItemsCount(), "1 quote item should be added");
         $this->assertSourceStockBeforeOrderPlace($sku, $expectedSourceDataBeforePlace);
 
+        $cart->unsetData('has_error'); // Ensure cart is clear before placing order
         $orderId = $this->cartManagement->placeOrder($cart->getId());
 
         self::assertNotNull($orderId);
