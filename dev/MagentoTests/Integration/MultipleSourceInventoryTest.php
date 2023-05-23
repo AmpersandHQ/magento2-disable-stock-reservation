@@ -129,12 +129,11 @@ class MultipleSourceInventoryTest extends TestCase
      * @magentoDataFixture Magento_InventoryApi::Test/_files/stocks.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/stock_source_links.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/source_items.php
-     * @magentoDataFixture Magento_InventorySalesApi::Test/_files/websites_with_stores.php
+     * @magentoDataFixtureBeforeTransaction Magento_InventorySalesApi::Test/_files/websites_with_stores.php
      * @magentoDataFixture Magento_InventorySalesApi::Test/_files/stock_website_sales_channels.php
      * @magentoDataFixture Magento_InventorySalesApi::Test/_files/quote.php
      * @magentoDataFixture Magento_InventoryIndexer::Test/_files/reindex_inventory.php
      * @magentoDbIsolation disabled
-     * @magentoCache disabled
      *
      * @throws LocalizedException
      * @throws \Exception
