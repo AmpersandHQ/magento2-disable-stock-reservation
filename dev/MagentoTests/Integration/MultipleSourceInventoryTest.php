@@ -98,20 +98,44 @@ class MultipleSourceInventoryTest extends TestCase
     private $stockRegistry;
 
     /**
-     * @magentoDbIsolation disabled
-     * @magentoAppIsolation enabled
-     * @magentoCache all disabled
+     * @var WebsiteRepositoryInterface
+     */
+    private $websiteRepository;
+
+
+    protected function setUp(): void
+    {
+        $this->objectManager = Bootstrap::getObjectManager();
+        $this->searchCriteriaBuilder = $this->objectManager->get(SearchCriteriaBuilder::class);
+        $this->productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
+        $this->getSourceItemsBySku = $this->objectManager->get(GetSourceItemsBySku::class);
+        $this->storeManager = $this->objectManager->get(StoreManagerInterface::class);
+        $this->getStockItemConfiguration = $this->objectManager->get(GetStockItemConfigurationInterface::class);
+        $this->saveStockItemConfiguration = $this->objectManager->get(SaveStockItemConfigurationInterface::class);
+        $this->storeRepository = $this->objectManager->get(StoreRepositoryInterface::class);
+        $this->cartItemFactory = $this->objectManager->get(CartItemInterfaceFactory::class);
+        $this->cartRepository = $this->objectManager->get(CartRepositoryInterface::class);
+        $this->cartManagement = $this->objectManager->get(CartManagementInterface::class);
+        $this->orderRepository = $this->objectManager->get(OrderRepositoryInterface::class);
+        $this->stockRegistry = $this->objectManager->get(StockRegistryInterface::class);
+        $this->websiteRepository = $this->objectManager->get(WebsiteRepositoryInterface::class);
+    }
+
+
+    /**
+     * @magentoDbIsolation enabled
      * @magentoConfigFixture current_store cataloginventory/indexer/strategy async
      * @dataProvider sourcesDataProvider
+     *
      * @magentoDataFixtureBeforeTransaction Magento_InventorySalesApi::Test/_files/websites_with_stores.php
-     * @magentoDataFixtureBeforeTransaction Magento_InventoryApi::Test/_files/products.php
-     * @magentoDataFixtureBeforeTransaction Magento_InventoryApi::Test/_files/sources.php
-     * @magentoDataFixtureBeforeTransaction Magento_InventoryApi::Test/_files/source_items.php
-     * @magentoDataFixtureBeforeTransaction Magento_InventoryApi::Test/_files/stocks.php
-     * @magentoDataFixtureBeforeTransaction Magento_InventorySalesApi::Test/_files/stock_website_sales_channels.php
-     * @magentoDataFixtureBeforeTransaction Magento_InventoryApi::Test/_files/stock_source_links.php
-     * @magentoDataFixtureBeforeTransaction Magento_InventorySalesApi::Test/_files/quote.php
-     * @magentoDataFixtureBeforeTransaction Magento_InventoryIndexer::Test/_files/reindex_inventory.php
+     * @magentoDataFixture Magento_InventoryApi::Test/_files/products.php
+     * @magentoDataFixture Magento_InventoryApi::Test/_files/sources.php
+     * @magentoDataFixture Magento_InventoryApi::Test/_files/stocks.php
+     * @magentoDataFixture Magento_InventoryApi::Test/_files/stock_source_links.php
+     * @magentoDataFixture Magento_InventoryApi::Test/_files/source_items.php
+     * @magentoDataFixture Magento_InventorySalesApi::Test/_files/stock_website_sales_channels.php
+     * @magentoDataFixture Magento_InventorySalesApi::Test/_files/quote.php
+     * @magentoDataFixture Magento_InventoryIndexer::Test/_files/reindex_inventory.php
      *
      * @throws LocalizedException
      * @throws \Exception
@@ -147,31 +171,6 @@ class MultipleSourceInventoryTest extends TestCase
         $order = $this->orderRepository->get($orderId);
         $order->cancel();
         $this->assertSourceStockAfterOrderCancel($sku, $expectedSourceDataBeforePlace);
-    }
-
-
-    /**
-     * @var WebsiteRepositoryInterface
-     */
-    private $websiteRepository;
-
-
-    protected function setUp(): void
-    {
-        $this->objectManager = Bootstrap::getObjectManager();
-        $this->searchCriteriaBuilder = $this->objectManager->get(SearchCriteriaBuilder::class);
-        $this->productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
-        $this->getSourceItemsBySku = $this->objectManager->get(GetSourceItemsBySku::class);
-        $this->storeManager = $this->objectManager->get(StoreManagerInterface::class);
-        $this->getStockItemConfiguration = $this->objectManager->get(GetStockItemConfigurationInterface::class);
-        $this->saveStockItemConfiguration = $this->objectManager->get(SaveStockItemConfigurationInterface::class);
-        $this->storeRepository = $this->objectManager->get(StoreRepositoryInterface::class);
-        $this->cartItemFactory = $this->objectManager->get(CartItemInterfaceFactory::class);
-        $this->cartRepository = $this->objectManager->get(CartRepositoryInterface::class);
-        $this->cartManagement = $this->objectManager->get(CartManagementInterface::class);
-        $this->orderRepository = $this->objectManager->get(OrderRepositoryInterface::class);
-        $this->stockRegistry = $this->objectManager->get(StockRegistryInterface::class);
-        $this->websiteRepository = $this->objectManager->get(WebsiteRepositoryInterface::class);
     }
 
     /**
