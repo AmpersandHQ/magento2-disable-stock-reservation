@@ -123,7 +123,7 @@ class MultipleSourceInventoryTest extends TestCase
 
 
     /**
-     * @magentoDbIsolation disabled
+     * @magentoDbIsolation enabled
      * @magentoAppIsolation enabled
      * @magentoCache all disabled
      * @dataProvider sourcesDataProvider
