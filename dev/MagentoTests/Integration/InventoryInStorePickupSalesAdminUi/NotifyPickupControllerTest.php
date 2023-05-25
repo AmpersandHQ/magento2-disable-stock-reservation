@@ -35,6 +35,7 @@ class NotifyPickupControllerTest extends \Magento\TestFramework\TestCase\Abstrac
      * @link https://github.com/AmpersandHQ/magento2-disable-stock-reservation/pull/109
      * @link https://github.com/AmpersandHQ/magento2-disable-stock-reservation/issues/69
      *
+     * @magentoAppIsolation enabled
      * @return void
      * @throws \Magento\Framework\Exception\LocalizedException
      */
