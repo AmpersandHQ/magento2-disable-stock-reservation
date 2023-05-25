@@ -5,7 +5,6 @@ namespace Ampersand\DisableStockReservation\Test\Integration;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
-use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -26,10 +25,11 @@ use Magento\Quote\Api\Data\CartItemInterfaceFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\StoreRepositoryInterface;
-use Magento\Store\Api\WebsiteRepositoryInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
+use Magento\InventorySalesApi\Api\StockResolverInterface;
+use Magento\InventorySales\Model\GetStockBySalesChannelCache;
 
 class MultipleSourceInventoryTest extends TestCase
 {
@@ -92,17 +92,6 @@ class MultipleSourceInventoryTest extends TestCase
      */
     private $orderRepository;
 
-    /**
-     * @var StockRegistryInterface
-     */
-    private $stockRegistry;
-
-    /**
-     * @var WebsiteRepositoryInterface
-     */
-    private $websiteRepository;
-
-
     protected function setUp(): void
     {
         $this->objectManager = Bootstrap::getObjectManager();
@@ -117,27 +106,26 @@ class MultipleSourceInventoryTest extends TestCase
         $this->cartRepository = $this->objectManager->get(CartRepositoryInterface::class);
         $this->cartManagement = $this->objectManager->get(CartManagementInterface::class);
         $this->orderRepository = $this->objectManager->get(OrderRepositoryInterface::class);
-        $this->stockRegistry = $this->objectManager->get(StockRegistryInterface::class);
-        $this->websiteRepository = $this->objectManager->get(WebsiteRepositoryInterface::class);
     }
 
-
     /**
+     *
      * @dataProvider sourcesDataProvider
+     *
+     * @magentoDataFixture Magento_InventorySalesApi::Test/_files/websites_with_stores.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/products.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/sources.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/stocks.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/stock_source_links.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/source_items.php
-     * @magentoDataFixture Magento_InventorySalesApi::Test/_files/websites_with_stores.php
      * @magentoDataFixture Magento_InventorySalesApi::Test/_files/stock_website_sales_channels.php
      * @magentoDataFixture Magento_InventorySalesApi::Test/_files/quote.php
      * @magentoDataFixture Magento_InventoryIndexer::Test/_files/reindex_inventory.php
      * @magentoDbIsolation disabled
+     * @magentoAppIsolation enabled
      *
      * @throws LocalizedException
      * @throws \Exception
-     *
      */
     public function testPlaceOrderAndCancelWithMsi(
         array $sourceData,
@@ -148,9 +136,25 @@ class MultipleSourceInventoryTest extends TestCase
         $quoteItemQty = $sourceData["qty"];
         $stockId = $sourceData["stock_id"];
 
+        /*
+         * Additional magento and product configuration
+         */
         $this->setStockItemConfigIsDecimal($sku, $stockId);
-        $cart = $this->getCartByStockId($stockId);
+        $this->clearSalesChannelCache();
 
+        /*
+         * Verify the stock is as expected before any interactions
+         */
+        $this->assertSourceStock(
+            $sku,
+            $expectedSourceDataBeforePlace,
+            'Stock does not match what is expected before adding to basket'
+        );
+
+        /*
+         * Add to basket and assert the source data has not changed
+         */
+        $cart = $this->getCart();
         /** @var Product $product */
         $product = $this->productRepository->get($sku);
 
@@ -159,16 +163,33 @@ class MultipleSourceInventoryTest extends TestCase
         $this->cartRepository->save($cart);
 
         $this->assertEquals(1, $cart->getItemsCount(), "1 quote item should be added");
-        $this->assertSourceStockBeforeOrderPlace($sku, $expectedSourceDataBeforePlace);
+        $this->assertSourceStock(
+            $sku,
+            $expectedSourceDataBeforePlace,
+            'Stock does not match what is expected before placing order'
+        );
 
+        /*
+         * Place the order and assert the source data has been reduced
+         */
         $orderId = $this->cartManagement->placeOrder($cart->getId());
-
         self::assertNotNull($orderId);
-        $this->assertSourceStockAfterOrderPlace($sku, $expectedSourceDataAfterPlace);
+        $this->assertSourceStock(
+            $sku,
+            $expectedSourceDataAfterPlace,
+            'Stock does not match what is expected after placing order'
+        );
 
+        /*
+         * Cancel the order and assert the source data has been returned correctly
+         */
         $order = $this->orderRepository->get($orderId);
         $order->cancel();
-        $this->assertSourceStockAfterOrderCancel($sku, $expectedSourceDataBeforePlace);
+        $this->assertSourceStock(
+            $sku,
+            $expectedSourceDataBeforePlace,
+            'Stock does not match what is after cancelling order'
+        );
     }
 
     /**
@@ -180,6 +201,35 @@ class MultipleSourceInventoryTest extends TestCase
         $stockItemConfiguration = $this->getStockItemConfiguration->execute($sku, $stockId);
         $stockItemConfiguration->setIsQtyDecimal(true);
         $this->saveStockItemConfiguration->execute($sku, $stockId, $stockItemConfiguration);
+    }
+
+    /**
+     * Clear the GetStockBySalesChannelCache as it gets populated during fixture runtime and varies depending on the
+     * version of magento being tested.
+     *
+     * This way we can start our test with a clear cache after all the fixtures have run.
+     *
+     * @return void
+     * @throws \ReflectionException
+     */
+    private function clearSalesChannelCache(): void
+    {
+        if (class_exists(GetStockBySalesChannelCache::class)) {
+            $getStockBySalesChannelCache = $this->objectManager->get(GetStockBySalesChannelCache::class);
+            $ref = new \ReflectionObject($getStockBySalesChannelCache);
+            try {
+                $refProperty = $ref->getProperty('channelCodes');
+            } catch (\ReflectionException $exception) {
+                $refProperty = $ref->getParentClass()->getProperty('channelCodes');
+            }
+            $refProperty->setAccessible(true);
+            $refProperty->setValue($getStockBySalesChannelCache, []);
+        }
+
+        $stockId = $this->objectManager->get(StockResolverInterface::class)
+            ->execute(SalesChannelInterface::TYPE_WEBSITE, 'eu_website')
+            ->getStockId();
+        $this->assertEquals(10, $stockId, 'The stock id for the eu_website should be 10');
     }
 
     /**
@@ -207,14 +257,15 @@ class MultipleSourceInventoryTest extends TestCase
     }
 
     /**
-     * @param int $stockId
      * @return CartInterface
      * @throws NoSuchEntityException
      */
-    private function getCartByStockId(int $stockId): CartInterface
+    private function getCart(): CartInterface
     {
+        // test_order_1 is set in vendor/magento/module-inventory-sales-api/Test/_files/quote.php
         $searchCriteria = $this->searchCriteriaBuilder
             ->addFilter('reserved_order_id', 'test_order_1')
+            ->setPageSize(1)
             ->create();
         /** @var CartInterface $cart */
         $cart = current($this->cartRepository->getList($searchCriteria)->getItems());
@@ -231,47 +282,13 @@ class MultipleSourceInventoryTest extends TestCase
      *
      * @param string $sku
      * @param array $expected
+     * @param string $message
      * @return void
      */
-    private function assertSourceStock(string $sku, array $expected): void
+    private function assertSourceStock(string $sku, array $expected, string $message = ''): void
     {
         $sources = $this->getSources($sku);
-        $this->assertEquals($expected, $sources);
-    }
-
-    /**
-     * Assert source stock before placing order
-     *
-     * @param string $sku
-     * @param array $expected
-     * @return void
-     */
-    private function assertSourceStockBeforeOrderPlace(string $sku, array $expected): void
-    {
-        $this->assertSourceStock($sku, $expected);
-    }
-
-    /**
-     * @param string $sku
-     * @param array $expected
-     * @return void
-     */
-    private function assertSourceStockAfterOrderPlace(string $sku, array $expected): void
-    {
-        $sources = $this->getSources($sku);
-        $this->assertEquals($expected, $sources);
-    }
-
-    /**
-     * Assert source stock after order cancel
-     * Source stock should be the same as before place order
-     * @param string $sku
-     * @param array $expected
-     * @return void
-     */
-    private function assertSourceStockAfterOrderCancel(string $sku, array $expected): void
-    {
-        $this->assertSourceStock($sku, $expected);
+        $this->assertEquals($expected, $sources, $message);
     }
 
     /**
@@ -284,7 +301,7 @@ class MultipleSourceInventoryTest extends TestCase
         $sources = [];
         $sourceItems = $this->getSourceItemsBySku->execute($sku);
         foreach ($sourceItems as $sourceItem) {
-            $sources [$sourceItem->getSourceCode()] = $sourceItem->getQuantity();
+            $sources[$sourceItem->getSourceCode()] = $sourceItem->getQuantity();
         }
         return $sources;
     }
@@ -295,44 +312,44 @@ class MultipleSourceInventoryTest extends TestCase
     public function sourcesDataProvider(): array
     {
         return [
-            [
-                [
+            'purchase 8.5 from eu-1 and eu-2, then return on cancel' => [
+                'purchase_data' => [
                     "sku" => "SKU-1",
                     "qty" => 8.5,
                     "stock_id" => 10
                 ],
-                [
+                'expected_source_data_after_place' => [
                     "eu-1" => 0,
                     "eu-2" => 0,
-                    "eu-3" => 10,
-                    "eu-disabled" => 10
+                    "eu-3" => 10.0,
+                    "eu-disabled" => 10.0,
                 ],
-                [
+                'expected_source_data_before_place' => [
                     "eu-1" => 5.5,
-                    "eu-2" => 3,
-                    "eu-3" => 10,
-                    "eu-disabled" => 10
+                    "eu-2" => 3.0,
+                    "eu-3" => 10.0,
+                    "eu-disabled" => 10.0,
                 ]
             ],
-            [
-                [
+            'purchase 2 from eu-1, then return on cancel' => [
+                'purchase_data' => [
                     "sku" => "SKU-1",
-                    "qty" => 2,
+                    "qty" => 2.0,
                     "stock_id" => 10
                 ],
-                [
+                'expected_source_data_after_place' => [
                     "eu-1" => 3.5,
                     "eu-2" => 3,
                     "eu-3" => 10,
-                    "eu-disabled" => 10
+                    "eu-disabled" => 10,
                 ],
-                [
+                'expected_source_data_before_place' => [
                     "eu-1" => 5.5,
-                    "eu-2" => 3,
-                    "eu-3" => 10,
-                    "eu-disabled" => 10
+                    "eu-2" => 3.0,
+                    "eu-3" => 10.0,
+                    "eu-disabled" => 10.0,
                 ]
-            ]
+            ], // TODOD add more test cases to cover complete exhaustion of data
         ];
     }
 }

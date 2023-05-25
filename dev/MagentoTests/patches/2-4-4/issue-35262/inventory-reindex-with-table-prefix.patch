@@ -1,0 +1,13 @@
+diff --git a/vendor/magento/module-inventory-indexer/Indexer/Stock/ReservationsIndexTable.php b/vendor/magento/module-inventory-indexer/Indexer/Stock/ReservationsIndexTable.php
+index e18562828b5..013bac3c7a5 100644
+--- a/vendor/magento/module-inventory-indexer/Indexer/Stock/ReservationsIndexTable.php
++++ b/vendor/magento/module-inventory-indexer/Indexer/Stock/ReservationsIndexTable.php
+@@ -77,7 +77,7 @@ public function createTable(int $stockId): void
+      */
+     public function getTableName(int $stockId): string
+     {
+-        return 'reservations_temp_for_stock_' . $stockId;
++        return $this->resourceConnection->getTableName('reservations_temp_for_stock_' . $stockId);
+     }
+
+     /**
