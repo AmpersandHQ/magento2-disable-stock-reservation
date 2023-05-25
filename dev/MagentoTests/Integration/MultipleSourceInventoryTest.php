@@ -123,22 +123,15 @@ class MultipleSourceInventoryTest extends TestCase
 
 
     /**
-     * TODO nano +61 /var/www/html/vendor/magento/module-inventory-indexer/Indexer/SourceItem/SourceItemReindexStrategy.php
-     * TODO nano +59 /var/www/html/vendor/magento/module-inventory-indexer/Indexer/Stock/StockReindexStrategy.php
      *
-     * TODO I think these config fixtures fire after the other fixtures, so these configs have no effect
-     * TODO can i spoof this by making a data fixture which sets the config and putting that first?
-     * @magentoConfigFixture current_store cataloginventory/indexer/strategy async
-     * @magentoAdminConfigFixture cataloginventory/indexer/strategy async
-     *
-     * @magentoConfigFixture current_store cataloginventory/indexer/strategy async
      * @dataProvider sourcesDataProvider
+     * @magentoDataFixtureBeforeTransaction Ampersand_DisableStockReservation::Test/_files/cataloginventory_indexer_strategy.php
+     * @magentoDataFixtureBeforeTransaction Magento_InventorySalesApi::Test/_files/websites_with_stores.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/products.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/sources.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/stocks.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/stock_source_links.php
      * @magentoDataFixture Magento_InventoryApi::Test/_files/source_items.php
-     * @magentoDataFixtureBeforeTransaction Magento_InventorySalesApi::Test/_files/websites_with_stores.php
      * @magentoDataFixture Magento_InventorySalesApi::Test/_files/stock_website_sales_channels.php
      * @magentoDataFixture Magento_InventorySalesApi::Test/_files/quote.php
      * @magentoDataFixture Magento_InventoryIndexer::Test/_files/reindex_inventory.php

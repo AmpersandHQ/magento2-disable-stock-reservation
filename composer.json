@@ -43,7 +43,6 @@
             "vendor/bin/mtest 'php bin/magento setup:db-declaration:generate-whitelist --module-name=Ampersand_DisableStockReservation'"
         ],
         "docker-configure-magento": [
-            "vendor/bin/mtest 'mkdir -p app/etc/ampersandconfig && cp -f vendor/ampersand/magento2-disable-stock-reservation/dev/MagentoTests/IntegrationConfig/config.xml app/etc/ampersandconfig'",
             "vendor/bin/mtest 'vendor/bin/n98-magerun2 config:store:set checkout/options/guest_checkout 1'",
             "vendor/bin/mtest 'vendor/bin/n98-magerun2 config:store:set payment/checkmo/active 1'",
             "vendor/bin/mtest 'vendor/bin/n98-magerun2 config:store:set oauth/consumer/enable_integration_as_bearer 1'",
