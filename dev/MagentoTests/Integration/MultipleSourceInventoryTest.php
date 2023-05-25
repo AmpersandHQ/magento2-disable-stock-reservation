@@ -214,15 +214,17 @@ class MultipleSourceInventoryTest extends TestCase
      */
     private function clearSalesChannelCache(): void
     {
-        $getStockBySalesChannelCache = $this->objectManager->get(GetStockBySalesChannelCache::class);
-        $ref = new \ReflectionObject($getStockBySalesChannelCache);
-        try {
-            $refProperty = $ref->getProperty('channelCodes');
-        } catch (\ReflectionException $exception) {
-            $refProperty = $ref->getParentClass()->getProperty('channelCodes');
+        if (class_exists(GetStockBySalesChannelCache::class)) {
+            $getStockBySalesChannelCache = $this->objectManager->get(GetStockBySalesChannelCache::class);
+            $ref = new \ReflectionObject($getStockBySalesChannelCache);
+            try {
+                $refProperty = $ref->getProperty('channelCodes');
+            } catch (\ReflectionException $exception) {
+                $refProperty = $ref->getParentClass()->getProperty('channelCodes');
+            }
+            $refProperty->setAccessible(true);
+            $refProperty->setValue($getStockBySalesChannelCache, []);
         }
-        $refProperty->setAccessible(true);
-        $refProperty->setValue($getStockBySalesChannelCache, []);
 
         $stockId = $this->objectManager->get(StockResolverInterface::class)
             ->execute(SalesChannelInterface::TYPE_WEBSITE, 'eu_website')
