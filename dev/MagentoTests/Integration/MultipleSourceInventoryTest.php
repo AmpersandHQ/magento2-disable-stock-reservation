@@ -163,7 +163,6 @@ class MultipleSourceInventoryTest extends TestCase
         $this->assertEquals(1, $cart->getItemsCount(), "1 quote item should be added");
         $this->assertSourceStockBeforeOrderPlace($sku, $expectedSourceDataBeforePlace);
 
-        $cart->unsetData('has_error'); // Ensure cart is clear before placing order
         $orderId = $this->cartManagement->placeOrder($cart->getId());
 
         self::assertNotNull($orderId);
