@@ -130,12 +130,17 @@ class MultipleSourceInventoryTest extends TestCase
     public function testPlaceOrderAndCancelWithMsi(
         array $sourceData,
         array $expectedSourceDataAfterPlace,
-        array $expectedSourceDataBeforePlace
+        array $expectedSourceDataBeforePlace,
+        bool $expectException
     ) {
         $sku = $sourceData["sku"];
         $quoteItemQty = $sourceData["qty"];
         $stockId = $sourceData["stock_id"];
 
+        if ($expectException) {
+            $this->expectException(\Magento\Framework\Validator\Exception::class);
+            $this->expectExceptionMessage("The requested qty is not available");
+        }
         /*
          * Additional magento and product configuration
          */
@@ -329,7 +334,8 @@ class MultipleSourceInventoryTest extends TestCase
                     "eu-2" => 3.0,
                     "eu-3" => 10.0,
                     "eu-disabled" => 10.0,
-                ]
+                ],
+                false
             ],
             'purchase 2 from eu-1, then return on cancel' => [
                 'purchase_data' => [
@@ -348,8 +354,39 @@ class MultipleSourceInventoryTest extends TestCase
                     "eu-2" => 3.0,
                     "eu-3" => 10.0,
                     "eu-disabled" => 10.0,
-                ]
-            ], // TODOD add more test cases to cover complete exhaustion of data
+                ],
+                false
+            ],
+            'purchase 18.5 from eu-1 and eu-2 and eu-3, then expect qty unavailable' => [
+                'purchase_data' => [
+                    "sku" => "SKU-1",
+                    "qty" => 18.5,
+                    "stock_id" => 10
+                ],
+                'expected_source_data_after_place' => [],
+                'expected_source_data_before_place' => [
+                    "eu-1" => 5.5,
+                    "eu-2" => 3.0,
+                    "eu-3" => 10.0,
+                    "eu-disabled" => 10.0,
+                ],
+                true
+            ],
+            'Test cannot add out of stock and disabled source to cart' => [
+                'purchase_data' => [
+                    "sku" => "SKU-1",
+                    "qty" => 25,
+                    "stock_id" => 10
+                ],
+                'expected_source_data_after_place' => [],
+                'expected_source_data_before_place' => [
+                    "eu-1" => 5.5,
+                    "eu-2" => 3.0,
+                    "eu-3" => 10.0,
+                    "eu-disabled" => 10.0,
+                ],
+                true
+            ]
         ];
     }
 }
