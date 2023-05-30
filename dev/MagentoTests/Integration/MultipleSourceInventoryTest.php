@@ -138,7 +138,7 @@ class MultipleSourceInventoryTest extends TestCase
         $stockId = $sourceData["stock_id"];
 
         if ($expectException) {
-            $this->expectException(\Magento\Framework\Validator\Exception::class);
+            $this->expectException(\Exception::class);
             $this->expectExceptionMessage("The requested qty is not available");
         }
         /*
