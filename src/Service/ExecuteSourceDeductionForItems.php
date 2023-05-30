@@ -3,6 +3,7 @@
 namespace Ampersand\DisableStockReservation\Service;
 
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\InventoryApi\Model\GetSourceCodesBySkusInterface;
 use Magento\InventorySalesApi\Api\Data\SalesChannelInterface;
 use Magento\InventorySalesApi\Api\Data\SalesEventInterface;
 use Magento\Sales\Api\Data\OrderInterface;
@@ -69,6 +70,11 @@ class ExecuteSourceDeductionForItems
     protected $product;
 
     /**
+     * @var GetSourceCodesBySkusInterface
+     */
+    private $getSourceCodesBySkus;
+
+    /**
      * ExecuteSourceDeductionForItems constructor.
      * @param WebsiteRepositoryInterface $websiteRepository
      * @param SalesEventInterfaceFactory $salesEventFactory
@@ -89,7 +95,8 @@ class ExecuteSourceDeductionForItems
         SourceDeductionServiceInterface $sourceDeductionService,
         SourcesRepositoryInterface $sourceRepository,
         Processor $priceIndexer,
-        Product $product
+        Product $product,
+        GetSourceCodesBySkusInterface $getSourceCodesBySkus
     ) {
         $this->websiteRepository = $websiteRepository;
         $this->salesEventFactory = $salesEventFactory;
@@ -100,11 +107,13 @@ class ExecuteSourceDeductionForItems
         $this->sourceRepository = $sourceRepository;
         $this->priceIndexer = $priceIndexer;
         $this->product = $product;
+        $this->getSourceCodesBySkus = $getSourceCodesBySkus;
     }
 
     /**
      * @param OrderItem $orderItem
      * @param array $itemsToCancel
+     * @throws NoSuchEntityException
      */
     public function executeSourceDeductionForItems(OrderItem $orderItem, array $itemsToCancel)
     {
@@ -130,28 +139,32 @@ class ExecuteSourceDeductionForItems
         /** @var OrderItem $item */
         foreach ($itemsToCancel as $item) {
             $itemsSkus[] = $item->getSku();
-
-            try {
-                $sourceItem = $this->sourceRepository->getSourceItemBySku(
-                    (string)$order->getId(),
-                    $item->getSku()
-                );
+            $sourceCodesBySku = $this->getSourceCodesBySkus->execute([$item->getSku()]);
+            $sourceItems = $this->sourceRepository->getSourceItemBySku(
+                (string)$order->getId(),
+                $item->getSku()
+            );
+            foreach ($sourceItems as $sourceItem) {
                 $sourceCode = $sourceItem->getSourceCode();
-            } catch (NoSuchEntityException $exception) {
-                $sourceCode = 'default';
+
+                // if source has been unassigned, return to default stock
+                if (!in_array($sourceCode, $sourceCodesBySku)) {
+                    $sourceCode = 'default';
+                }
+                $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
+                    'sourceCode' => $sourceCode,
+                    'items' => [
+                        $this->itemToDeductFactory->create([
+                            'sku' => $item->getSku(),
+                            'qty' => -$sourceItem->getQtyToDeduct()
+                        ])
+                    ],
+                    'salesChannel' => $salesChannel,
+                    'salesEvent' => $salesEvent
+                ]);
+
+                $this->sourceDeductionService->execute($sourceDeductionRequest);
             }
-
-            $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
-                'sourceCode' => $sourceCode,
-                'items' => [$this->itemToDeductFactory->create([
-                    'sku' => $item->getSku(),
-                    'qty' => -$item->getQuantity()
-                ])],
-                'salesChannel' => $salesChannel,
-                'salesEvent' => $salesEvent
-            ]);
-
-            $this->sourceDeductionService->execute($sourceDeductionRequest);
         }
 
         $itemsIds = $this->product->getProductsIdsBySkus($itemsSkus);

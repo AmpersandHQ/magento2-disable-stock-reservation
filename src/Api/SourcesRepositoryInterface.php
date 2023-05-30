@@ -28,8 +28,8 @@ interface SourcesRepositoryInterface
      * @param string $orderId
      * @param string $itemSku
      *
-     * @return SourceSelectionItem
+     * @return SourceSelectionItem []
      * @throws NoSuchEntityException
      */
-    public function getSourceItemBySku(string $orderId, string $itemSku): SourceSelectionItem;
+    public function getSourceItemBySku(string $orderId, string $itemSku): array;
 }
