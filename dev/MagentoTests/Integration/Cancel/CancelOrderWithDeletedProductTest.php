@@ -2,6 +2,9 @@
 declare(strict_types=1);
 namespace Ampersand\DisableStockReservation\Test\Integration\Cancel;
 
+use Magento\Framework\MessageQueue\QueueRepository;
+use Magento\Framework\MessageQueue\Consumer\ConfigInterface as ConsumerConfig;
+use Magento\Framework\MessageQueue\Consumer\Config\ConsumerConfigItemInterface;
 use Magento\Framework\Registry;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Framework\ObjectManagerInterface;
@@ -9,7 +12,6 @@ use Magento\InventoryApi\Api\GetSourceItemsBySkuInterface;
 use Magento\Framework\MessageQueue\ConsumerFactory;
 use Magento\InventorySales\Model\GetStockBySalesChannelCache;
 use Magento\TestFramework\Helper\Bootstrap;
-use Magento\TestFramework\MessageQueue\ClearQueueProcessor;
 use TddWizard\Fixtures\Catalog\ProductBuilder;
 use TddWizard\Fixtures\Catalog\ProductFixture;
 use TddWizard\Fixtures\Sales\ShipmentBuilder;
@@ -26,9 +28,6 @@ class CancelOrderWithDeletedProduct extends TestCase
     /** @var ObjectManagerInterface */
     private $objectManager;
 
-    /** @var ClearQueueProcessor */
-    private $clearQueueProcessor;
-
     /** @var GetSourceItemsBySkuInterface */
     private $getSourceItemsBySku;
 
@@ -37,7 +36,13 @@ class CancelOrderWithDeletedProduct extends TestCase
     
     /** @var ProductRepositoryInterface */
     private $productRepository;
-    
+
+    /** @var ConsumerConfig*/
+    private $consumerConfig;
+
+    /** @var QueueRepository */
+    private $queueRepository;
+
     /** @var Registry */
     private $registry;
     
@@ -52,12 +57,13 @@ class CancelOrderWithDeletedProduct extends TestCase
         parent::setUp();
 
         $this->objectManager = Bootstrap::getObjectManager();
-        $this->clearQueueProcessor = $this->objectManager->get(ClearQueueProcessor::class);
         $this->productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
         $this->productRepository->cleanCache();
         $this->getSourceItemsBySku = $this->objectManager->get(GetSourceItemsBySkuInterface::class);
         $this->consumerFactory = $this->objectManager->get(ConsumerFactory::class);
         $this->registry = $this->objectManager->get(Registry::class);
+        $this->consumerConfig = $this->objectManager->get(ConsumerConfig::class);
+        $this->queueRepository = $this->objectManager->get(QueueRepository::class);
     }
 
     /**
@@ -105,11 +111,6 @@ class CancelOrderWithDeletedProduct extends TestCase
             ->placeOrder();
         $this->assertGreaterThan(0, strlen($order->getIncrementId()), 'the order does not have a valid increment_id');
         $this->assertIsNumeric($order->getId(), 'the order does not have an entity_id');
-
-        /**
-         * Ensure consumers are cleared before next steps
-         */
-        $this->clearQueueProcessor->execute('inventory.source.items.cleanup');
 
         /**
          * Delete the product
@@ -192,9 +193,16 @@ class CancelOrderWithDeletedProduct extends TestCase
         
         /**
          * Ensure consumers are cleared before next steps
+         *
+         * Backported logic from \Magento\TestFramework\MessageQueue\ClearQueueProcessor
          */
-        $this->clearQueueProcessor->execute('inventory.source.items.cleanup');
-        
+        /** @var ConsumerConfigItemInterface $consumerConfig */
+        $consumerConfig = $this->consumerConfig->getConsumer('inventory.source.items.cleanup');
+        $queue = $this->queueRepository->get($consumerConfig->getConnection(), $consumerConfig->getQueue());
+        while ($message = $queue->dequeue()) {
+            $queue->acknowledge($message);
+        }
+
         /**
          * Delete the product
          */
