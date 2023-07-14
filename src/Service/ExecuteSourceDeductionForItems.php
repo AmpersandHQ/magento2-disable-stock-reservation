@@ -113,9 +113,10 @@ class ExecuteSourceDeductionForItems
     /**
      * @param OrderItem $orderItem
      * @param array $itemsToCancel
+     * @param bool $graceful
      * @throws NoSuchEntityException
      */
-    public function executeSourceDeductionForItems(OrderItem $orderItem, array $itemsToCancel)
+    public function executeSourceDeductionForItems(OrderItem $orderItem, array $itemsToCancel, bool $graceful = false)
     {
         $order = $orderItem->getOrder();
 
@@ -163,7 +164,13 @@ class ExecuteSourceDeductionForItems
                     'salesEvent' => $salesEvent
                 ]);
 
-                $this->sourceDeductionService->execute($sourceDeductionRequest);
+                try {
+                    $this->sourceDeductionService->execute($sourceDeductionRequest);
+                } catch (NoSuchEntityException $noSuchEntityException) {
+                    if (!$graceful) {
+                        throw $noSuchEntityException;
+                    }
+                }
             }
         }
 
