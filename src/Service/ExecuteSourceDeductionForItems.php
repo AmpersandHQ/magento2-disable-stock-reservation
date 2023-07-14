@@ -169,6 +169,8 @@ class ExecuteSourceDeductionForItems
 
         $itemsIds = $this->product->getProductsIdsBySkus($itemsSkus);
         $itemsIds = array_values(array_map('intval', $itemsIds));
-        $this->priceIndexer->reindexList($itemsIds);
+        if (!empty($itemsIds)) {
+            $this->priceIndexer->reindexList($itemsIds);
+        }
     }
 }
