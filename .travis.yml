@@ -11,6 +11,7 @@ env:
   - TEST_GROUP=2-4-4
   - TEST_GROUP=2-4-5
   - TEST_GROUP=2-4-6
+  - TEST_GROUP=2-4-6-p1
 
 jobs:
   allow_failures:
