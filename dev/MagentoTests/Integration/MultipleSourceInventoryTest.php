@@ -30,6 +30,8 @@ use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 use Magento\InventorySalesApi\Api\StockResolverInterface;
 use Magento\InventorySales\Model\GetStockBySalesChannelCache;
+require_once __DIR__ . '/../Helper/IntegrationHelper.php';
+use Ampersand\DisableStockReservation\Test\Helper\IntegrationHelper as TestHelper;
 
 class MultipleSourceInventoryTest extends TestCase
 {
@@ -219,17 +221,7 @@ class MultipleSourceInventoryTest extends TestCase
      */
     private function clearSalesChannelCache(): void
     {
-        if (class_exists(GetStockBySalesChannelCache::class)) {
-            $getStockBySalesChannelCache = $this->objectManager->get(GetStockBySalesChannelCache::class);
-            $ref = new \ReflectionObject($getStockBySalesChannelCache);
-            try {
-                $refProperty = $ref->getProperty('channelCodes');
-            } catch (\ReflectionException $exception) {
-                $refProperty = $ref->getParentClass()->getProperty('channelCodes');
-            }
-            $refProperty->setAccessible(true);
-            $refProperty->setValue($getStockBySalesChannelCache, []);
-        }
+        TestHelper::clearCaches();
 
         $stockId = $this->objectManager->get(StockResolverInterface::class)
             ->execute(SalesChannelInterface::TYPE_WEBSITE, 'eu_website')

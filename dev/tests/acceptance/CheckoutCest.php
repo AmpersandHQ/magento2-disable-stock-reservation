@@ -310,4 +310,185 @@ class CheckoutCest
         $refundedQty = $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]);
         $I->assertEquals(95, $refundedQty, 'The quantity should remain at 95 when not returned');
     }
+
+    /**
+     * @link https://github.com/AmpersandHQ/magento2-disable-stock-reservation/pull/92
+     *
+     * @depends stockIsReturnedWhenOrderIsCancelled
+     * @param Step\Acceptance\Magento $I
+     */
+    public function productGoesBackInStockWhenOrderIsRefunded(Step\Acceptance\Magento $I)
+    {
+        if (in_array(getenv('TEST_GROUP'), ['2-4-4', '2-4-3'])) {
+            //https://github.com/magento/inventory/commit/1d5bc9daa517e41577d533c58be5f42251270366
+            // Inventory changes done through API not reflect on the PDP page
+            $I->markTestSkipped('Known Rest API only failure in this version of magento, covered with integration test');
+        }
+
+        $productId = $I->createSimpleProduct('amp_stock_returns_in_stock_on_refund',1);
+        $I->assertEquals(
+            1,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product has not started with qty=1'
+        );
+        $I->assertEquals(
+            1,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product has not started with is_in_stock=1'
+        );
+
+        $cartId = $I->getGuestQuote();
+        $I->addSimpleProductToQuote($cartId, 'amp_stock_returns_in_stock_on_refund', 1);
+        $orderId = $I->completeGuestCheckout($cartId);
+
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product did not go qty=0 after an order'
+        );
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product did not go is_in_stock=0 after an order'
+        );
+
+        $I->amBearerAuthenticated(Step\Acceptance\Magento::ACCESS_TOKEN);
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/invoice", json_encode([
+            "capture" => true,
+            "notify" => false
+        ]));
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/ship");
+
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product did not stay qty=0 after invoicing and shipping'
+        );
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product did not stay is_in_stock=0 after invoicing and shipping'
+        );
+
+        $orderItemId = $I->grabFromDatabase('sales_order_item', 'item_id', ['order_id' => $orderId]);
+
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/refund", json_encode([
+            "items" => [
+                [
+                    "order_item_id" => $orderItemId,
+                    "qty" => 1
+                ]
+            ],
+            "notify" => false,
+            "arguments" => [
+                "shipping_amount" =>  0,
+                "adjustment_positive" => 0,
+                "adjustment_negative" =>  0,
+                "extension_attributes" => [
+                    "return_to_stock_items" => [
+                        $orderItemId
+                    ]
+                ]
+            ]
+        ]));
+
+        $I->assertEquals(
+            1,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product did not go to is_in_stock=1 after a refund'
+        );
+        $I->assertEquals(
+            1,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product did not go to qty=1 after a refund'
+        );
+    }
+
+    public function productStockNotAmendedWhenOrderIsRefundedAndNoBackToStockSet(Step\Acceptance\Magento $I)
+    {
+        if (in_array(getenv('TEST_GROUP'), ['2-4-4', '2-4-3'])) {
+            //https://github.com/magento/inventory/commit/1d5bc9daa517e41577d533c58be5f42251270366
+            // Inventory changes done through API not reflect on the PDP page
+            $I->markTestSkipped('Known failure in this version of magento');
+        }
+
+        $productId = $I->createSimpleProduct('amp_no_stock_returns_in_stock_on_refund',1);
+        $I->assertEquals(
+            1,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product has not started with qty=1'
+        );
+        $I->assertEquals(
+            1,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product has not started with is_in_stock=1'
+        );
+
+        $cartId = $I->getGuestQuote();
+        $I->addSimpleProductToQuote($cartId, 'amp_no_stock_returns_in_stock_on_refund', 1);
+        $orderId = $I->completeGuestCheckout($cartId);
+
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product did not go qty=0 after an order'
+        );
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product did not go is_in_stock=0 after an order'
+        );
+
+        $I->amBearerAuthenticated(Step\Acceptance\Magento::ACCESS_TOKEN);
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/invoice", json_encode([
+            "capture" => true,
+            "notify" => false
+        ]));
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/ship");
+
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product did not stay qty=0 after invoicing and shipping'
+        );
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product did not stay is_in_stock=0 after invoicing and shipping'
+        );
+
+        $orderItemId = $I->grabFromDatabase('sales_order_item', 'item_id', ['order_id' => $orderId]);
+
+        // Do not return to stock, the products should remail OOS
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/refund", json_encode([
+            "items" => [
+                [
+                    "order_item_id" => $orderItemId,
+                    "qty" => 1
+                ]
+            ],
+            "notify" => false,
+            "arguments" => [
+                "shipping_amount" =>  0,
+                "adjustment_positive" => 0,
+                "adjustment_negative" =>  0,
+                /*"extension_attributes" => [
+                    "return_to_stock_items" => [
+                        $orderItemId
+                    ]
+                ]*/
+            ]
+        ]));
+
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product did not stay is_in_stock=0 after a refund'
+        );
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product did not stay qty=0 after a refund'
+        );
+    }
 }
