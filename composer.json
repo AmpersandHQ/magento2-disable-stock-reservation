@@ -52,7 +52,7 @@
             "vendor/bin/mtest 'php bin/magento --version'"
         ],
         "docker-run-codeception": [
-            "URL=\"http://0.0.0.0:1234/\" MYSQL_USER=\"root\" MYSQL_HOST=\"0.0.0.0\" MYSQL_DB=\"magento\" MYSQL_PORT=\"1235\" ./dev/run-codeception.sh"
+            "TEST_GROUP=$TEST_GROUP URL=\"http://0.0.0.0:1234/\" MYSQL_USER=\"root\" MYSQL_HOST=\"0.0.0.0\" MYSQL_DB=\"magento\" MYSQL_PORT=\"1235\" ./dev/run-codeception.sh"
         ],
         "docker-run-unit-tests": [
             "vendor/bin/mtest 'vendor/bin/phpunit -c /var/www/html/dev/tests/unit/phpunit.xml.dist --testsuite Unit --debug'"
