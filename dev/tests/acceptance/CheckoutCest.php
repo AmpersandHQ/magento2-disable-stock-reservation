@@ -92,6 +92,63 @@ class CheckoutCest
     }
 
     /**
+     * We should be able to ship orders when they have qty=0 because, the product has been purchased and that was what
+     * is responsible for decrementing teh quantity
+     *
+     * @depends noInventoryIsReservedAndStockHasBeenDeducted
+     * @param Step\Acceptance\Magento $I
+     *
+     * @link https://github.com/AmpersandHQ/magento2-disable-stock-reservation/issues/69
+     */
+    public function orderShipmentsAreValidWhenZeroStock(Step\Acceptance\Magento $I)
+    {
+        $productId = $I->createSimpleProduct('amp_shipment_at_zero_stock', 100);
+
+        $cartId = $I->getGuestQuote();
+        $I->addSimpleProductToQuote($cartId, 'amp_shipment_at_zero_stock', 100);
+        $orderId = $I->completeGuestCheckout($cartId);
+
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product has not gone to qty=0'
+        );
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product has not gone to is_in_stock=0'
+        );
+
+        $I->amBearerAuthenticated(Step\Acceptance\Magento::ACCESS_TOKEN);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        // Ship the 100 items
+        $orderItemId = $I->grabFromDatabase('sales_order_item', 'item_id', ['order_id' => $orderId]);
+        $I->sendPOSTAndVerifyResponseCodeIs200("V1/order/{$orderId}/ship", json_encode([
+            "items" => [
+                [
+                    "order_item_id" => $orderItemId,
+                    "qty" => 100
+                ]
+            ]
+        ]));
+        $I->assertEquals(
+            100,
+            $I->grabFromDatabase('sales_shipment_item', 'qty', ['order_item_id' => $orderItemId]),
+            'Product shipment was not for qty=100'
+        );
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'qty', ['product_id' => $productId]),
+            'Product has not stayed at qty=0'
+        );
+        $I->assertEquals(
+            0,
+            $I->grabFromDatabase('cataloginventory_stock_item', 'is_in_stock', ['product_id' => $productId]),
+            'Product has not stayed at is_in_stock=0'
+        );
+    }
+
+    /**
      * @depends noInventoryIsReservedAndStockHasBeenDeducted
      * @param Step\Acceptance\Magento $I
      */
