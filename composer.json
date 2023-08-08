@@ -3,7 +3,7 @@
     "description": "This module disables the inventory reservation logic introduced as part of MSI in Magento 2.3.3",
     "type": "magento2-module",
     "require": {
-        "magento/framework": "*",
+        "magento/framework": ">=103",
         "php": "^7.1|^8.0"
     },
     "autoload": {
@@ -39,7 +39,9 @@
     },
     "scripts": {
         "docker-install-magento": [
-            "CURRENT_EXTENSION=\".\" FULL_INSTALL=1 COMPOSER_REQUIRE_EXTRA='tddwizard/magento2-fixtures' TWOFACTOR_ENABLED=1 UNIT_TESTS_PATH='dev/MagentoTests/Unit' INTEGRATION_TESTS_PATH='dev/MagentoTests/Integration' vendor/bin/mtest-make $TEST_GROUP"
+            "CURRENT_EXTENSION=\".\" FULL_INSTALL=1 COMPOSER_REQUIRE_EXTRA='tddwizard/magento2-fixtures' TWOFACTOR_ENABLED=1 UNIT_TESTS_PATH='dev/MagentoTests/Unit' INTEGRATION_TESTS_PATH='dev/MagentoTests/Integration' vendor/bin/mtest-make $TEST_GROUP",
+            "vendor/bin/mtest \"./vendor/ampersand/magento2-disable-stock-reservation/dev/MagentoTests/patches/apply.sh $TEST_GROUP\"",
+            "vendor/bin/mtest 'php bin/magento setup:db-declaration:generate-whitelist --module-name=Ampersand_DisableStockReservation'"
         ],
         "docker-configure-magento": [
             "vendor/bin/mtest 'vendor/bin/n98-magerun2 config:store:set checkout/options/guest_checkout 1'",
@@ -50,13 +52,13 @@
             "vendor/bin/mtest 'php bin/magento --version'"
         ],
         "docker-run-codeception": [
-            "URL=\"http://0.0.0.0:1234/\" MYSQL_USER=\"root\" MYSQL_HOST=\"0.0.0.0\" MYSQL_DB=\"magento\" MYSQL_PORT=\"1235\" ./dev/run-codeception.sh"
+            "TEST_GROUP=$TEST_GROUP URL=\"http://0.0.0.0:1234/\" MYSQL_USER=\"root\" MYSQL_HOST=\"0.0.0.0\" MYSQL_DB=\"magento\" MYSQL_PORT=\"1235\" ./dev/run-codeception.sh"
         ],
         "docker-run-unit-tests": [
             "vendor/bin/mtest 'vendor/bin/phpunit -c /var/www/html/dev/tests/unit/phpunit.xml.dist --testsuite Unit --debug'"
         ],
         "docker-run-integration-tests": [
-            "vendor/bin/mtest 'vendor/bin/phpunit -c /var/www/html/dev/tests/integration/phpunit.xml.dist --testsuite Integration --debug'"
+            "vendor/bin/mtest 'vendor/bin/phpunit -c /var/www/html/dev/tests/integration/phpunit.xml.dist --testsuite Integration --debug '"
         ],
         "post-install-cmd": [
             "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/)"

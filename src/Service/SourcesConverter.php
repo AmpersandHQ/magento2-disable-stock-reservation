@@ -72,7 +72,7 @@ class SourcesConverter
                 ]
             );
 
-            $sourceSelectionItems[$item['sku']] = $sourceSelectionItem;
+            $sourceSelectionItems[] = $sourceSelectionItem;
         }
 
         return $sourceSelectionItems;

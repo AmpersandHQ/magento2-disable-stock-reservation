@@ -35,7 +35,7 @@ class PatchedSourceDeductionService implements SourceDeductionServiceInterface
     private $getStockBySalesChannel;
 
     /**
-     * @var DecrementSourceItemQty
+     * @var DecrementSourceItemQtyFactory
      */
     private $decrementSourceItemFactory;
 

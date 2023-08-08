@@ -18,8 +18,8 @@ composer docker-configure-magento
 
 Run the tests
 ```
-composer docker-run-unit-tests          # unit tests
-composer docker-run-integration-tests   # integration tests
-composer docker-run-codeception         # codeception rest api tests
+composer docker-run-unit-tests                           # unit tests
+composer docker-run-integration-tests                    # integration tests
+TEST_GROUP=2-4-5 composer docker-run-codeception         # codeception rest api tests
 ```
 

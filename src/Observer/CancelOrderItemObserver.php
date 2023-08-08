@@ -52,6 +52,6 @@ class CancelOrderItemObserver implements ObserverInterface
             return;
         }
 
-        $this->executeSourceDeductionForItems->executeSourceDeductionForItems($orderItem, $itemsToCancel);
+        $this->executeSourceDeductionForItems->executeSourceDeductionForItems($orderItem, $itemsToCancel, true);
     }
 }
