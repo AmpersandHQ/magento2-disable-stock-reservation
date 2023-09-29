@@ -89,7 +89,7 @@ class CancelOrderWithMissingOrderSourcesTest extends TestCase
          * Delete the order_sources information, can occur when cancelling an old order created on an older version
          * of this module before the order_sources table was introduced
          */
-        $this->connection->getConnection()->query('delete from order_sources');
+        $this->connection->getConnection()->query('delete from trv_order_sources');
 
         /**
          * Cancel the order
