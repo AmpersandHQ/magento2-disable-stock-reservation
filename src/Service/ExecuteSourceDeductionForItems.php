@@ -139,38 +139,39 @@ class ExecuteSourceDeductionForItems
 
         /** @var OrderItem $item */
         foreach ($itemsToCancel as $item) {
-            $itemsSkus[] = $item->getSku();
-            $sourceCodesBySku = $this->getSourceCodesBySkus->execute([$item->getSku()]);
-            $sourceItems = $this->sourceRepository->getSourceItemBySku(
-                (string)$order->getId(),
-                $item->getSku()
-            );
-            foreach ($sourceItems as $sourceItem) {
-                $sourceCode = $sourceItem->getSourceCode();
+            try {
+                $itemsSkus[] = $item->getSku();
+                $sourceCodesBySku = $this->getSourceCodesBySkus->execute([$item->getSku()]);
+                $sourceItems = $this->sourceRepository->getSourceItemBySku(
+                    (string)$order->getId(),
+                    $item->getSku()
+                );
+                foreach ($sourceItems as $sourceItem) {
+                    $sourceCode = $sourceItem->getSourceCode();
 
-                // if source has been unassigned, return to default stock
-                if (!in_array($sourceCode, $sourceCodesBySku)) {
-                    $sourceCode = 'default';
-                }
-                $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
-                    'sourceCode' => $sourceCode,
-                    'items' => [
-                        $this->itemToDeductFactory->create([
-                            'sku' => $item->getSku(),
-                            'qty' => -$sourceItem->getQtyToDeduct()
-                        ])
-                    ],
-                    'salesChannel' => $salesChannel,
-                    'salesEvent' => $salesEvent
-                ]);
-
-                try {
-                    $this->sourceDeductionService->execute($sourceDeductionRequest);
-                } catch (NoSuchEntityException $noSuchEntityException) {
-                    if (!$graceful) {
-                        throw $noSuchEntityException;
+                    // if source has been unassigned, return to default stock
+                    if (!in_array($sourceCode, $sourceCodesBySku)) {
+                        $sourceCode = 'default';
                     }
+                    $sourceDeductionRequest = $this->sourceDeductionRequestFactory->create([
+                        'sourceCode' => $sourceCode,
+                        'items' => [
+                            $this->itemToDeductFactory->create([
+                                'sku' => $item->getSku(),
+                                'qty' => -$sourceItem->getQtyToDeduct()
+                            ])
+                        ],
+                        'salesChannel' => $salesChannel,
+                        'salesEvent' => $salesEvent
+                    ]);
+
+                    $this->sourceDeductionService->execute($sourceDeductionRequest);
                 }
+            } catch (NoSuchEntityException $noSuchEntityException) {
+                if ($graceful) {
+                    continue;
+                }
+                throw $noSuchEntityException;
             }
         }
 
