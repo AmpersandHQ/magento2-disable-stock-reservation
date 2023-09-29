@@ -14,7 +14,7 @@ use TddWizard\Fixtures\Customer\CustomerBuilder;
 use TddWizard\Fixtures\Customer\AddressBuilder;
 use PHPUnit\Framework\TestCase;
 
-class CancelOrder extends TestCase
+class CancelOrderTest extends TestCase
 {
     /** @var ObjectManagerInterface */
     private $objectManager;
