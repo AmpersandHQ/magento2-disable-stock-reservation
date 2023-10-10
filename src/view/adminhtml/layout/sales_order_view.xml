@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="admin-2columns-left" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="content">
+            <!--
+            Remove this block "Magento\InventoryShippingAdminUi\Block\Adminhtml\Order\View\ShipButton" which takes you
+            to a source selection screen if the order is deemed to need it via sales->order->ship
+
+            The source has already been removed at the time of order shipment, so just take the admin to the old shipment
+            page (which is the same functionality if manageStock was set to 0)
+            -->
+            <referenceBlock name="sales_order_view_ship_button" remove="true"/>
+        </referenceContainer>
+    </body>
+</page>
