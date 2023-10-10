@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Ampersand\DisableStockReservation\Model\SourceDeductionService;
 
 use Ampersand\DisableStockReservation\Model\SourceItem\Command\DecrementSourceItemQtyFactory;
+use Magento\CatalogInventory\Model\Configuration;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\InventoryApi\Api\Data\SourceItemInterface;
 use Magento\InventoryConfigurationApi\Api\Data\StockItemConfigurationInterface;
@@ -18,6 +19,11 @@ class PatchedSourceDeductionService implements SourceDeductionServiceInterface
      * Constant for zero stock quantity value.
      */
     private const ZERO_STOCK_QUANTITY = 0.0;
+
+    /**
+     * @var Configuration
+     */
+    private $stockConfiguration;
 
     /**
      * @var GetSourceItemBySourceCodeAndSku
@@ -44,17 +50,20 @@ class PatchedSourceDeductionService implements SourceDeductionServiceInterface
      * @param GetStockItemConfigurationInterface $getStockItemConfiguration
      * @param GetStockBySalesChannelInterface $getStockBySalesChannel
      * @param DecrementSourceItemQtyFactory $decrementSourceItemFactory
+     * @param Configuration $stockConfiguration
      */
     public function __construct(
         GetSourceItemBySourceCodeAndSku $getSourceItemBySourceCodeAndSku,
         GetStockItemConfigurationInterface $getStockItemConfiguration,
         GetStockBySalesChannelInterface $getStockBySalesChannel,
-        DecrementSourceItemQtyFactory $decrementSourceItemFactory
+        DecrementSourceItemQtyFactory $decrementSourceItemFactory,
+        Configuration $stockConfiguration
     ) {
         $this->getSourceItemBySourceCodeAndSku = $getSourceItemBySourceCodeAndSku;
         $this->getStockItemConfiguration = $getStockItemConfiguration;
         $this->getStockBySalesChannel = $getStockBySalesChannel;
         $this->decrementSourceItemFactory = $decrementSourceItemFactory;
+        $this->stockConfiguration = $stockConfiguration;
     }
 
     /**
@@ -142,9 +151,19 @@ class PatchedSourceDeductionService implements SourceDeductionServiceInterface
         SourceItemInterface $sourceItem
     ): int {
         $sourceItemQty = $sourceItem->getQuantity() ?: self::ZERO_STOCK_QUANTITY;
+        $currentStatus = (int)$stockItemConfiguration->getExtensionAttributes()->getIsInStock();
+        $calculatedStatus =  SourceItemInterface::STATUS_IN_STOCK;
 
-        return $sourceItemQty === $stockItemConfiguration->getMinQty() && !$stockItemConfiguration->getBackorders()
-            ? SourceItemInterface::STATUS_OUT_OF_STOCK
-            : SourceItemInterface::STATUS_IN_STOCK;
+        if ($sourceItemQty === $stockItemConfiguration->getMinQty() && !$stockItemConfiguration->getBackorders()) {
+            $calculatedStatus = SourceItemInterface::STATUS_OUT_OF_STOCK;
+        }
+
+        if ($this->inventoryConfiguration->isCanBackInStock() && $sourceItemQty > $stockItemConfiguration->getMinQty()
+            && $currentStatus === SourceItemInterface::STATUS_OUT_OF_STOCK
+        ) {
+            return SourceItemInterface::STATUS_IN_STOCK;
+        }
+
+        return $currentStatus === SourceItemInterface::STATUS_OUT_OF_STOCK ? $currentStatus : $calculatedStatus;
     }
 }
