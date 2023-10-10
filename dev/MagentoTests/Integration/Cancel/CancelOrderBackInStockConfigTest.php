@@ -62,6 +62,7 @@ class CancelOrderBackInStockConfigTest extends TestCase
         );
 
         $this->assertEquals(5, $this->getStockItem($sku)->getQty(), 'The stock did start at 5');
+        $this->assertTrue($this->getStockItem($sku)->getIsInStock(), 'The stock did not start at is_in_stock=1');
 
         /**
          * Create a customer and login
@@ -79,7 +80,7 @@ class CancelOrderBackInStockConfigTest extends TestCase
             CartBuilder::forCurrentSession()
                 ->withSimpleProduct(
                     $this->productFixture->getSku(),
-                    1
+                    5
                 )
                 ->build()
         );
@@ -90,7 +91,8 @@ class CancelOrderBackInStockConfigTest extends TestCase
         $this->assertGreaterThan(0, strlen($order->getIncrementId()), 'the order does not have a valid increment_id');
         $this->assertIsNumeric($order->getId(), 'the order does not have an entity_id');
 
-        $this->assertEquals(4, $this->getStockItem($sku)->getQty(), 'The stock did not go down to 4');
+        $this->assertEquals(0, $this->getStockItem($sku)->getQty(), 'The stock did go to 0');
+        $this->assertFalse($this->getStockItem($sku)->getIsInStock(), 'The stock did not go to is_in_stock=0');
 
         /**
          * Cancel the order
@@ -99,7 +101,8 @@ class CancelOrderBackInStockConfigTest extends TestCase
         $order->cancel();
         $this->assertEquals('canceled', $order->getStatus(), 'The order was not cancelled');
 
-        $this->assertEquals(5, $this->getStockItem($sku)->getQty(), 'The stock did not go back to 5');
+        $this->assertEquals(5, $this->getStockItem($sku)->getQty(), 'The stock did go to 5');
+        $this->assertTrue($this->getStockItem($sku)->getIsInStock(), 'The stock did not go to is_in_stock=1');
     }
 
     /**
@@ -122,6 +125,7 @@ class CancelOrderBackInStockConfigTest extends TestCase
         );
 
         $this->assertEquals(5, $this->getStockItem($sku)->getQty(), 'The stock did start at 5');
+        $this->assertTrue($this->getStockItem($sku)->getIsInStock(), 'The stock did not start at is_in_stock=1');
 
         /**
          * Create a customer and login
@@ -139,7 +143,7 @@ class CancelOrderBackInStockConfigTest extends TestCase
             CartBuilder::forCurrentSession()
                 ->withSimpleProduct(
                     $this->productFixture->getSku(),
-                    1
+                    5
                 )
                 ->build()
         );
@@ -150,7 +154,8 @@ class CancelOrderBackInStockConfigTest extends TestCase
         $this->assertGreaterThan(0, strlen($order->getIncrementId()), 'the order does not have a valid increment_id');
         $this->assertIsNumeric($order->getId(), 'the order does not have an entity_id');
 
-        $this->assertEquals(4, $this->getStockItem($sku)->getQty(), 'The stock did not go down to 4');
+        $this->assertEquals(0, $this->getStockItem($sku)->getQty(), 'The stock did go to 0');
+        $this->assertFalse($this->getStockItem($sku)->getIsInStock(), 'The stock did not go to is_in_stock=0');
 
         /**
          * Cancel the order
@@ -159,7 +164,8 @@ class CancelOrderBackInStockConfigTest extends TestCase
         $order->cancel();
         $this->assertEquals('canceled', $order->getStatus(), 'The order was not cancelled');
 
-        $this->assertEquals(5, $this->getStockItem($sku)->getQty(), 'The stock did not go back to 5');
+        $this->assertEquals(5, $this->getStockItem($sku)->getQty(), 'The stock did go to 5');
+        $this->assertTrue($this->getStockItem($sku)->getIsInStock(), 'The stock did not go to is_in_stock=1');
     }
 
     /**
@@ -182,6 +188,7 @@ class CancelOrderBackInStockConfigTest extends TestCase
         );
 
         $this->assertEquals(5, $this->getStockItem($sku)->getQty(), 'The stock did start at 5');
+        $this->assertTrue($this->getStockItem($sku)->getIsInStock(), 'The stock did not start at is_in_stock=1');
 
         /**
          * Create a customer and login
@@ -199,7 +206,7 @@ class CancelOrderBackInStockConfigTest extends TestCase
             CartBuilder::forCurrentSession()
                 ->withSimpleProduct(
                     $this->productFixture->getSku(),
-                    1
+                    5
                 )
                 ->build()
         );
@@ -210,7 +217,8 @@ class CancelOrderBackInStockConfigTest extends TestCase
         $this->assertGreaterThan(0, strlen($order->getIncrementId()), 'the order does not have a valid increment_id');
         $this->assertIsNumeric($order->getId(), 'the order does not have an entity_id');
 
-        $this->assertEquals(4, $this->getStockItem($sku)->getQty(), 'The stock did not go down to 4');
+        $this->assertEquals(0, $this->getStockItem($sku)->getQty(), 'The stock did go to 0');
+        $this->assertFalse($this->getStockItem($sku)->getIsInStock(), 'The stock did not go to is_in_stock=0');
 
         /**
          * Cancel the order
@@ -219,7 +227,8 @@ class CancelOrderBackInStockConfigTest extends TestCase
         $order->cancel();
         $this->assertEquals('canceled', $order->getStatus(), 'The order was not cancelled');
 
-        $this->assertEquals(4, $this->getStockItem($sku)->getQty(), 'The stock did not stay at 4');
+        $this->assertEquals(5, $this->getStockItem($sku)->getQty(), 'The stock did go to 5');
+        $this->assertFalse($this->getStockItem($sku)->getIsInStock(), 'The stock did not stay at is_in_stock=0');
     }
 
     private function getStockItem($sku)

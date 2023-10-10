@@ -139,8 +139,6 @@ class PatchedSourceDeductionService implements SourceDeductionServiceInterface
     /**
      * Get source item stock status after quantity deduction.
      *
-     * Ampersand change in this function we revert https://github.com/magento/inventory/commit/6f20ba6
-     *
      * @param StockItemConfigurationInterface $stockItemConfiguration
      * @param SourceItemInterface $sourceItem
      *
@@ -158,7 +156,7 @@ class PatchedSourceDeductionService implements SourceDeductionServiceInterface
             $calculatedStatus = SourceItemInterface::STATUS_OUT_OF_STOCK;
         }
 
-        if ($this->inventoryConfiguration->isCanBackInStock() && $sourceItemQty > $stockItemConfiguration->getMinQty()
+        if ($this->stockConfiguration->getCanBackInStock() && $sourceItemQty > $stockItemConfiguration->getMinQty()
             && $currentStatus === SourceItemInterface::STATUS_OUT_OF_STOCK
         ) {
             return SourceItemInterface::STATUS_IN_STOCK;
