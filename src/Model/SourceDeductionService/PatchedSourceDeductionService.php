@@ -156,12 +156,14 @@ class PatchedSourceDeductionService implements SourceDeductionServiceInterface
             $calculatedStatus = SourceItemInterface::STATUS_OUT_OF_STOCK;
         }
 
-        if ($this->stockConfiguration->getCanBackInStock() && $sourceItemQty > $stockItemConfiguration->getMinQty()
+        $canBackInStock = $this->stockConfiguration->getCanBackInStock();
+        if ($canBackInStock && $sourceItemQty > $stockItemConfiguration->getMinQty()
             && $currentStatus === SourceItemInterface::STATUS_OUT_OF_STOCK
         ) {
             return SourceItemInterface::STATUS_IN_STOCK;
         }
 
-        return $currentStatus === SourceItemInterface::STATUS_OUT_OF_STOCK ? $currentStatus : $calculatedStatus;
+        $result = $currentStatus === SourceItemInterface::STATUS_OUT_OF_STOCK ? $currentStatus : $calculatedStatus;
+        return $result;
     }
 }

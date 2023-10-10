@@ -7,6 +7,7 @@ use Magento\InventorySales\Model\GetStockBySalesChannelCache;
 use Magento\CatalogInventory\Model\StockRegistryStorage;
 use Magento\InventoryIndexer\Model\GetStockItemData\CacheStorage;
 use Magento\InventoryConfiguration\Plugin\InventoryConfiguration\Model\GetLegacyStockItemCache;
+use Magento\InventoryConfiguration\Model\LegacyStockItem\CacheStorage as LegacyStockItemCache;
 
 class IntegrationHelper
 {
@@ -82,6 +83,20 @@ class IntegrationHelper
                     return;
                 }
                 $refProperty = $ref->getParentClass()->getProperty('legacyStockItemsBySku');
+            }
+            $refProperty->setAccessible(true);
+            $refProperty->setValue($object, []);
+        }
+        if (class_exists(LegacyStockItemCache::class)) {
+            $object = Bootstrap::getObjectManager()->get(LegacyStockItemCache::class);
+            $ref = new \ReflectionObject($object);
+            try {
+                $refProperty = $ref->getProperty('cachedItems');
+            } catch (\ReflectionException $exception) {
+                if (!$ref->getParentClass()) {
+                    return;
+                }
+                $refProperty = $ref->getParentClass()->getProperty('cachedItems');
             }
             $refProperty->setAccessible(true);
             $refProperty->setValue($object, []);
