@@ -32,7 +32,7 @@
         "codeception/module-asserts": "^1.1.0",
         "codeception/module-db": "^1.0.1",
         "ampersand/magento-docker-test-instance": "^0.1",
-        "codeception/module-rest": "^1.2.0",
+        "codeception/module-rest": "^1.2.0||^3.0",
         "friendsofphp/php-cs-fixer": "^2.16",
         "magento/magento-coding-standard": "<16",
         "tddwizard/magento2-fixtures": "^1.1"
