@@ -9,6 +9,7 @@ use Magento\InventorySales\Model\GetItemsToCancelFromOrderItem;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Ampersand\DisableStockReservation\Service\ExecuteSourceDeductionForItems;
 use Magento\CatalogInventory\Model\Configuration;
+
 class CancelOrderItemObserver implements ObserverInterface
 {
     /**
