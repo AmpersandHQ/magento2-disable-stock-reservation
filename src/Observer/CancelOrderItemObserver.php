@@ -48,7 +48,6 @@ class CancelOrderItemObserver implements ObserverInterface
      */
     public function execute(EventObserver $observer): void
     {
-
         if (!$this->catalogInventoryConfiguration->getCanBackInStock()) {
             return;
         }
