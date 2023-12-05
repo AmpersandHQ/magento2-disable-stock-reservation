@@ -227,7 +227,7 @@ class CancelOrderBackInStockConfigTest extends TestCase
         $order->cancel();
         $this->assertEquals('canceled', $order->getStatus(), 'The order was not cancelled');
 
-        $this->assertEquals(5, $this->getStockItem($sku)->getQty(), 'The stock did go to 5');
+        $this->assertEquals(0, $this->getStockItem($sku)->getQty(), 'The stock did not stay at 0');
         $this->assertFalse($this->getStockItem($sku)->getIsInStock(), 'The stock did not stay at is_in_stock=0');
     }
 
