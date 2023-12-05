@@ -8,6 +8,7 @@ use Magento\Framework\Event\ObserverInterface;
 use Magento\InventorySales\Model\GetItemsToCancelFromOrderItem;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Ampersand\DisableStockReservation\Service\ExecuteSourceDeductionForItems;
+use Magento\CatalogInventory\Model\Configuration;
 
 class CancelOrderItemObserver implements ObserverInterface
 {
@@ -22,16 +23,23 @@ class CancelOrderItemObserver implements ObserverInterface
     private $executeSourceDeductionForItems;
 
     /**
+     * @var Configuration
+     */
+    private $catalogInventoryConfiguration;
+
+    /**
      * CancelOrderItemObserver constructor.
      * @param GetItemsToCancelFromOrderItem $getItemsToCancelFromOrderItem
      * @param ExecuteSourceDeductionForItems $executeSourceDeductionForItems
      */
     public function __construct(
         GetItemsToCancelFromOrderItem $getItemsToCancelFromOrderItem,
-        ExecuteSourceDeductionForItems $executeSourceDeductionForItems
+        ExecuteSourceDeductionForItems $executeSourceDeductionForItems,
+        Configuration $catalogInventoryConfiguration
     ) {
         $this->getItemsToCancelFromOrderItem = $getItemsToCancelFromOrderItem;
         $this->executeSourceDeductionForItems = $executeSourceDeductionForItems;
+        $this->catalogInventoryConfiguration = $catalogInventoryConfiguration;
     }
 
     /**
@@ -40,6 +48,10 @@ class CancelOrderItemObserver implements ObserverInterface
      */
     public function execute(EventObserver $observer): void
     {
+        if (!$this->catalogInventoryConfiguration->getCanBackInStock()) {
+            return;
+        }
+        
         /** @var OrderItem $orderItem */
         $orderItem = $observer->getEvent()->getItem();
         if (!$orderItem instanceof OrderItem) {
