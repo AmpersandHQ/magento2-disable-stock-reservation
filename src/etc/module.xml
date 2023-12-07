@@ -6,7 +6,6 @@
             <module name="Magento_InventorySales"/>
             <module name="Magento_InventorySalesApi"/>
             <module name="Magento_InventoryShipping"/>
-            <module name="Magento_InventoryShippingAdminUi"/>
         </sequence>
     </module>
 </config>
