@@ -6,7 +6,6 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderSearchResultInterface;
 use Magento\Sales\Api\Data\OrderExtensionFactory;
-use Magento\InventorySourceSelectionApi\Api\Data\SourceSelectionResultInterfaceFactory;
 use Ampersand\DisableStockReservation\Model\Sources as SourceModel;
 use Ampersand\DisableStockReservation\Service\SourcesConverter;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -31,11 +30,6 @@ class OrderRepositoryPlugin
     private $orderExtensionFactory;
 
     /**
-     * @var SourceSelectionResultInterfaceFactory
-     */
-    private $sourceSelectionResultInterfaceFactory;
-
-    /**
      * @var SourcesConverter
      */
     private $sourcesConverter;
@@ -49,20 +43,17 @@ class OrderRepositoryPlugin
      * OrderRepositoryPlugin constructor.
      * @param SourcesRepositoryInterface $sourcesRepository
      * @param OrderExtensionFactory $orderExtensionFactory
-     * @param SourceSelectionResultInterfaceFactory $sourceSelectionResultInterfaceFactory
      * @param SourcesConverter $sourcesConverter
      * @param CollectionFactory $collectionFactory
      */
     public function __construct(
         SourcesRepositoryInterface $sourcesRepository,
         OrderExtensionFactory $orderExtensionFactory,
-        SourceSelectionResultInterfaceFactory $sourceSelectionResultInterfaceFactory,
         SourcesConverter $sourcesConverter,
         CollectionFactory $collectionFactory
     ) {
         $this->sourcesRepository = $sourcesRepository;
         $this->orderExtensionFactory = $orderExtensionFactory;
-        $this->sourceSelectionResultInterfaceFactory = $sourceSelectionResultInterfaceFactory;
         $this->sourcesConverter = $sourcesConverter;
         $this->collectionFactory = $collectionFactory;
     }

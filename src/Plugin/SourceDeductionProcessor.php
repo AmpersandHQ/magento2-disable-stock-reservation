@@ -18,7 +18,6 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Service\OrderService;
 use Ampersand\DisableStockReservation\Api\SourcesRepositoryInterface;
-use Magento\Sales\Api\Data\OrderExtensionFactory;
 use Ampersand\DisableStockReservation\Service\SourcesConverter;
 use Ampersand\DisableStockReservation\Api\Data\SourcesInterfaceFactory;
 
@@ -60,11 +59,6 @@ class SourceDeductionProcessor
     private $sourceRepository;
 
     /**
-     * @var OrderExtensionFactory
-     */
-    private $orderExtensionFactory;
-
-    /**
      * @var SourcesConverter
      */
     private $sourcesConverter;
@@ -82,7 +76,6 @@ class SourceDeductionProcessor
      * @param ItemToSellInterfaceFactory $itemToSellFactory
      * @param PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent
      * @param SourcesRepositoryInterface $sourceRepository
-     * @param OrderExtensionFactory $orderExtensionFactory
      * @param SourcesConverter $sourcesConverter
      * @param SourcesInterfaceFactory $sourcesFactory
      */
@@ -94,7 +87,6 @@ class SourceDeductionProcessor
         ItemToSellInterfaceFactory $itemToSellFactory,
         PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent,
         SourcesRepositoryInterface $sourceRepository,
-        OrderExtensionFactory $orderExtensionFactory,
         SourcesConverter $sourcesConverter,
         SourcesInterfaceFactory $sourcesFactory
     ) {
@@ -105,7 +97,6 @@ class SourceDeductionProcessor
         $this->itemToSellFactory = $itemToSellFactory;
         $this->placeReservationsForSalesEvent = $placeReservationsForSalesEvent;
         $this->sourceRepository = $sourceRepository;
-        $this->orderExtensionFactory = $orderExtensionFactory;
         $this->sourcesConverter = $sourcesConverter;
         $this->sourcesFactory = $sourcesFactory;
     }

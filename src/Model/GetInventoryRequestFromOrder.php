@@ -108,10 +108,10 @@ class GetInventoryRequestFromOrder
 
         return $this->addressInterfaceFactory->create([
             'country' => $shippingAddress->getCountryId(),
-            'postcode' => $shippingAddress->getPostcode() ?? '',
+            'postcode' => $shippingAddress->getPostcode() ? $shippingAddress->getPostcode() : '',
             'street' => implode("\n", $shippingAddress->getStreet()),
-            'region' => $region ?? $shippingAddress->getRegionCode() ?? '',
-            'city' => $shippingAddress->getCity() ?? ''
+            'region' => $region ? $region : $shippingAddress->getRegionCode() ? $shippingAddress->getRegionCode() : '',
+            'city' => $shippingAddress->getCity() ? $shippingAddress->getCity() : ''
         ]);
     }
 }
