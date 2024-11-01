@@ -36,6 +36,17 @@
     <preference for="Magento\InventorySourceDeductionApi\Model\SourceDeductionServiceInterface"
                 type="Ampersand\DisableStockReservation\Model\SourceDeductionService"></preference>
 
+    <!--
+        Magento changed how they managed deducting stock when a credit memo was raised, this was previously an event observer
+        The functionality we want to disable is now handled by a plugin, without this change stock is deducated when we choose NOT to put an item back into stock when refunding
+
+        - @see https://github.com/magento/inventory/commit/6e80815350639a6a2d9de7b5ee2b0440a9281c69#diff-9c6267ddefcb3d90dde201cece1a55e0e9ee0757aa2dedfa65282cc6e60e1b1eL16
+        - @see https://github.com/magento/inventory/commit/6e80815350639a6a2d9de7b5ee2b0440a9281c69#diff-e65e61aad4c9b2dee4eefef602a2222ed6519a75003aaa69a4f15843f8f32fe5R173
+    -->
+    <type name="Magento\Sales\Api\CreditmemoRepositoryInterface">
+        <plugin name="deduct_source_item_quantity_on_refund" disabled="true"/>
+    </type>
+
     <type name="Magento\Sales\Model\OrderRepository">
         <plugin name="add_sources_to_order"
                 type="Ampersand\DisableStockReservation\Plugin\Model\OrderRepositoryPlugin"
