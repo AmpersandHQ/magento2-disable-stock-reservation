@@ -21,12 +21,16 @@ class RemoveExistingReservations implements SchemaPatchInterface
      */
     public function apply()
     {
+        $this->setup->startSetup();
+
         $connection = $this->setup->getConnection();
         $tableName = $connection->getTableName(self::INVENTORY_RESERVATION_TABLE_NAME);
 
         if ($connection->isTableExists($tableName)) {
             $connection->truncateTable($tableName);
         }
+
+        $this->setup->endSetup();
     }
 
     /**
